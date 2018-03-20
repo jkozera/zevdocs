@@ -183,9 +183,6 @@ dh_link_new (DhLinkType   type,
 {
         DhLink *link;
 
-        g_return_val_if_fail (type != DH_LINK_TYPE_BOOK, NULL);
-        g_return_val_if_fail (book_link != NULL, NULL);
-        g_return_val_if_fail (book_link->type == DH_LINK_TYPE_BOOK, NULL);
         g_return_val_if_fail (name != NULL, NULL);
         g_return_val_if_fail (relative_url != NULL, NULL);
 
@@ -385,43 +382,7 @@ dh_link_belongs_to_page (DhLink      *link,
 gchar *
 dh_link_get_uri (DhLink *link)
 {
-        const gchar *base_path;
-        gchar *filename;
-        gchar *uri;
-        gchar *anchor;
-        GError *error = NULL;
-
-        g_return_val_if_fail (link != NULL, NULL);
-
-        if (link->type == DH_LINK_TYPE_BOOK)
-                base_path = link->book.data->base_path;
-        else
-                base_path = link->book.link->book.data->base_path;
-
-        filename = g_build_filename (base_path, link->relative_url, NULL);
-
-        anchor = strrchr (filename, '#');
-        if (anchor != NULL) {
-                *anchor = '\0';
-                anchor++;
-        }
-
-        uri = g_filename_to_uri (filename, NULL, &error);
-        if (error != NULL) {
-                g_warning ("Failed to get DhLink URI: %s", error->message);
-                g_clear_error (&error);
-        }
-
-        if (uri != NULL && anchor != NULL) {
-                gchar *uri_with_anchor;
-
-                uri_with_anchor = g_strconcat (uri, "#", anchor, NULL);
-                g_free (uri);
-                uri = uri_with_anchor;
-        }
-
-        g_free (filename);
-        return uri;
+        return link->relative_url;
 }
 
 /**

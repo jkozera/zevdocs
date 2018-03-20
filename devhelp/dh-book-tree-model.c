@@ -50,7 +50,7 @@ compare_strs (gconstpointer a,
 }
 
 static DhBookTreeModelNode*
-new_dynamic_symbols_node(JsonObject* object, const gchar* symbol_type, gint count, GtkTreePath *parent, gint num, const gchar* title, const gchar* tp)
+new_dynamic_symbols_node(JsonObject* object, const gchar* symbol_type, gint count, GtkTreePath *parent, gint num, const gchar* title, const gchar* tp, const char* URL)
 {
         DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
         JsonObject *counts;
@@ -71,7 +71,7 @@ new_dynamic_symbols_node(JsonObject* object, const gchar* symbol_type, gint coun
         }
         node->children = NULL;
         node->path = gtk_tree_path_copy (parent);
-        node->link = NULL;
+        node->link = dh_link_new (DH_LINK_TYPE_KEYWORD, NULL, node->title, URL);
         node->book = dh_book_new (NULL);
         gtk_tree_path_append_index(node->path, num);
 
@@ -140,7 +140,7 @@ new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar*
                                                                          symbol->data,
                                                                          json_object_get_int_member(counts, symbol->data),
                                                                          node->path,
-                                                                         i++, NULL, "symbols"));
+                                                                         i++, NULL, "symbols", NULL));
                 symbol = symbol->next;
         }
         g_list_free(symbols);
@@ -183,7 +183,8 @@ new_node (JsonObject* object, GtkTreePath *parent, gint num)
                                                                          node->path,
                                                                          0,
                                                                          "Chapters",
-                                                                         "chapters"));
+                                                                         "chapters",
+                                                                         NULL));
                 g_list_append(node->children, new_symbols_node (object, node->path, 1, NULL));
         }
 
@@ -537,7 +538,11 @@ lazy_fetch_children(DhBookTreeModelNode *node)
                                                                          0,
                                                                          node->path,
                                                                          i,
-                                                                         symbol, node->symbol_tp));
+                                                                         symbol, node->symbol_tp,
+                                                                         g_strjoin("/",
+                                                                                   "http://localhost:12340",
+                                                                                   json_array_get_string_element(subarray, 1),
+                                                                                   NULL)));
         }
 
 
@@ -623,12 +628,12 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
 
         case DH_BOOK_TREE_MODEL_COL_LINK:
                 g_value_init(value, DH_TYPE_LINK);
-                g_value_set_object(value, node->link);
+                g_value_set_boxed(value, node->link);
                 return;
 
         case DH_BOOK_TREE_MODEL_COL_BOOK:
                 g_value_init(value, DH_TYPE_BOOK);
-                g_value_set_object(value, node->book);
+                g_value_set_boxed(value, node->book);
                 return;
 
         case DH_BOOK_TREE_MODEL_COL_WEIGHT:

@@ -918,7 +918,7 @@ web_view_decide_policy_cb (WebKitWebView            *web_view,
                 return GDK_EVENT_STOP;
         }
 
-        if (!g_str_has_prefix (uri, "file://")) {
+        if (!g_str_has_prefix (uri, "http://localhost:12340/")) {
                 webkit_policy_decision_ignore (policy_decision);
                 gtk_show_uri_on_window (GTK_WINDOW (window), uri, GDK_CURRENT_TIME, NULL);
                 return GDK_EVENT_STOP;
