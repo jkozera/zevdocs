@@ -297,6 +297,7 @@ dh_book_new (GFile *index_file)
         gchar *language = NULL;
         GError *error = NULL;
 
+        if (!G_IS_FILE(index_file)) return NULL;
         g_return_val_if_fail (G_IS_FILE (index_file), NULL);
 
         book = g_object_new (DH_TYPE_BOOK, NULL);

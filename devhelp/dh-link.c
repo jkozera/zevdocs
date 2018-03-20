@@ -184,6 +184,7 @@ dh_link_new (DhLinkType   type,
         DhLink *link;
 
         g_return_val_if_fail (name != NULL, NULL);
+        if (relative_url == NULL) return NULL;
         g_return_val_if_fail (relative_url != NULL, NULL);
 
         link = dh_link_new_common (type, name, relative_url);

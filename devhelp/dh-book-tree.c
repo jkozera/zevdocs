@@ -586,13 +586,15 @@ book_tree_populate_tree (DhBookTree *tree)
         DhBookManager *book_manager;
         GList *l;
 
+        book_manager = dh_book_manager_get_singleton ();
+
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree), NULL);
-        priv->store = dh_book_tree_model_new(gtk_widget_get_scale_factor(tree));
+        priv->store = dh_book_tree_model_new(gtk_widget_get_scale_factor(tree),
+                                             dh_book_manager_get_group_by_language (book_manager));
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree),
                                  GTK_TREE_MODEL (priv->store));
 
         /* This list comes in order, but we don't really mind */
-        book_manager = dh_book_manager_get_singleton ();
         for (l = dh_book_manager_get_books (book_manager);
              l != NULL;
              l = l->next) {
@@ -766,18 +768,19 @@ dh_book_tree_init (DhBookTree *tree)
 
         priv = dh_book_tree_get_instance_private (tree);
 
+        book_manager = dh_book_manager_get_singleton ();
+
         gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (tree), FALSE);
         gtk_tree_view_set_enable_search (GTK_TREE_VIEW (tree), FALSE);
 
-        priv->store = dh_book_tree_model_new(gtk_widget_get_scale_factor(tree));
+        priv->store = dh_book_tree_model_new(gtk_widget_get_scale_factor(tree),
+                                             dh_book_manager_get_group_by_language (book_manager));
         priv->selected_link = NULL;
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree),
                                  GTK_TREE_MODEL (priv->store));
 
         book_tree_add_columns (tree);
         book_tree_setup_selection (tree);
-
-        book_manager = dh_book_manager_get_singleton ();
 
         g_signal_connect_object (book_manager,
                                  "book-created",

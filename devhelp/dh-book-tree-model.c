@@ -391,6 +391,23 @@ dh_book_tree_model_init (DhBookTreeModel *model)
 {
         DhBookTreeModelPrivate *priv = dh_book_tree_model_get_instance_private (model);
 
+
+
+        priv->stamp = g_random_int_range (1, G_MAXINT32);
+}
+
+/**
+ * dh_book_tree_model_new:
+ *
+ * Returns: a new #DhBookTreeModel object.
+ */
+DhBookTreeModel *
+dh_book_tree_model_new (gint scale, gboolean group_by_language)
+{
+        DhBookTreeModel *model = DH_BOOK_TREE_MODEL (g_object_new (DH_TYPE_BOOK_TREE_MODEL, NULL));
+        DhBookTreeModelPrivate *priv = dh_book_tree_model_get_instance_private (model);
+        priv->scale = scale;
+
         SoupSession *session;
         const char *uri;
         GHashTable *hash;
@@ -405,7 +422,8 @@ dh_book_tree_model_init (DhBookTreeModel *model)
         JsonArray *array;
 
         priv->root_nodes = NULL;
-        priv->group_by_language = TRUE;
+        priv->group_by_language = group_by_language;
+        printf("BB %d\n", priv->scale);
 
         parser = json_parser_new();
         session = soup_session_new();
@@ -442,23 +460,8 @@ dh_book_tree_model_init (DhBookTreeModel *model)
         g_hash_table_unref (hash);
         g_object_unref (request);
         g_object_unref (session);
-
-        priv->stamp = g_random_int_range (1, G_MAXINT32);
-}
-
-/**
- * dh_book_tree_model_new:
- *
- * Returns: a new #DhBookTreeModel object.
- */
-DhBookTreeModel *
-dh_book_tree_model_new (int scale)
-{
-        DhBookTreeModel *ret = g_object_new (DH_TYPE_BOOK_TREE_MODEL, NULL);
-        DhBookTreeModelPrivate *priv;
-        priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (ret));
-        priv->scale = scale;
-        return ret;
+        printf("AA %d\n", priv->scale);
+        return model;
 }
 
 static gboolean
