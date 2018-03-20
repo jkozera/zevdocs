@@ -2,12 +2,12 @@ AM_CPPFLAGS =			\
 	-I$(top_srcdir)		\
 	-I$(top_builddir)	\
 	$(WARN_CFLAGS)		\
-	$(DEVHELP_CFLAGS)
+	$(ZEVDOCS_CFLAGS)
 
 AM_LDFLAGS = $(WARN_LDFLAGS)
 
 LDADD = $(top_builddir)/devhelp/libdevhelp-core.la	\
-	$(DEVHELP_LIBS)
+	$(ZEVDOCS_LIBS)
 
 UNIT_TEST_PROGS =
 

@@ -1,4 +1,4 @@
 #!/bin/sh
 
-flatpak install --user devhelp-repo org.gnome.Devhelp
-flatpak update --user org.gnome.Devhelp
+flatpak install --user devhelp-repo io.github.jkozera.ZevDocs
+flatpak update --user io.github.jkozera.ZevDocs

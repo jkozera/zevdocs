@@ -1,9 +1,9 @@
 AC_PREREQ([2.64])
-AC_INIT([Devhelp],
+AC_INIT([ZevDocs],
         [3.28.1],
-        [https://bugzilla.gnome.org/browse.cgi?product=devhelp],
-        [devhelp],
-        [https://wiki.gnome.org/Apps/Devhelp])
+        [https://github.com/jkozera/zevdocs/issues/],
+        [zevdocs],
+        [https://github.com/jkozera/zevdocs/])
 
 AX_REQUIRE_DEFINED([AX_IS_RELEASE])
 AX_IS_RELEASE([git-directory])
@@ -60,7 +60,7 @@ AX_COMPILER_FLAGS([WARN_CFLAGS], [WARN_LDFLAGS], [yes])
 LT_LIB_M
 
 AX_REQUIRE_DEFINED([AX_PKG_CHECK_MODULES])
-AX_PKG_CHECK_MODULES([DEVHELP],
+AX_PKG_CHECK_MODULES([ZEVDOCS],
 		     [gio-2.0 >= 2.40  gtk+-3.0 >= 3.22  webkit2gtk-4.0 >= 2.19.2  json-glib-1.0 >= 1.0],
 		     [gsettings-desktop-schemas])
 
@@ -68,7 +68,7 @@ AX_PKG_CHECK_MODULES([DEVHELP],
 AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.19.7])
 
-GETTEXT_PACKAGE=devhelp
+GETTEXT_PACKAGE=zevdocs
 AC_SUBST(GETTEXT_PACKAGE)
 AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE,"$GETTEXT_PACKAGE", [Package name for gettext])
 

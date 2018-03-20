@@ -1,10 +1,10 @@
 {
-    "app-id" : "org.gnome.Devhelp",
+    "app-id" : "io.github.jkozera.ZevDocs",
     "runtime" : "org.gnome.Sdk",
     "runtime-version" : "master",
     "sdk" : "org.gnome.Sdk",
-    "command" : "devhelp",
-    "rename-icon" : "devhelp",
+    "command" : "zevdocs",
+    "rename-icon" : "zevdocs",
     "tags" : [
         "nightly"
     ],
@@ -40,14 +40,14 @@
     ],
     "modules" : [
         {
-            "name" : "devhelp",
+            "name" : "zevdocs",
             "config-opts" : [
                 "--enable-flatpak-build"
             ],
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "git://git.gnome.org/devhelp",
+                    "url" : "git://gitub.com/jkozera/zevdocs",
                     "branch" : "master"
                 }
             ]

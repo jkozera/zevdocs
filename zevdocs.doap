@@ -5,10 +5,10 @@
          xmlns:gnome="http://api.gnome.org/doap-extensions#"
          xmlns="http://usefulinc.com/ns/doap#">
 
-  <name xml:lang="en">devhelp</name>
+  <name xml:lang="en">zevdocs</name>
   <shortdesc xml:lang="en">A developer tool for browsing and searching API documentation</shortdesc>
   <description xml:lang="en">
-Devhelp is a developer tool for browsing and searching API documentation.
+ZevDocs is a developer tool for browsing and searching API documentation.
 It provides an easy way to navigate through libraries and to search by
 function, struct, or macro.
 

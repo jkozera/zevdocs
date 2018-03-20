@@ -86,7 +86,7 @@ libdevhelp_core_la_CPPFLAGS =	\
 	$(AM_CPPFLAGS)
 
 libdevhelp_core_la_CFLAGS =	\
-	$(DEVHELP_CFLAGS)
+	$(ZEVDOCS_CFLAGS)
 
 libdevhelp_core_la_LDFLAGS =	\
 	$(AM_LDFLAGS)		\
@@ -103,7 +103,7 @@ libdevhelp_3_la_SOURCES =
 
 libdevhelp_3_la_LIBADD =	\
 	libdevhelp-core.la	\
-	$(DEVHELP_LIBS)
+	$(ZEVDOCS_LIBS)
 
 libdevhelp_3_la_LDFLAGS =			\
 	$(AM_LDFLAGS)				\
@@ -138,7 +138,7 @@ INTROSPECTION_SCANNER_ARGS =		\
 	--identifier-prefix dh		\
 	--c-include=devhelp/devhelp.h	\
 	--warn-all
-Devhelp_3_0_gir_CFLAGS = $(DEVHELP_CFLAGS)
+Devhelp_3_0_gir_CFLAGS = $(ZEVDOCS_CFLAGS)
 Devhelp_3_0_gir_SCANNERFLAGS = $(WARN_SCANNERFLAGS)
 Devhelp_3_0_gir_LIBS = libdevhelp-3.la
 Devhelp_3_0_gir_FILES =				\

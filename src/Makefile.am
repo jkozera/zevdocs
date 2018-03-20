@@ -1,6 +1,6 @@
 AM_CPPFLAGS = 				\
 	-I$(top_srcdir)			\
-	-DG_LOG_DOMAIN=\"Devhelp\"	\
+	-DG_LOG_DOMAIN=\"zevdocs\"	\
 	$(WARN_CFLAGS)
 
 AM_LDFLAGS =		\
@@ -42,29 +42,29 @@ BUILT_SOURCES = 		\
 	$(NULL)
 
 # The application
-bin_PROGRAMS = devhelp
+bin_PROGRAMS = zevdocs
 
-devhelp_SOURCES =	\
+zevdocs_SOURCES =	\
 	$(app_headers)	\
 	$(app_c_files)	\
 	$(NULL)
 
 # Do not distribute generated files.
-nodist_devhelp_SOURCES =	\
+nodist_zevdocs_SOURCES =	\
 	$(app_built_sources)
 
-devhelp_CPPFLAGS =	\
+zevdocs_CPPFLAGS =	\
 	$(AM_CPPFLAGS)
 
-devhelp_CFLAGS =		\
-	$(DEVHELP_CFLAGS)
+zevdocs_CFLAGS =		\
+	$(ZEVDOCS_CFLAGS)
 
-devhelp_LDADD = 				\
-	$(DEVHELP_LIBS)				\
+zevdocs_LDADD = 				\
+	$(zevdocs_LIBS)				\
 	$(LIBM)					\
         $(top_builddir)/devhelp/libdevhelp-3.la
 
-devhelp_LDFLAGS =	\
+zevdocs_LDFLAGS =	\
 	$(AM_LDFLAGS)
 
 resource_files =		\

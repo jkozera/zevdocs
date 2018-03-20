@@ -149,14 +149,14 @@ about_cb (GSimpleAction *action,
                                /* Translators: please don't translate "Devhelp" (it's marked as
                                 * translatable for transliteration only).
                                 */
-                               "name", _("Devhelp"),
+                               "name", _("ZevDocs"),
                                "version", PACKAGE_VERSION,
                                "comments", _("A developer tool for browsing and searching API documentation"),
                                "authors", authors,
                                "translator-credits", _("translator-credits"),
-                               "website", "https://wiki.gnome.org/Apps/Devhelp",
-                               "website-label", _("Devhelp Website"),
-                               "logo-icon-name", "devhelp",
+                               "website", "https://github.com/jkozera/zevdocs",
+                               "website-label", _("ZevHelp Website"),
+                               "logo-icon-name", "zevhelp",
                                "license-type", GTK_LICENSE_GPL_2_0,
                                "copyright", "Copyright 2001-2018 – the Devhelp team",
                                NULL);
@@ -494,8 +494,8 @@ dh_app_init (DhApp *app)
         /* Translators: please don't translate "Devhelp" (it's marked as
          * translatable for transliteration only).
          */
-        g_set_application_name (_("Devhelp"));
-        gtk_window_set_default_icon_name ("devhelp");
+        g_set_application_name (_("ZevDocs"));
+        gtk_window_set_default_icon_name ("zevdocs");
 
         g_application_add_main_option_entries (G_APPLICATION (app), options);
 }
@@ -504,7 +504,7 @@ DhApp *
 dh_app_new (void)
 {
         return g_object_new (DH_TYPE_APP,
-                             "application-id", "org.gnome.Devhelp",
+                             "application-id", "io.github.jkozera.ZevDocs",
                              "flags", G_APPLICATION_HANDLES_COMMAND_LINE,
                              NULL);
 }

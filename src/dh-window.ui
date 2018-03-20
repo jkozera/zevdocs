@@ -99,7 +99,7 @@
     <property name="can_focus">False</property>
     <property name="has_focus">False</property>
     <property name="is_focus">False</property>
-    <property name="icon_name">devhelp</property>
+    <property name="icon_name">zevdocs</property>
     <child type="titlebar">
       <object class="GtkHeaderBar" id="header_bar">
         <property name="visible">True</property>

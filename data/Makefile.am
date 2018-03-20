@@ -13,7 +13,7 @@ gsettings_SCHEMAS =				\
 	org.gnome.libdevhelp-3.gschema.xml
 @GSETTINGS_RULES@
 
-appstream_in_files = org.gnome.Devhelp.appdata.xml.in
+appstream_in_files = io.github.jkozera.ZevDocs.appdata.xml.in
 appstream_XML = $(appstream_in_files:.xml.in=.xml)
 @APPSTREAM_XML_RULES@
 
@@ -21,19 +21,19 @@ $(appstream_XML): $(appstream_in_files)
 	$(AM_V_GEN) $(MSGFMT) --xml --template $< -d $(top_srcdir)/po -o $@
 
 desktopdir = $(datadir)/applications
-desktop_in_file = org.gnome.Devhelp.desktop.in
-desktop_DATA = org.gnome.Devhelp.desktop
+desktop_in_file = io.github.jkozera.ZevDocs.desktop.in
+desktop_DATA = io.github.jkozera.ZevDocs.desktop
 
 $(desktop_DATA): $(desktop_in_file)
 	$(AM_V_GEN) $(MSGFMT) --desktop --template $< -d $(top_srcdir)/po -o $@
 
 dbusservicedir = $(datadir)/dbus-1/services
-dbusservice_DATA = org.gnome.Devhelp.service
+dbusservice_DATA = io.github.jkozera.ZevDocs.service
 
-org.gnome.Devhelp.service: Makefile
+io.github.jkozera.ZevDocs.service: Makefile
 	$(AM_V_GEN) (echo '[D-BUS Service]'; \
-		     echo 'Name=org.gnome.Devhelp'; \
-		     echo 'Exec=${bindir}/devhelp --gapplication-service') > $@.tmp && \
+		     echo 'Name=io.github.jkozera.ZevDocs'; \
+		     echo 'Exec=${bindir}/zevdocs --gapplication-service') > $@.tmp && \
 		     mv $@.tmp $@
 
 man_MANS = devhelp.1

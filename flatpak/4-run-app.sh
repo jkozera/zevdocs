@@ -1,3 +1,3 @@
 #!/bin/sh
 
-flatpak run org.gnome.Devhelp
+flatpak run io.github.jkozera.ZevDocs

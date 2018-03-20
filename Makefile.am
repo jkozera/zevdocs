@@ -5,7 +5,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS =	\
 	--enable-introspection	\
 	--enable-appstream-util
 
-EXTRA_DIST = devhelp.doap
+EXTRA_DIST = zevdocs.doap
 
 MAINTAINERCLEANFILES = \
 	$(GITIGNORE_MAINTAINERCLEANFILES_TOPLEVEL) \
