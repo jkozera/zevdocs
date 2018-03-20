@@ -480,6 +480,8 @@ websocket_message_cb (SoupWebsocketConnection *self,
         size_t len;
         DhLink *link;
         SearchContext *ctx = user_data;
+        GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
+        DhBook *book;
 
         const gchar* msg = g_bytes_get_data(message, &len);
         if (len < 2) {
@@ -500,14 +502,15 @@ websocket_message_cb (SoupWebsocketConnection *self,
         object = json_node_get_object(root);
 
         link = dh_link_new (DH_LINK_TYPE_KEYWORD,
-                            NULL,
+                            dh_link_new_book (
+                                "", "", json_object_get_string_member(object, "DocsetName"), ""
+                            ),
                             json_object_get_string_member(object, "Res"),
                             g_strjoin("/",
                                       "http://localhost:12340",
                                       json_object_get_string_member(object, "Path"),
                                       NULL)
                             );
-
         g_queue_push_tail(&ctx->priv->links, link);
 }
 

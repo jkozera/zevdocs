@@ -457,6 +457,41 @@ hitlist_cell_data_func (GtkTreeViewColumn *tree_column,
 }
 
 static void
+hitlist_cell_icon_func (GtkTreeViewColumn *tree_column,
+                        GtkCellRenderer   *cell,
+                        GtkTreeModel      *hitlist_model,
+                        GtkTreeIter       *iter,
+                        gpointer           data)
+{
+        DhLink *link;
+        DhLinkType link_type;
+        PangoStyle style;
+        PangoWeight weight;
+        gboolean current_book_flag;
+        GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
+        DhBook *book;
+
+        gtk_tree_model_get (hitlist_model, iter,
+                            DH_KEYWORD_MODEL_COL_LINK, &link,
+                            -1);
+
+
+        while (books) {
+                book = books->data;
+                if (g_str_equal(dh_link_get_book_title (link), dh_book_get_title (book))) {
+                        break;
+                }
+                books = books->next;
+        }
+
+        g_object_set (cell,
+                      "surface", dh_book_get_icon_surface(book),
+                      NULL);
+
+        dh_link_unref (link);
+}
+
+static void
 book_tree_link_selected_cb (DhBookTree *book_tree,
                             DhLink     *link,
                             DhSidebar  *sidebar)
@@ -468,7 +503,7 @@ static void
 dh_sidebar_init (DhSidebar *sidebar)
 {
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
-        GtkCellRenderer *cell;
+        GtkCellRenderer *cell, *cell2;
         DhBookManager *book_manager;
 
         gtk_orientable_set_orientation (GTK_ORIENTABLE (sidebar),
@@ -532,6 +567,14 @@ dh_sidebar_init (DhSidebar *sidebar)
         g_object_set (cell,
                       "ellipsize", PANGO_ELLIPSIZE_END,
                       NULL);
+        cell2 = gtk_cell_renderer_pixbuf_new ();
+        gtk_tree_view_insert_column_with_data_func (priv->hitlist_view,
+                                                    -1,
+                                                    NULL,
+                                                    cell2,
+                                                    hitlist_cell_icon_func,
+                                                    sidebar,
+                                                    NULL);
         gtk_tree_view_insert_column_with_data_func (priv->hitlist_view,
                                                     -1,
                                                     NULL,
