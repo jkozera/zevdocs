@@ -21,6 +21,8 @@
 #include "dh-preferences.h"
 #include <string.h>
 #include <devhelp/devhelp.h>
+#include <json-glib/json-glib.h>
+#include <libsoup/soup.h>
 #include "devhelp/dh-settings.h"
 #include "dh-settings-app.h"
 #include "dh-util-app.h"
@@ -34,6 +36,14 @@ enum {
         COLUMN_WEIGHT,
         COLUMN_INCONSISTENT,
         N_COLUMNS
+};
+
+
+enum {
+        COLUMN_DL_TITLE = 0,
+        COLUMN_DL_PROGRESS,
+        COLUMN_DL_ID,
+        N_COLUMNS_DL
 };
 
 typedef struct {
@@ -51,7 +61,11 @@ typedef struct {
         /* Book Shelf tab */
         GtkCellRendererToggle *bookshelf_enabled_toggle;
         GtkListStore *bookshelf_store;
+        GtkListStore *bookshelf_store_downloads;
         GtkCheckButton *bookshelf_group_by_language_button;
+        GtkTreeView *bookshelf_download_treeview;
+
+        SoupWebsocketConnection *dl_ws;
 } DhPreferencesPrivate;
 
 G_DEFINE_TYPE_WITH_PRIVATE (DhPreferences, dh_preferences, GTK_TYPE_DIALOG)
@@ -79,9 +93,13 @@ dh_preferences_class_init (DhPreferencesClass *klass)
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, variable_font_button);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, fixed_font_button);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_store);
+        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_store_downloads);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_group_by_language_button);
+        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_download_treeview);
         // TODO:
+        //
         // gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_enabled_toggle);
+        //
 }
 
 static void
@@ -411,6 +429,64 @@ preferences_bookshelf_populate_store (DhPreferences *prefs)
         }
 }
 
+
+static void
+preferences_bookshelf_populate_store_downloads (DhPreferences *prefs)
+{
+
+        DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
+        GtkTreeIter  iter;
+        SoupSession *session;
+        const char *uri;
+        GHashTable *hash;
+        GList *langlist;
+        SoupMessage *request;
+        SoupMessageBody *body;
+        SoupBuffer *buffer;
+        const gchar *data;
+        gsize length;
+        JsonParser *parser;
+        JsonNode *root;
+        JsonArray *array;
+        JsonObject *object;
+
+        parser = json_parser_new();
+        session = soup_session_new();
+        uri = "http://localhost:12340/repo/1/items";
+        hash = g_hash_table_new(g_str_hash, g_str_equal);
+        request = soup_form_request_new_from_hash ("GET", uri, hash);
+
+        soup_session_send_message (session, request);
+        g_object_get(request, "response-body", &body, NULL);
+
+        buffer = soup_message_body_flatten(body);
+        soup_buffer_get_data(buffer, (const guint8**)&data, &length);
+        json_parser_load_from_data(parser, data, length, NULL);
+        root = json_parser_get_root(parser);
+        array = json_node_get_array(root);
+
+        for (guint i = 0; i < json_array_get_length (array); ++i) {
+                object = json_array_get_object_element(array, i);
+                gtk_list_store_append (priv->bookshelf_store_downloads,
+                                       &iter);
+
+                gtk_list_store_set (priv->bookshelf_store_downloads,
+                                    &iter,
+                                    COLUMN_DL_TITLE, json_object_get_string_member(object, "Title"),
+                                    COLUMN_DL_PROGRESS, 0,
+                                    COLUMN_DL_ID, json_object_get_string_member(object, "Id"),
+                                    -1);
+
+        }
+
+        soup_buffer_free (buffer);
+        soup_message_body_free (body);
+        g_object_unref (parser);
+        g_hash_table_unref (hash);
+        g_object_unref (request);
+        g_object_unref (session);
+}
+
 static void
 preferences_bookshelf_group_by_language_cb (GObject       *object,
                                             GParamSpec    *pspec,
@@ -588,6 +664,142 @@ preferences_bookshelf_tree_selection_toggled_cb (GtkCellRendererToggle *cell_ren
         }
 }
 
+void
+websocket_message_cb (SoupWebsocketConnection *self,
+                      gint                     type,
+                      GBytes                  *message,
+                      gpointer                 user_data)
+{
+        DhPreferencesPrivate *priv = user_data;
+        JsonParser *parser;
+        JsonNode *root;
+        JsonObject *object;
+        GError *error = NULL;
+        size_t len;
+        gint received, total;
+        gboolean next;
+        DhLink *link;
+        GtkTreeIter iter;
+        gchar *docset, *iter_docset;
+
+        const gchar* msg = g_bytes_get_data(message, &len);
+        if (len < 2) {
+                return;
+        }
+
+        parser = json_parser_new();
+        json_parser_load_from_data(parser, msg, len, &error);
+
+
+        root = json_parser_get_root(parser);
+        object = json_node_get_object(root);
+        docset = json_object_get_string_member(object, "Docset");
+        received = json_object_get_int_member(object, "Received");
+        total = json_object_get_int_member(object, "Total");
+
+        next = gtk_tree_model_get_iter_first(priv->bookshelf_store_downloads, &iter);
+        while (next) {
+                gtk_tree_model_get(GTK_TREE_MODEL (priv->bookshelf_store_downloads),
+                                   &iter,
+                                   COLUMN_DL_TITLE, &iter_docset,
+                                   -1);
+                if (g_str_equal (iter_docset, docset)) {
+                        printf("%d\n", 100 * received / total);
+                        gtk_list_store_set(priv->bookshelf_store_downloads,
+                                           &iter,
+                                           COLUMN_DL_PROGRESS, 100 * received / total,
+                                           -1);
+                        break;
+                }
+                next = gtk_tree_model_iter_next(priv->bookshelf_store_downloads, &iter);
+        }
+        gtk_widget_queue_draw(priv->bookshelf_download_treeview);
+}
+
+void
+websocket_closed_cb (SoupWebsocketConnection *self,
+                     gpointer                 user_data)
+{
+        DhPreferencesPrivate *priv = user_data;
+        priv->dl_ws = NULL;
+}
+
+void
+websocket_connected_cb (GObject *source_object,
+                        GAsyncResult *res,
+                        gpointer user_data)
+{
+        DhPreferencesPrivate *priv = user_data;
+        priv->dl_ws = soup_session_websocket_connect_finish(source_object, res, NULL);
+        g_signal_connect(priv->dl_ws, "message", (GCallback*)websocket_message_cb, user_data);
+        g_signal_connect(priv->dl_ws, "closed", (GCallback*)websocket_closed_cb, user_data);
+}
+
+static void
+open_progress_ws(DhPreferences *prefs)
+{
+        DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
+
+        SoupSession *session;
+        const char *uri;
+        GHashTable *hash;
+        SoupMessage *request;
+
+        session = soup_session_new();
+        uri = "ws://localhost:12340/download_progress";
+        hash = g_hash_table_new(g_str_hash, g_str_equal);
+        request = soup_form_request_new_from_hash ("GET", uri, hash);
+
+
+        char **protocols = malloc(sizeof(char*));
+        *protocols = NULL;
+        soup_session_websocket_connect_async(session,
+                                             request,
+                                             "http://localhost/",
+                                             protocols,
+                                             NULL,
+                                             websocket_connected_cb,
+                                             priv);
+        free(protocols);
+}
+
+gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
+{
+        if (ev->type != GDK_2BUTTON_PRESS) {
+               return FALSE;
+        }
+
+        GtkTreeSelection *selection = gtk_tree_view_get_selection(tv);
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+        gchar *id, *json;
+        SoupSession *session;
+        const char *uri;
+        SoupMessage *request;
+
+        gtk_tree_selection_get_selected (selection, &model, &iter);
+        gtk_tree_model_get(model, &iter, COLUMN_DL_ID, &id, -1);
+
+        session = soup_session_new();
+        uri = "http://localhost:12340/item";
+        request = soup_message_new ("POST", uri);
+        json = g_strjoin("", "{\"id\":\"", id, "\"}", NULL);
+
+        soup_message_set_request(request,
+                                 "application/json",
+                                 SOUP_MEMORY_COPY,
+                                 json,
+                                 strlen(json));
+
+        soup_session_send_message (session, request);
+
+        char **protocols = malloc(sizeof(char*));
+        *protocols = NULL;
+
+        open_progress_ws (prefs);
+        return FALSE;
+}
+
 static void
 dh_preferences_init (DhPreferences *prefs)
 {
@@ -599,6 +811,8 @@ dh_preferences_init (DhPreferences *prefs)
         GSettings *settings_contents;
 
         priv = dh_preferences_get_instance_private (prefs);
+
+        priv->dl_ws = NULL;
 
         gtk_widget_init_template (GTK_WIDGET (prefs));
 
@@ -650,6 +864,13 @@ dh_preferences_init (DhPreferences *prefs)
                           prefs);
 
         preferences_bookshelf_populate_store (prefs);
+        preferences_bookshelf_populate_store_downloads (prefs);
+
+        g_signal_connect (priv->bookshelf_download_treeview,
+                          "button-press-event",
+                          G_CALLBACK (download_start),
+                          prefs);
+
 }
 
 void
