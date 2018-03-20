@@ -74,6 +74,7 @@ typedef struct {
         GFile *index_file;
 
         gchar *id;
+        gchar *id_for_removing;
         gchar *title;
         gchar *language;
         cairo_surface_t* icon_surface;
@@ -401,6 +402,11 @@ dh_book_new_from_json (JsonObject *object, gint scale)
         priv = dh_book_get_instance_private (book);
         priv->title = g_strdup(json_object_get_string_member(object, "Title"));
         priv->id = g_strdup(json_object_get_string_member(object, "Id"));
+        priv->id_for_removing = NULL;
+
+        if (g_str_equal("com.kapeli", json_object_get_string_member(object, "SourceId"))) {
+            priv->id_for_removing = priv->id;
+        }
 
         /* Rewrite language, if any, including the prefix we want to use when
          * seeing it, to standarize how the language group is shown.
@@ -473,6 +479,22 @@ dh_book_get_id (DhBook *book)
         priv = dh_book_get_instance_private (book);
 
         return priv->id;
+}
+
+const gchar *
+dh_book_get_id_for_removing (DhBook *book)
+{
+        DhBookPrivate *priv;
+
+        g_return_val_if_fail (DH_IS_BOOK (book), NULL);
+
+        priv = dh_book_get_instance_private (book);
+
+        if (priv->id_for_removing == NULL) {
+                return g_strdup("");
+        } else {
+                return priv->id_for_removing;
+        }
 }
 
 /**

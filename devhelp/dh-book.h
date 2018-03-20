@@ -61,6 +61,8 @@ GFile *      dh_book_get_index_file  (DhBook *book);
 
 const gchar *dh_book_get_id          (DhBook *book);
 
+const gchar *dh_book_get_id_for_removing (DhBook *book);
+
 cairo_surface_t* dh_book_get_icon_surface (DhBook *book);
 
 const gchar *dh_book_get_title       (DhBook *book);

@@ -35,6 +35,7 @@ enum {
         COLUMN_BOOK,
         COLUMN_WEIGHT,
         COLUMN_INCONSISTENT,
+        COLUMN_ID_FOR_REMOVING,
         N_COLUMNS
 };
 
@@ -64,6 +65,8 @@ typedef struct {
         GtkListStore *bookshelf_store_downloads;
         GtkCheckButton *bookshelf_group_by_language_button;
         GtkTreeView *bookshelf_download_treeview;
+        GtkTreeView *bookshelf_treeview;
+        GtkButton *bookshelf_delete_button;
 
         SoupWebsocketConnection *dl_ws;
 } DhPreferencesPrivate;
@@ -96,6 +99,8 @@ dh_preferences_class_init (DhPreferencesClass *klass)
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_store_downloads);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_group_by_language_button);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_download_treeview);
+        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_treeview);
+        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_delete_button);
         // TODO:
         //
         // gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_enabled_toggle);
@@ -278,10 +283,11 @@ preferences_bookshelf_add_book_to_store (DhPreferences *prefs,
                 gboolean     language_iter_found;
                 GtkTreeIter  next_language_iter;
                 gboolean     next_language_iter_found;
-                const gchar *language_title;
+                const gchar *language_title, *id_for_removing;
                 gboolean     first_in_language = FALSE;
 
                 language_title = dh_book_get_language (book);
+                id_for_removing = dh_book_get_id_for_removing (book);
 
                 /* Look for the proper language group */
                 preferences_bookshelf_find_language_group (prefs,
@@ -308,6 +314,7 @@ preferences_bookshelf_add_book_to_store (DhPreferences *prefs,
                                             COLUMN_BOOK,         NULL,
                                             COLUMN_WEIGHT,       PANGO_WEIGHT_BOLD,
                                             COLUMN_INCONSISTENT, FALSE,
+                                            COLUMN_ID_FOR_REMOVING, "",
                                             -1);
 
                         first_in_language = TRUE;
@@ -372,6 +379,7 @@ preferences_bookshelf_add_book_to_store (DhPreferences *prefs,
                                     COLUMN_BOOK,         book,
                                     COLUMN_WEIGHT,       PANGO_WEIGHT_NORMAL,
                                     COLUMN_INCONSISTENT, FALSE,
+                                    COLUMN_ID_FOR_REMOVING, id_for_removing,
                                     -1);
                 g_free (indented_title);
         } else {
@@ -405,6 +413,7 @@ preferences_bookshelf_add_book_to_store (DhPreferences *prefs,
                                     COLUMN_TITLE,    dh_book_get_title (book),
                                     COLUMN_BOOK,     book,
                                     COLUMN_WEIGHT,   PANGO_WEIGHT_NORMAL,
+                                    COLUMN_ID_FOR_REMOVING, dh_book_get_id_for_removing (book),
                                     -1);
         }
 }
@@ -664,7 +673,56 @@ preferences_bookshelf_tree_selection_toggled_cb (GtkCellRendererToggle *cell_ren
         }
 }
 
-void
+static void
+preferences_bookshelf_remove_book (GObject* obj, GdkEvent *ev, gpointer user_data)
+{
+        DhPreferencesPrivate *priv = user_data;
+        GtkTreeSelection *selection = gtk_tree_view_get_selection(priv->bookshelf_treeview);
+        SoupSession *session;
+        SoupMessage *request;
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+        gchar *uri, *id;
+
+        gtk_tree_selection_get_selected(selection, &model, &iter);
+        gtk_tree_model_get(GTK_TREE_MODEL (priv->bookshelf_store),
+                           &iter,
+                           COLUMN_ID_FOR_REMOVING, &id, -1);
+        session = soup_session_new();
+        uri = g_strjoin("/", "http://localhost:12340/item", id);
+        request = soup_message_new ("DELETE", uri);
+        soup_session_send_message (session, request);
+        //soup_message_unref(request);
+        //soup_session_unref(session);
+        dh_book_manager_refresh (dh_book_manager_get_singleton ());
+}
+
+static void
+preferences_bookshelf_tree_selection_changed_cb (GtkTreeSelection *selection,
+                                                 gpointer user_data)
+{
+        DhPreferencesPrivate *priv = user_data;
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+        gchar *id;
+
+        if (gtk_tree_selection_get_selected(selection, &model, &iter)) {
+                gtk_tree_model_get(GTK_TREE_MODEL (priv->bookshelf_store),
+                                   &iter,
+                                   COLUMN_ID_FOR_REMOVING, &id, -1);
+                if (g_str_equal(id, "")) {
+                        gtk_widget_set_sensitive(priv->bookshelf_delete_button, FALSE);
+                } else {
+                        gtk_widget_set_sensitive(priv->bookshelf_delete_button, TRUE);
+                }
+        } else {
+                gtk_widget_set_sensitive(priv->bookshelf_delete_button, FALSE);
+        }
+
+}
+
+
+static void
 websocket_message_cb (SoupWebsocketConnection *self,
                       gint                     type,
                       GBytes                  *message,
@@ -706,7 +764,7 @@ websocket_message_cb (SoupWebsocketConnection *self,
                 if (g_str_equal (iter_docset, docset)) {
                         gtk_list_store_set(priv->bookshelf_store_downloads,
                                            &iter,
-                                           COLUMN_DL_PROGRESS, 100 * received / total,
+                                           COLUMN_DL_PROGRESS, (gint)(((guint64)100) * ((guint64) received) / ((guint64) total)),
                                            -1);
                         break;
                 }
@@ -719,7 +777,7 @@ websocket_message_cb (SoupWebsocketConnection *self,
         }
 }
 
-void
+static void
 websocket_closed_cb (SoupWebsocketConnection *self,
                      gpointer                 user_data)
 {
@@ -727,7 +785,7 @@ websocket_closed_cb (SoupWebsocketConnection *self,
         priv->dl_ws = NULL;
 }
 
-void
+static void
 websocket_connected_cb (GObject *source_object,
                         GAsyncResult *res,
                         gpointer user_data)
@@ -768,10 +826,7 @@ open_progress_ws(DhPreferences *prefs)
 
 gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
 {
-        if (ev->type != GDK_2BUTTON_PRESS) {
-               return FALSE;
-        }
-
+        DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
         GtkTreeSelection *selection = gtk_tree_view_get_selection(tv);
         GtkTreeModel *model;
         GtkTreeIter iter;
@@ -779,6 +834,11 @@ gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
         SoupSession *session;
         const char *uri;
         SoupMessage *request;
+
+
+        if (ev->type != GDK_2BUTTON_PRESS || priv->dl_ws != NULL) {
+               return FALSE;
+        }
 
         gtk_tree_selection_get_selected (selection, &model, &iter);
         gtk_tree_model_get(model, &iter, COLUMN_DL_ID, &id, -1);
@@ -802,6 +862,17 @@ gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
         open_progress_ws (prefs);
         return FALSE;
 }
+
+
+preferences_bookshelf_refresh_cb (GObject* object, DhPreferences  *prefs)
+{
+        DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
+        gtk_list_store_clear (priv->bookshelf_store);
+        gtk_list_store_clear (priv->bookshelf_store_downloads);
+        preferences_bookshelf_populate_store (prefs);
+        preferences_bookshelf_populate_store_downloads (prefs);
+}
+
 
 static void
 dh_preferences_init (DhPreferences *prefs)
@@ -839,6 +910,12 @@ dh_preferences_init (DhPreferences *prefs)
                                  prefs,
                                  0);
 
+        g_signal_connect_object (book_manager,
+                                 "refresh",
+                                 G_CALLBACK (preferences_bookshelf_refresh_cb),
+                                 prefs,
+                                 0);
+
         /* setup GSettings bindings */
         settings_app = dh_settings_app_get_singleton ();
         settings_fonts = dh_settings_app_peek_fonts_settings (settings_app);
@@ -866,6 +943,12 @@ dh_preferences_init (DhPreferences *prefs)
                           G_CALLBACK (preferences_bookshelf_tree_selection_toggled_cb),
                           prefs);
 
+
+        g_signal_connect (gtk_tree_view_get_selection(priv->bookshelf_treeview),
+                          "changed",
+                          G_CALLBACK (preferences_bookshelf_tree_selection_changed_cb),
+                          priv);
+
         preferences_bookshelf_populate_store (prefs);
         preferences_bookshelf_populate_store_downloads (prefs);
 
@@ -874,6 +957,10 @@ dh_preferences_init (DhPreferences *prefs)
                           G_CALLBACK (download_start),
                           prefs);
 
+        g_signal_connect (priv->bookshelf_delete_button,
+                          "button-press-event",
+                          G_CALLBACK (preferences_bookshelf_remove_book),
+                          priv);
 }
 
 void

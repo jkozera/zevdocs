@@ -901,6 +901,10 @@ populate (DhBookManager *book_manager)
         JsonParser *parser;
         JsonNode *root;
         JsonArray *array;
+        DhBookManagerPrivate *priv = dh_book_manager_get_instance_private (book_manager);
+
+        g_list_free_full (priv->books, g_object_unref);
+        priv->books = NULL;
 
         parser = json_parser_new();
         session = soup_session_new();
