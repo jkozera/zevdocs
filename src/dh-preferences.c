@@ -704,7 +704,6 @@ websocket_message_cb (SoupWebsocketConnection *self,
                                    COLUMN_DL_TITLE, &iter_docset,
                                    -1);
                 if (g_str_equal (iter_docset, docset)) {
-                        printf("%d\n", 100 * received / total);
                         gtk_list_store_set(priv->bookshelf_store_downloads,
                                            &iter,
                                            COLUMN_DL_PROGRESS, 100 * received / total,
@@ -714,6 +713,10 @@ websocket_message_cb (SoupWebsocketConnection *self,
                 next = gtk_tree_model_iter_next(priv->bookshelf_store_downloads, &iter);
         }
         gtk_widget_queue_draw(priv->bookshelf_download_treeview);
+
+        if (received == total) {
+                dh_book_manager_refresh (dh_book_manager_get_singleton ());
+        }
 }
 
 void

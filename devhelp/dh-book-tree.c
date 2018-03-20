@@ -616,6 +616,13 @@ book_tree_group_by_language_cb (GObject    *object,
 }
 
 static void
+refresh_tree (GObject    *object,
+              DhBookTree *tree)
+{
+        book_tree_populate_tree (tree);
+}
+
+static void
 dh_book_tree_dispose (GObject *object)
 {
         DhBookTreePrivate *priv = dh_book_tree_get_instance_private (DH_BOOK_TREE (object));
@@ -807,6 +814,12 @@ dh_book_tree_init (DhBookTree *tree)
         g_signal_connect_object (book_manager,
                                  "notify::group-by-language",
                                  G_CALLBACK (book_tree_group_by_language_cb),
+                                 tree,
+                                 0);
+
+        g_signal_connect_object (book_manager,
+                                 "refresh",
+                                 G_CALLBACK (refresh_tree),
                                  tree,
                                  0);
 

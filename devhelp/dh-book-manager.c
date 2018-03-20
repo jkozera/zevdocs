@@ -142,6 +142,7 @@ enum {
         SIGNAL_BOOK_DELETED,
         SIGNAL_BOOK_ENABLED,
         SIGNAL_BOOK_DISABLED,
+        SIGNAL_REFRESH,
         N_SIGNALS
 };
 
@@ -332,6 +333,15 @@ dh_book_manager_class_init (DhBookManagerClass *klass)
                               G_TYPE_NONE,
                               1,
                               DH_TYPE_BOOK);
+
+        signals[SIGNAL_REFRESH] =
+                g_signal_new ("refresh",
+                              G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST,
+                              0,
+                              NULL, NULL, NULL,
+                              G_TYPE_NONE,
+                              0);
 
         /**
          * DhBookManager:group-by-language:
@@ -964,6 +974,14 @@ dh_book_manager_new (gint scale)
         return g_object_ref (dh_book_manager_get_singleton ());
 }
 
+void
+dh_book_manager_refresh(DhBookManager *manager)
+{
+        populate(manager);
+        g_signal_emit (manager,
+                       signals[SIGNAL_REFRESH],
+                       0);
+}
 
 /**
  * dh_book_manager_get_singleton:
