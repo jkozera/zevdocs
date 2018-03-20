@@ -61,7 +61,7 @@ LT_LIB_M
 
 AX_REQUIRE_DEFINED([AX_PKG_CHECK_MODULES])
 AX_PKG_CHECK_MODULES([DEVHELP],
-		     [gio-2.0 >= 2.40  gtk+-3.0 >= 3.22  webkit2gtk-4.0 >= 2.19.2],
+		     [gio-2.0 >= 2.40  gtk+-3.0 >= 3.22  webkit2gtk-4.0 >= 2.19.2  json-glib-1.0 >= 1.0],
 		     [gsettings-desktop-schemas])
 
 # i18n stuff

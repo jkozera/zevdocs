@@ -1,47 +1,54 @@
 {
-    "app-id": "org.gnome.Devhelp",
-    "runtime": "org.gnome.Sdk",
-    "runtime-version": "master",
-    "sdk": "org.gnome.Sdk",
-    "command": "devhelp",
-    "rename-icon": "devhelp",
-    "tags": ["nightly"],
-    "desktop-file-name-prefix": "(Nightly) ",
-    "finish-args": [
-        /* X11 + XShm access */
-        "--share=ipc", "--socket=x11",
-        /* Wayland access */
+    "app-id" : "org.gnome.Devhelp",
+    "runtime" : "org.gnome.Sdk",
+    "runtime-version" : "master",
+    "sdk" : "org.gnome.Sdk",
+    "command" : "devhelp",
+    "rename-icon" : "devhelp",
+    "tags" : [
+        "nightly"
+    ],
+    "desktop-file-name-prefix" : "(Nightly) ",
+    "finish-args" : [
+        "--share=ipc",
+        "--socket=x11",
         "--socket=wayland",
-        /* OpenGL for Webkit */
+        "--share=network",
         "--device=dri",
-        /* We want full fs access to see the API docs installed by traditional
-         * Linux distro packages.
-         */
         "--filesystem=host:ro",
-        /* Needed for dconf to work */
-        "--filesystem=xdg-run/dconf", "--filesystem=~/.config/dconf:ro",
-        "--talk-name=ca.desrt.dconf", "--env=DCONF_USER_CONFIG_DIR=.config/dconf"
+        "--filesystem=xdg-run/dconf",
+        "--filesystem=~/.config/dconf:ro",
+        "--talk-name=ca.desrt.dconf",
+        "--env=DCONF_USER_CONFIG_DIR=.config/dconf"
     ],
     "build-options" : {
-        "cflags": "-O2 -g",
-        "cxxflags": "-O2 -g",
-        "env": {
-            "V": "1"
+        "cflags" : "-g -O0",
+        "cxxflags" : "-O2 -g",
+        "env" : {
+            "V" : "1"
         }
     },
-    "cleanup": ["/include", "/lib/pkgconfig",
-                "/share/pkgconfig", "/share/aclocal",
-                "/man", "/share/man",
-                "*.la", "*.a"],
-    "modules": [
+    "cleanup" : [
+        "/include",
+        "/lib/pkgconfig",
+        "/share/pkgconfig",
+        "/share/aclocal",
+        "/man",
+        "/share/man",
+        "*.la",
+        "*.a"
+    ],
+    "modules" : [
         {
-            "name": "devhelp",
-            "config-opts": [ "--enable-flatpak-build" ],
-            "sources": [
+            "name" : "devhelp",
+            "config-opts" : [
+                "--enable-flatpak-build"
+            ],
+            "sources" : [
                 {
-                    "type": "git",
-                    "url": "git://git.gnome.org/devhelp",
-                    "branch": "master"
+                    "type" : "git",
+                    "url" : "git://git.gnome.org/devhelp",
+                    "branch" : "master"
                 }
             ]
         }
