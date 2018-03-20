@@ -4,7 +4,6 @@
     "runtime-version" : "master",
     "sdk" : "org.gnome.Sdk",
     "command" : "zevdocs",
-    "rename-icon" : "zevdocs",
     "tags" : [
         "nightly"
     ],

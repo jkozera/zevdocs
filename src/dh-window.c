@@ -768,6 +768,9 @@ dh_window_init (DhWindow *window)
 
         /* Focus search in sidebar by default. */
         dh_sidebar_set_search_focus (priv->sidebar);
+
+        gtk_window_set_wmclass(GTK_WINDOW (window), "ZevDocs", "ZevDocs");
+        gtk_window_set_title(GTK_WINDOW (window), "ZevDocs");
 }
 
 static void

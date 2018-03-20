@@ -21,14 +21,58 @@
 #include <locale.h>
 #include <glib/gi18n.h>
 #include <devhelp/devhelp.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <sys/wait.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include "dh-app.h"
 #include "dh-settings-app.h"
+
+
+static void wait_for_core ()
+{
+        bool connected = FALSE;
+        struct sockaddr_in addr;
+        int sockfd;
+
+        while (!connected) {
+                sockfd = socket(AF_INET, SOCK_STREAM, 0);
+                addr.sin_family = AF_INET;
+                addr.sin_port = htons(12340);
+                inet_aton("127.0.0.1", &addr.sin_addr.s_addr);
+
+                if (connect(sockfd, &addr, sizeof(addr)) < 0) {
+                        printf("Waiting for zealcore...\n");
+                } else {
+                        connected = TRUE;
+                }
+                sleep(1);
+        }
+}
 
 int
 main (int argc, char **argv)
 {
         DhApp *application;
         gint status;
+        int pid_status;
+        pid_t zealcore_pid = fork();
+
+        if (zealcore_pid == 0) {
+                char env[10000] = {0};
+                strcat(env, "/run/host/usr/share:");
+                strcat(env, getenv("HOME"));
+                strcat(env, "/.local/share");
+                setenv("XDG_DATA_DIRS", env, 1);
+                execl("/app/bin/zealcore", "zealcore", (char*) NULL);
+                return 0;
+        }
+
+        wait_for_core();
 
         setlocale (LC_ALL, "");
         textdomain (GETTEXT_PACKAGE);
@@ -41,6 +85,10 @@ main (int argc, char **argv)
 
         dh_finalize ();
         dh_settings_app_unref_singleton ();
+
+        if (waitpid(zealcore_pid, &pid_status, WNOHANG) == 0) {
+                kill(zealcore_pid, SIGTERM);
+        }
 
         return status;
 }
