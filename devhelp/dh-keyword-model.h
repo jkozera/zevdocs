@@ -42,6 +42,9 @@ struct _DhKeywordModel {
 struct _DhKeywordModelClass {
         GObjectClass parent_class;
 
+        /* Signals */
+        void (*filter_complete) (DhKeywordModel *model);
+
         /* Padding for future expansion */
         gpointer padding[12];
 };

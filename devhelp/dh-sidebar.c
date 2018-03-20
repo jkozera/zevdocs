@@ -119,6 +119,15 @@ dh_sidebar_class_init (DhSidebarClass *klass)
 
 /******************************************************************************/
 
+static void set_model_cb(DhKeywordModel *model, gpointer user_data)
+{
+        DhSidebar *sidebar = DH_SIDEBAR (user_data);
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
+        printf("SETMODEL!\n");
+        gtk_tree_view_set_model (priv->hitlist_view,
+                                 GTK_TREE_MODEL (model));
+}
+
 static gboolean
 search_idle_cb (gpointer user_data)
 {
@@ -144,8 +153,9 @@ search_idle_cb (gpointer user_data)
                                               book_id,
                                               NULL);
 
-        gtk_tree_view_set_model (priv->hitlist_view,
-                                 GTK_TREE_MODEL (priv->hitlist_model));
+        g_signal_connect(priv->hitlist_model,
+                         "filter-complete", (GCallback)set_model_cb, sidebar);
+
 
         if (exact_link != NULL)
                 g_signal_emit (sidebar, signals[SIGNAL_LINK_SELECTED], 0, exact_link);

@@ -21,7 +21,10 @@
  */
 
 #include "dh-keyword-model.h"
+#include <cairo/cairo-gobject.h>
 #include <gtk/gtk.h>
+#include <json-glib/json-glib.h>
+#include <libsoup/soup.h>
 #include "dh-book.h"
 #include "dh-book-manager.h"
 #include "dh-search-context.h"
@@ -95,6 +98,13 @@ typedef struct {
 
 #define MAX_HITS 1000
 
+enum {
+        SIGNAL_FILTER_COMPLETE,
+        N_SIGNALS
+};
+
+static guint signals[N_SIGNALS] = { 0 };
+
 static void dh_keyword_model_tree_model_init (GtkTreeModelIface *iface);
 
 G_DEFINE_TYPE_WITH_CODE (DhKeywordModel, dh_keyword_model, G_TYPE_OBJECT,
@@ -134,6 +144,14 @@ dh_keyword_model_class_init (DhKeywordModelClass *klass)
         GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
         object_class->finalize = dh_keyword_model_finalize;
+        signals[SIGNAL_FILTER_COMPLETE] =
+                g_signal_new ("filter-complete",
+                              G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST,
+                              G_STRUCT_OFFSET (DhKeywordModelClass, filter_complete),
+                              NULL, NULL, NULL,
+                              G_TYPE_NONE,
+                              0);
 }
 
 static void
@@ -442,51 +460,108 @@ search_single_book (DhBook          *book,
         return ret;
 }
 
+
+typedef struct {
+        SearchSettings settings;
+        DhKeywordModel *model;
+        DhKeywordModelPrivate *priv;
+} SearchContext;
+
+void
+websocket_message_cb (SoupWebsocketConnection *self,
+                      gint                     type,
+                      GBytes                  *message,
+                      gpointer                 user_data)
+{
+        JsonParser *parser;
+        JsonNode *root;
+        JsonObject *object;
+        GError *error = NULL;
+        size_t len;
+        DhLink *link;
+        SearchContext *ctx = user_data;
+
+        const gchar* msg = g_bytes_get_data(message, &len);
+        if (len < 2) {
+                return;
+        }
+
+        parser = json_parser_new();
+        json_parser_load_from_data(parser, msg, len, &error);
+
+        if (error != NULL) {
+                g_signal_emit(ctx->model, signals[SIGNAL_FILTER_COMPLETE], 0);
+                return;
+        }
+
+        root = json_parser_get_root(parser);
+        object = json_node_get_object(root);
+
+        link = dh_link_new (DH_LINK_TYPE_KEYWORD,
+                            NULL,
+                            json_object_get_string_member(object, "Res"),
+                            g_strjoin("/",
+                                      "http://localhost:12340",
+                                      json_object_get_string_member(object, "Path"),
+                                      NULL)
+                            );
+
+        g_queue_push_tail(&ctx->priv->links, link);
+}
+
+void
+websocket_connected_cb (GObject *source_object,
+                        GAsyncResult *res,
+                        gpointer user_data)
+{
+        SearchContext *ctx = user_data;
+        SoupWebsocketConnection *conn = soup_session_websocket_connect_finish(source_object, res, NULL);
+        g_signal_connect(conn, "message", (GCallback*)websocket_message_cb, user_data);
+        gchar *kws = ctx->settings.search_context->joined_keywords;
+        soup_websocket_connection_send_text(conn, kws);
+}
+
 static GQueue *
-search_books (SearchSettings  *settings,
+search_books (DhKeywordModel *model,
+              SearchSettings  *settings,
               guint            max_hits,
               DhLink         **exact_link)
 {
-        DhBookManager *book_manager;
-        GList *books;
-        GList *l;
-        GQueue *ret;
+        clear_links(model);
+        DhKeywordModelPrivate *priv = dh_keyword_model_get_instance_private (model);
+        GQueue *ret = g_queue_new();
 
-        ret = g_queue_new ();
-
-        book_manager = dh_book_manager_get_singleton ();
-        books = dh_book_manager_get_books (book_manager);
-
-        for (l = books;
-             l != NULL && ret->length < max_hits;
-             l = l->next) {
-                DhBook *book = DH_BOOK (l->data);
-                GQueue *book_result;
-
-                if (!_dh_search_context_match_book (settings->search_context, book))
-                        continue;
-
-                /* Filtering by book? */
-                if (settings->book_id != NULL &&
-                    g_strcmp0 (settings->book_id, dh_book_get_id (book)) != 0) {
-                        continue;
-                }
-
-                /* Skipping a given book? */
-                if (settings->skip_book_id != NULL &&
-                    g_strcmp0 (settings->skip_book_id, dh_book_get_id (book)) == 0) {
-                        continue;
-                }
-
-                book_result = search_single_book (book,
-                                                  settings,
-                                                  max_hits - ret->length,
-                                                  exact_link);
-
-                _dh_util_queue_concat (ret, book_result);
+        if (settings->search_context->keywords == NULL) {
+                return ret;
         }
 
-        g_queue_sort (ret, (GCompareDataFunc) dh_link_compare, NULL);
+        SoupSession *session;
+        const char *uri;
+        GHashTable *hash;
+        SearchContext *ctx;
+        SoupMessage *request;
+
+        ctx = malloc(sizeof(SearchContext));
+        ctx->settings = *settings;
+        ctx->model = model;
+        ctx->priv = priv;
+
+        session = soup_session_new();
+        uri = "ws://localhost:12340/search";
+        hash = g_hash_table_new(g_str_hash, g_str_equal);
+        request = soup_form_request_new_from_hash ("GET", uri, hash);
+
+
+        char **protocols = malloc(sizeof(char*));
+        *protocols = NULL;
+        soup_session_websocket_connect_async(session,
+                                             request,
+                                             "http://localhost/",
+                                             protocols,
+                                             NULL,
+                                             websocket_connected_cb,
+                                             ctx);
+
         return ret;
 }
 
@@ -591,9 +666,9 @@ keyword_model_search (DhKeywordModel   *model,
 
         /* First look for prefixed items in the given book id. */
         if (priv->current_book_id != NULL) {
-                in_book = search_books (&settings,
+                /*in_book = search_books (model, &settings,
                                         max_hits,
-                                        &in_book_exact_link);
+                                        &in_book_exact_link);*/
         }
 
         /* Next, always check other books as well, as the exact match may be in
@@ -601,7 +676,7 @@ keyword_model_search (DhKeywordModel   *model,
          */
         settings.book_id = NULL;
         settings.skip_book_id = priv->current_book_id;
-        other_books = search_books (&settings,
+        return search_books (model, &settings,
                                     max_hits,
                                     &other_books_exact_link);
 
@@ -633,13 +708,13 @@ keyword_model_search (DhKeywordModel   *model,
                 settings.book_id = priv->current_book_id;
                 settings.skip_book_id = NULL;
 
-                in_book = search_books (&settings,
+                /*in_book = search_books (model, &settings,
                                         max_hits - out->length,
                                         NULL);
 
                 _dh_util_queue_concat (out, in_book);
                 if (out->length >= max_hits)
-                        return out;
+                        return out;*/
         }
 
         /* If still room for more items, look for non-prefixed items in other
@@ -647,10 +722,10 @@ keyword_model_search (DhKeywordModel   *model,
          */
         settings.book_id = NULL;
         settings.skip_book_id = priv->current_book_id;
-        other_books = search_books (&settings,
+        /*other_books = search_books (model, &settings,
                                     max_hits - out->length,
                                     NULL);
-        _dh_util_queue_concat (out, other_books);
+        _dh_util_queue_concat (out, other_books);*/
 
         return out;
 }
@@ -714,19 +789,19 @@ dh_keyword_model_filter (DhKeywordModel *model,
                 else
                         priv->current_book_id = g_strdup (current_book_id);
 
-                new_links = keyword_model_search (model, search_context, &exact_link);
+                keyword_model_search (model, search_context, &exact_link);
         }
 
-        clear_links (model);
-        _dh_util_queue_concat (&priv->links, new_links);
-        new_links = NULL;
+        //clear_links (model);
+        //_dh_util_queue_concat (&priv->links, new_links);
+        //new_links = NULL;
 
         /* The content has been modified, change the stamp so that older
          * GtkTreeIter's become invalid.
          */
         priv->stamp++;
 
-        _dh_search_context_free (search_context);
+        // _dh_search_context_free (search_context);
 
         /* One hit */
         if (priv->links.length == 1)

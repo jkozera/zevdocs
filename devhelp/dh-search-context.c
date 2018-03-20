@@ -19,29 +19,6 @@
 #include "dh-search-context.h"
 #include <string.h>
 
-/* DhSearchContext is a helper class for a search instance, with the search
- * string as data.
- */
-
-struct _DhSearchContext {
-        /* The content of the search string: */
-
-        gchar *book_id;
-        gchar *page_id;
-
-        // If non-NULL, contains at least one non-empty string.
-        GStrv keywords;
-
-        /* Derived data: */
-
-        // Element-type: KeywordData*.
-        GSList *keywords_data;
-
-        gchar *joined_keywords;
-
-        guint case_sensitive : 1;
-};
-
 typedef struct _KeywordData {
         gchar *keyword;
 

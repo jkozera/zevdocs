@@ -497,8 +497,6 @@ sidebar_link_selected_cb (DhSidebar *sidebar,
         web_view = get_active_web_view (window);
         if (web_view != NULL)
                 webkit_web_view_load_uri (WEBKIT_WEB_VIEW (web_view), uri);
-
-        g_free (uri);
 }
 
 static void

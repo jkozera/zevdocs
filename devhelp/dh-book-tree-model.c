@@ -423,7 +423,6 @@ dh_book_tree_model_new (gint scale, gboolean group_by_language)
 
         priv->root_nodes = NULL;
         priv->group_by_language = group_by_language;
-        printf("BB %d\n", priv->scale);
 
         parser = json_parser_new();
         session = soup_session_new();
@@ -460,7 +459,6 @@ dh_book_tree_model_new (gint scale, gboolean group_by_language)
         g_hash_table_unref (hash);
         g_object_unref (request);
         g_object_unref (session);
-        printf("AA %d\n", priv->scale);
         return model;
 }
 
