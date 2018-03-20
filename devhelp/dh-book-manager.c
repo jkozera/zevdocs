@@ -132,6 +132,8 @@ typedef struct {
         /* List of book IDs (gchar*) currently disabled */
         GList *books_disabled;
 
+        gint scale;
+
         guint group_by_language : 1;
 } DhBookManagerPrivate;
 
@@ -537,7 +539,7 @@ create_book_from_json_object (DhBookManager *book_manager,
 
         priv = dh_book_manager_get_instance_private (book_manager);
 
-        book = dh_book_new_from_json (object);
+        book = dh_book_new_from_json (object, priv->scale);
         if (book == NULL)
                 return FALSE;
 
@@ -915,21 +917,17 @@ populate (DhBookManager *book_manager)
         g_object_unref (session);
 }
 
+void
+dh_book_manager_set_scale (gint scale)
+{
+        dh_book_manager_new (scale);
+}
+
 static void
 dh_book_manager_init (DhBookManager *book_manager)
 {
-        DhSettings *settings;
-        GSettings *contents_settings;
-
-        load_books_disabled (book_manager);
-
-        settings = dh_settings_get_singleton ();
-        contents_settings = dh_settings_peek_contents_settings (settings);
-        g_settings_bind (contents_settings, "group-books-by-language",
-                         book_manager, "group-by-language",
-                         G_SETTINGS_BIND_DEFAULT);
-
-        populate (book_manager);
+        DhBookManagerPrivate *priv = dh_book_manager_get_instance_private (book_manager);
+        priv->scale = 1;
 }
 
 /**
@@ -940,10 +938,32 @@ dh_book_manager_init (DhBookManager *book_manager)
  * Deprecated: 3.26: Call dh_book_manager_get_singleton() instead.
  */
 DhBookManager *
-dh_book_manager_new (void)
+dh_book_manager_new (gint scale)
 {
+        if (singleton != NULL) {
+                return singleton;
+        }
+
+        singleton = g_object_new (DH_TYPE_BOOK_MANAGER, NULL);
+        DhSettings *settings;
+        GSettings *contents_settings;
+        DhBookManagerPrivate *priv = dh_book_manager_get_instance_private (singleton);
+
+        priv->scale = scale;
+
+        load_books_disabled (singleton);
+
+        settings = dh_settings_get_singleton ();
+        contents_settings = dh_settings_peek_contents_settings (settings);
+        g_settings_bind (contents_settings, "group-books-by-language",
+                         singleton, "group-by-language",
+                         G_SETTINGS_BIND_DEFAULT);
+
+        populate (singleton);
+
         return g_object_ref (dh_book_manager_get_singleton ());
 }
+
 
 /**
  * dh_book_manager_get_singleton:
@@ -954,9 +974,7 @@ dh_book_manager_new (void)
 DhBookManager *
 dh_book_manager_get_singleton (void)
 {
-        if (singleton == NULL)
-                singleton = g_object_new (DH_TYPE_BOOK_MANAGER, NULL);
-
+        g_assert(singleton != NULL);
         return singleton;
 }
 

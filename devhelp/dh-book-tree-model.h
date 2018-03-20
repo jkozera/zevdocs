@@ -58,7 +58,7 @@ enum {
 
 GType           dh_book_tree_model_get_type  (void);
 
-DhBookTreeModel *dh_book_tree_model_new       (gint scale, gboolean group_by_language);
+DhBookTreeModel *dh_book_tree_model_new       (gboolean group_by_language);
 
 G_END_DECLS
 

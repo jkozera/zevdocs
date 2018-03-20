@@ -55,9 +55,9 @@ gboolean        dh_book_manager_get_group_by_language   (DhBookManager *book_man
 
 void            dh_book_manager_set_group_by_language   (DhBookManager *book_manager,
                                                          gboolean       group_by_language);
+void            dh_book_manager_set_scale               (gint scale);
 
-G_DEPRECATED
-DhBookManager * dh_book_manager_new                     (void);
+DhBookManager * dh_book_manager_new                     (gint scale);
 
 G_DEPRECATED
 void            dh_book_manager_populate                (DhBookManager *book_manager);

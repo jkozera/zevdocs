@@ -22,6 +22,7 @@
 
 #include "config.h"
 #include "dh-book.h"
+#include <gdk/gdk.h>
 #include <glib/gi18n-lib.h>
 #include "dh-link.h"
 #include "dh-parser.h"
@@ -75,6 +76,7 @@ typedef struct {
         gchar *id;
         gchar *title;
         gchar *language;
+        cairo_surface_t* icon_surface;
 
         /* The book tree of DhLink*. */
         GNode *tree;
@@ -388,11 +390,12 @@ dh_book_new (GFile *index_file)
  * failed.
  */
 DhBook *
-dh_book_new_from_json (JsonObject *object)
+dh_book_new_from_json (JsonObject *object, gint scale)
 {
         DhBookPrivate *priv;
         DhBook *book;
         gchar *language;
+        size_t len;
 
         book = g_object_new (DH_TYPE_BOOK, NULL);
         priv = dh_book_get_instance_private (book);
@@ -408,6 +411,25 @@ dh_book_new_from_json (JsonObject *object)
         priv->language = (!g_str_equal(language, "") ?
                           g_strdup_printf (_("Language: %s"), language) :
                           g_strdup (""));
+
+        guchar* data;
+        GError* err;
+        if (scale == 1) {
+                data = g_base64_decode(json_object_get_string_member(object, "Icon"), &len);
+        } else {
+                data = g_base64_decode(json_object_get_string_member(object, "Icon2x"), &len);
+                scale = (int)(2.0 * (2.0 / (double)scale));
+        }
+        err = NULL;
+        priv->icon_surface = gdk_cairo_surface_create_from_pixbuf(
+                gdk_pixbuf_new_from_stream(
+                        g_memory_input_stream_new_from_data(data, len, NULL),
+                        NULL, &err
+                ),
+                scale,
+                NULL
+        );
+
         g_free(language);
 
         return book;
@@ -469,6 +491,18 @@ dh_book_get_title (DhBook *book)
         priv = dh_book_get_instance_private (book);
 
         return priv->title;
+}
+
+cairo_surface_t*
+dh_book_get_icon_surface (DhBook *book)
+{
+        DhBookPrivate *priv;
+
+        g_return_val_if_fail (DH_IS_BOOK (book), NULL);
+
+        priv = dh_book_get_instance_private (book);
+
+        return priv->icon_surface;
 }
 
 /**

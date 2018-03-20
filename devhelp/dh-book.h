@@ -24,6 +24,7 @@
 #define DH_BOOK_H
 
 #include <gio/gio.h>
+#include <cairo/cairo-gobject.h>
 #include <json-glib/json-glib.h>
 #include <devhelp/dh-completion.h>
 
@@ -54,11 +55,13 @@ GType        dh_book_get_type        (void) G_GNUC_CONST;
 
 DhBook *     dh_book_new             (GFile *index_file);
 
-DhBook *     dh_book_new_from_json   (JsonObject *object);
+DhBook *     dh_book_new_from_json   (JsonObject *object, gint scale);
 
 GFile *      dh_book_get_index_file  (DhBook *book);
 
 const gchar *dh_book_get_id          (DhBook *book);
+
+cairo_surface_t* dh_book_get_icon_surface (DhBook *book);
 
 const gchar *dh_book_get_title       (DhBook *book);
 

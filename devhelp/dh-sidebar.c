@@ -553,6 +553,7 @@ dh_sidebar_init (DhSidebar *sidebar)
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->sw_hitlist));
 
         /* Setup book manager */
+        dh_book_manager_set_scale (gtk_widget_get_scale_factor (GTK_WIDGET(sidebar)));
         book_manager = dh_book_manager_get_singleton ();
 
         g_signal_connect_object (book_manager,
