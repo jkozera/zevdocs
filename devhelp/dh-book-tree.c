@@ -822,29 +822,7 @@ book_tree_find_uri_foreach (GtkTreeModel *model,
                             GtkTreeIter  *iter,
                             FindURIData  *data)
 {
-        DhLink *link;
-
-        gtk_tree_model_get (model, iter,
-                            COL_LINK, &link,
-                            -1);
-
-        if (link != NULL) {
-                gchar *link_uri;
-
-                link_uri = dh_link_get_uri (link);
-
-                if (link_uri != NULL &&
-                    g_str_has_prefix (data->uri, link_uri)) {
-                        data->found = TRUE;
-                        data->iter = *iter;
-                        data->path = gtk_tree_path_copy (path);
-                }
-
-                g_free (link_uri);
-                dh_link_unref (link);
-        }
-
-        return data->found;
+        return FALSE;
 }
 
 /**
@@ -858,53 +836,7 @@ void
 dh_book_tree_select_uri (DhBookTree  *tree,
                          const gchar *uri)
 {
-        DhBookTreePrivate   *priv = dh_book_tree_get_instance_private (tree);
-        GtkTreeSelection *selection;
-        FindURIData       data;
-        DhLink           *link;
 
-        data.found = FALSE;
-        data.uri = uri;
-
-        gtk_tree_model_foreach (GTK_TREE_MODEL (priv->store),
-                                (GtkTreeModelForeachFunc) book_tree_find_uri_foreach,
-                                &data);
-
-        if (!data.found)
-                return;
-
-        selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree));
-
-        /* Do not re-select (which will expand current additionally) if already
-         * there. */
-        if (gtk_tree_selection_iter_is_selected (selection, &data.iter))
-                goto out;
-
-        /* FIXME: it's strange to block the signal here. The signal handler
-         * should probably be blocked in DhWindow instead.
-         */
-        g_signal_handlers_block_by_func (selection,
-                                         book_tree_selection_changed_cb,
-                                         tree);
-
-        gtk_tree_view_expand_to_path (GTK_TREE_VIEW (tree), data.path);
-
-        gtk_tree_model_get (GTK_TREE_MODEL (priv->store),
-                            &data.iter,
-                            COL_LINK, &link,
-                            -1);
-        g_clear_pointer (&priv->selected_link, (GDestroyNotify)dh_link_unref);
-        priv->selected_link = link;
-        gtk_tree_selection_select_iter (selection, &data.iter);
-
-        gtk_tree_view_set_cursor (GTK_TREE_VIEW (tree), data.path, NULL, 0);
-
-        g_signal_handlers_unblock_by_func (selection,
-                                           book_tree_selection_changed_cb,
-                                           tree);
-
-out:
-        gtk_tree_path_free (data.path);
 }
 
 /**

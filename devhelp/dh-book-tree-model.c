@@ -31,15 +31,169 @@
 
 typedef struct {
         gchar *title;
+        gchar *symbolchapterpath;
+        JsonObject* object;
         GtkTreePath *path;
         GList *children;
+        gboolean lazy_has_children;
+        gchar *lazy_children_url;
+        gchar *symbol_tp;
         DhLink *link;
         DhBook *book;
 } DhBookTreeModelNode;
 
+static gint
+compare_strs (gconstpointer a,
+              gconstpointer b)
+{
+        return g_strcmp0(a, b);
+}
+
 static DhBookTreeModelNode*
-new_node (const gchar* title, GtkTreePath *parent, gint num, gboolean language) {
+new_dynamic_symbols_node(JsonObject* object, const gchar* symbol_type, gint count, GtkTreePath *parent, gint num, const gchar* title, const gchar* tp)
+{
         DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        JsonObject *counts;
+        JsonObjectIter iter;
+        GList *symbols;
+        const gchar *member_name;
+        JsonNode *member_node;
+        size_t len;
+
+        if (title == NULL) {
+                len = strlen (symbol_type);
+                node->title = malloc (len + 1);
+                memcpy(node->title, symbol_type, len + 1);
+        } else {
+                len = strlen (title);
+                node->title = malloc (len + 1);
+                memcpy(node->title, title, len + 1);
+        }
+        node->children = NULL;
+        node->path = gtk_tree_path_copy (parent);
+        node->link = NULL;
+        node->book = dh_book_new (NULL);
+        gtk_tree_path_append_index(node->path, num);
+
+        if (title == NULL || g_str_equal(tp, "chapters")) {
+                // only 1st level of symbols
+                // (chapters need querying on all levels because we don't know in advance
+                //  if they have children)
+                node->lazy_children_url = g_strjoin("",
+                                                    "http://localhost:12340/item/",
+                                                    json_object_get_string_member(object, "Id"),
+                                                    "/", tp, "/", symbol_type, NULL);
+        } else {
+                node->lazy_children_url = NULL;
+        }
+        node->symbol_tp = tp;
+        node->symbolchapterpath = malloc(strlen(symbol_type)+1);
+        node->object = json_object_ref(object);
+        strcpy(node->symbolchapterpath, symbol_type);
+        node->lazy_has_children = count > 0;
+
+        return node;
+}
+
+
+static DhBookTreeModelNode*
+new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar* title)
+{
+        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        node->lazy_children_url = NULL;
+        JsonObject *counts;
+        JsonObjectIter iter;
+        GList *symbols, *symbol;
+        const gchar *member_name;
+        JsonNode *member_node;
+        size_t len;
+        gint i;
+
+        if (title == NULL) {
+                title = "Symbols";
+        }
+        len = strlen (title);
+        node->title = malloc (len + 1);
+        memcpy(node->title, title, len + 1);
+        node->children = NULL;
+        if (parent != NULL) {
+                node->path = gtk_tree_path_copy (parent);
+        } else {
+                node->path = gtk_tree_path_new ();
+        }
+        node->link = NULL;
+        node->book = dh_book_new (NULL);
+        gtk_tree_path_append_index(node->path, num);
+
+
+        counts = json_object_get_object_member (object, "SymbolCounts");
+        json_object_iter_init (&iter, counts);
+        symbols = NULL;
+        while(json_object_iter_next(&iter, &member_name, &member_node)) {
+                symbols = g_list_append (symbols, member_name);
+        }
+        symbol = symbols = g_list_sort (symbols, compare_strs);
+        i = 0;
+        while(symbol) {
+                node->children = g_list_append(node->children,
+                                               new_dynamic_symbols_node (object,
+                                                                         symbol->data,
+                                                                         json_object_get_int_member(counts, symbol->data),
+                                                                         node->path,
+                                                                         i++, NULL, "symbols"));
+                symbol = symbol->next;
+        }
+        g_list_free(symbols);
+        return node;
+}
+
+static DhBookTreeModelNode*
+new_node (JsonObject* object, GtkTreePath *parent, gint num)
+{
+        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        node->lazy_children_url = NULL;
+        const gchar* title;
+        size_t len;
+
+        title = json_object_get_string_member(object, "Title");
+
+        if (g_str_equal (json_object_get_string_member(object, "SourceId"), "com.kapeli")) {
+                return new_symbols_node (object, parent, num, title);
+        } else {
+                len = strlen (title);
+                node->title = malloc (len + 1);
+                memcpy(node->title, title, len + 1);
+                node->children = NULL;
+
+
+                if (parent != NULL) {
+                        node->path = gtk_tree_path_copy (parent);
+                } else {
+                        node->path = gtk_tree_path_new ();
+                }
+
+                node->link = NULL;
+
+                node->book = dh_book_new (NULL);
+                gtk_tree_path_append_index(node->path, num);
+                node->children = g_list_append(node->children,
+                                               new_dynamic_symbols_node (object,
+                                                                         "",
+                                                                         0,
+                                                                         node->path,
+                                                                         0,
+                                                                         "Chapters",
+                                                                         "chapters"));
+                g_list_append(node->children, new_symbols_node (object, node->path, 1, NULL));
+        }
+
+        return node;
+}
+
+static DhBookTreeModelNode*
+new_lang_node (const gchar* title, GtkTreePath *parent, gint num) {
+        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        node->lazy_children_url = NULL;
         size_t len;
         len = strlen (title);
         node->title = malloc (len + 1);
@@ -50,11 +204,9 @@ new_node (const gchar* title, GtkTreePath *parent, gint num, gboolean language) 
         } else {
                 node->path = gtk_tree_path_new ();
         }
-        if (language) {
-                node->link = NULL;
-        } else {
-                node->link = dh_link_new_book ("", "", "", "");
-        }
+
+        node->link = NULL;
+
         node->book = dh_book_new (NULL);
         gtk_tree_path_append_index(node->path, num);
         return node;
@@ -104,13 +256,11 @@ print_doc (JsonArray *array,
         JsonObject *object;
         DhBookTreeModelPrivate *priv;
         DhBookTreeModelNode *node;
-        const gchar *title;
 
         priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (user_data));
 
         object = json_node_get_object(element_node);
-        title = json_object_get_string_member(object, "Title");
-        node = new_node (title, NULL, index_, FALSE);
+        node = new_node (object, NULL, index_);
         priv->root_nodes = g_list_append (priv->root_nodes, node);
 }
 
@@ -135,8 +285,10 @@ add_language (gpointer data,
 
         priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (user_data));
 
-        node = new_node (data, NULL, priv->langcount++, TRUE);
-        priv->root_nodes = g_list_append (priv->root_nodes, node);
+        if (!g_str_equal(data, "")) {
+                node = new_lang_node (data, NULL, priv->langcount++);
+                priv->root_nodes = g_list_append (priv->root_nodes, node);
+        }
 }
 
 static void
@@ -161,24 +313,30 @@ add_docs_for_cur_lang (JsonArray *array,
         if (g_strcmp0(language, priv->currently_adding_language) != 0) {
                 return;
         }
-        l = priv->root_nodes;
-        idx = 0;
-        while (l) {
-                node = l->data;
-                if (node->link == NULL && g_strcmp0(language, node->title) == 0) {
-                        break;
-                }
-                if (node->link == NULL) {
-                        idx += 1;
-                }
-                l = l->next;
-        }
 
-        node->children = g_list_append (node->children,
-                                        new_node (title,
-                                                  gtk_tree_path_new_from_indices(idx, -1),
-                                                  priv->langcount++,
-                                                  FALSE));
+        if (g_str_equal(language, "")) {
+                priv->root_nodes = g_list_append (priv->root_nodes,
+                                                  new_node (object,
+                                                            NULL,
+                                                            g_list_length(priv->root_nodes)));
+        } else {
+                l = priv->root_nodes;
+                idx = 0;
+                while (l) {
+                        node = l->data;
+                        if (node->link == NULL && g_strcmp0(language, node->title) == 0) {
+                                break;
+                        }
+                        if (node->link == NULL) {
+                                idx += 1;
+                        }
+                        l = l->next;
+                }
+                node->children = g_list_append (node->children,
+                                                new_node (object,
+                                                          gtk_tree_path_new_from_indices(idx, -1),
+                                                          priv->langcount++));
+        }
 }
 
 static void
@@ -192,13 +350,6 @@ add_language_docs (gpointer data,
         priv->currently_adding_language = data;
         priv->langcount = 0;
         json_array_foreach_element(priv->array, add_docs_for_cur_lang, user_data);
-}
-
-static gint
-compare_strs (gconstpointer a,
-              gconstpointer b)
-{
-        return g_strcmp0(a, b);
 }
 
 static void
@@ -347,6 +498,57 @@ dh_book_tree_model_get_column_type (GtkTreeModel *tree_model,
         }
 }
 
+static void
+lazy_fetch_children(DhBookTreeModelNode *node)
+{
+        SoupSession *session;
+        const char *uri;
+        GHashTable *hash;
+        GList *langlist;
+        SoupMessage *request;
+        SoupMessageBody *body;
+        SoupBuffer *buffer;
+        const gchar *data, *symbol;
+        gsize length;
+        JsonParser *parser;
+        JsonNode *root;
+        JsonArray *array, *subarray;
+
+        parser = json_parser_new();
+        session = soup_session_new();
+        hash = g_hash_table_new(g_str_hash, g_str_equal);
+        request = soup_form_request_new_from_hash ("GET", node->lazy_children_url, hash);
+
+        soup_session_send_message (session, request);
+        g_object_get(request, "response-body", &body, NULL);
+
+        buffer = soup_message_body_flatten(body);
+        soup_buffer_get_data(buffer, (const guint8**)&data, &length);
+        json_parser_load_from_data(parser, data, length, NULL);
+        root = json_parser_get_root(parser);
+        array = json_node_get_array(root);
+
+        for (guint i = 0; i < json_array_get_length(array); ++i) {
+                subarray = json_array_get_array_element(array, i);
+                symbol = json_array_get_string_element(subarray, 0);
+                node->children = g_list_append(node->children,
+                                               new_dynamic_symbols_node (node->object,
+                                                                         g_strjoin("", node->symbolchapterpath, "/", symbol, NULL),
+                                                                         0,
+                                                                         node->path,
+                                                                         i,
+                                                                         symbol, node->symbol_tp));
+        }
+
+
+        soup_buffer_free (buffer);
+        soup_message_body_free (body);
+        g_object_unref (parser);
+        g_hash_table_unref (hash);
+        g_object_unref (request);
+        g_object_unref (session);
+}
+
 static gboolean
 dh_book_tree_model_iter_has_child (GtkTreeModel *tree_model,
                                    GtkTreeIter *iter)
@@ -358,7 +560,10 @@ dh_book_tree_model_iter_has_child (GtkTreeModel *tree_model,
                 return FALSE;
         }
         node = list->data;
-        return g_list_length (node->children) > 0;
+        if (node->lazy_children_url && !node->lazy_has_children && !node->children) {
+                lazy_fetch_children(node);
+        }
+        return g_list_length (node->children) > 0 || (node->lazy_children_url && node->lazy_has_children);
 }
 
 static gboolean
@@ -463,6 +668,9 @@ dh_book_tree_model_iter_nth_child (GtkTreeModel *tree_model,
         list = parent->user_data;
 
         node = list->data;
+        if (node->lazy_children_url && !node->children) {
+                lazy_fetch_children(node);
+        }
         list = g_list_nth (node->children, n);
         if (list == NULL) {
                 return FALSE;
