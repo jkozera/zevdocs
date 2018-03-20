@@ -491,6 +491,8 @@ websocket_message_cb (SoupWebsocketConnection *self,
 
         if (error != NULL) {
                 g_signal_emit(ctx->model, signals[SIGNAL_FILTER_COMPLETE], 0);
+                const char *data = "";
+                soup_websocket_connection_close(self, 0, data);
                 return;
         }
 

@@ -382,6 +382,38 @@ dh_book_new (GFile *index_file)
 }
 
 /**
+ * dh_book_new_from_json:
+ *
+ * Returns: (nullable): a new #DhBook object, or %NULL if parsing the JSON
+ * failed.
+ */
+DhBook *
+dh_book_new_from_json (JsonObject *object)
+{
+        DhBookPrivate *priv;
+        DhBook *book;
+        gchar *language;
+
+        book = g_object_new (DH_TYPE_BOOK, NULL);
+        priv = dh_book_get_instance_private (book);
+        priv->title = g_strdup(json_object_get_string_member(object, "Title"));
+        priv->id = g_strdup(json_object_get_string_member(object, "Id"));
+
+        /* Rewrite language, if any, including the prefix we want to use when
+         * seeing it, to standarize how the language group is shown.
+         * FIXME: maybe instead of a string, have a DhLanguage object which
+         * canonicalizes the string.
+         */
+        language = g_strdup(json_object_get_string_member(object, "Language"));
+        priv->language = (!g_str_equal(language, "") ?
+                          g_strdup_printf (_("Language: %s"), language) :
+                          g_strdup (""));
+        g_free(language);
+
+        return book;
+}
+
+/**
  * dh_book_get_index_file:
  * @book: a #DhBook.
  *

@@ -441,10 +441,10 @@ book_tree_add_book_to_store (DhBookTree *tree,
 
         /* Now book_iter contains the proper iterator where we'll add the whole
          * book tree. */
-        book_tree_insert_node (tree,
+        /*book_tree_insert_node (tree,
                                dh_book_get_tree (book),
                                &book_iter,
-                               book);
+                               book);*/
 }
 
 static void
@@ -455,7 +455,7 @@ book_tree_book_created_or_enabled_cb (DhBookManager *book_manager,
         if (!dh_book_get_enabled (book))
                 return;
 
-        book_tree_add_book_to_store (tree, book);
+        // book_tree_add_book_to_store (tree, book);
 }
 
 static void
@@ -812,7 +812,7 @@ dh_book_tree_init (DhBookTree *tree)
                                  tree,
                                  0);
 
-        book_tree_populate_tree (tree);
+        // book_tree_populate_tree (tree);
 }
 
 /**

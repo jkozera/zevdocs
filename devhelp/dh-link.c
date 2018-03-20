@@ -41,6 +41,8 @@
 typedef struct {
         gchar *base_path;
         gchar *book_id;
+        gchar *icon;
+        gchar *icon2x;
 } BookData;
 
 struct _DhLink {

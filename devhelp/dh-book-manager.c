@@ -22,6 +22,10 @@
  */
 
 #include "config.h"
+#include <cairo/cairo-gobject.h>
+#include <gtk/gtk.h>
+#include <json-glib/json-glib.h>
+#include <libsoup/soup.h>
 #include "dh-book-manager.h"
 #include "dh-book.h"
 #include "dh-settings.h"
@@ -524,6 +528,72 @@ book_disabled_cb (DhBook        *book,
  * book directory needs to be tried.
  */
 static gboolean
+create_book_from_json_object (DhBookManager *book_manager,
+                              JsonObject    *object)
+{
+        DhBookManagerPrivate *priv;
+        DhBook *book;
+        gboolean book_enabled;
+
+        priv = dh_book_manager_get_instance_private (book_manager);
+
+        book = dh_book_new_from_json (object);
+        if (book == NULL)
+                return FALSE;
+
+        /* Check if book with same ID was already loaded in the manager (we need
+         * to force unique book IDs).
+         */
+        if (g_list_find_custom (priv->books,
+                                book,
+                                (GCompareFunc)dh_book_cmp_by_id)) {
+                g_object_unref (book);
+                return TRUE;
+        }
+
+        priv->books = g_list_insert_sorted (priv->books,
+                                            book,
+                                            (GCompareFunc)dh_book_cmp_by_title);
+
+        book_enabled = !is_book_disabled_in_conf (book_manager, book);
+        dh_book_set_enabled (book, book_enabled);
+
+        g_signal_connect_object (book,
+                                 "deleted",
+                                 G_CALLBACK (book_deleted_cb),
+                                 book_manager,
+                                 0);
+
+        g_signal_connect_object (book,
+                                 "updated",
+                                 G_CALLBACK (book_updated_cb),
+                                 book_manager,
+                                 0);
+
+        g_signal_connect_object (book,
+                                 "enabled",
+                                 G_CALLBACK (book_enabled_cb),
+                                 book_manager,
+                                 0);
+
+        g_signal_connect_object (book,
+                                 "disabled",
+                                 G_CALLBACK (book_disabled_cb),
+                                 book_manager,
+                                 0);
+
+        g_signal_emit (book_manager,
+                       signals[SIGNAL_BOOK_CREATED],
+                       0,
+                       book);
+
+        return TRUE;
+}
+
+/* Returns TRUE if "successful", FALSE if the next possible index file in the
+ * book directory needs to be tried.
+ */
+static gboolean
 create_book_from_index_file (DhBookManager *book_manager,
                              GFile         *index_file)
 {
@@ -790,41 +860,59 @@ find_books_in_data_dir (DhBookManager *book_manager,
         g_free (dir);
 }
 
+
+
+static void
+print_doc (JsonArray *array,
+           guint index_,
+           JsonNode *element_node,
+           gpointer user_data)
+{
+        JsonObject *object = json_node_get_object(element_node);
+
+        DhBookManager *manager = DH_BOOK_MANAGER (user_data);
+
+        create_book_from_json_object (manager, object);
+}
+
 static void
 populate (DhBookManager *book_manager)
 {
-        const gchar * const *system_dirs;
-        gint i;
+        SoupSession *session;
+        const char *uri;
+        GHashTable *hash;
+        SoupMessage *request;
+        SoupMessageBody *body;
+        SoupBuffer *buffer;
+        const gchar *data;
+        gsize length;
+        JsonParser *parser;
+        JsonNode *root;
+        JsonArray *array;
 
-        find_books_in_data_dir (book_manager, g_get_user_data_dir ());
+        parser = json_parser_new();
+        session = soup_session_new();
+        uri = "http://localhost:12340/item";
+        hash = g_hash_table_new(g_str_hash, g_str_equal);
+        request = soup_form_request_new_from_hash ("GET", uri, hash);
 
-        system_dirs = g_get_system_data_dirs ();
-        g_return_if_fail (system_dirs != NULL);
+        soup_session_send_message (session, request);
+        g_object_get(request, "response-body", &body, NULL);
 
-        for (i = 0; system_dirs[i] != NULL; i++) {
-                find_books_in_data_dir (book_manager, system_dirs[i]);
-        }
+        buffer = soup_message_body_flatten(body);
+        soup_buffer_get_data(buffer, (const guint8**)&data, &length);
+        json_parser_load_from_data(parser, data, length, NULL);
+        root = json_parser_get_root(parser);
+        array = json_node_get_array(root);
 
-        /* For Flatpak, to see the books installed on the host by traditional
-         * Linux distro packages.
-         *
-         * It is not a good idea to add the directory to XDG_DATA_DIRS, see:
-         * https://github.com/flatpak/flatpak/issues/1299
-         * "all sorts of things will break if we add all host config to each
-         * app, which is totally opposite to the entire point of flatpak."
-         * "i don't think XDG_DATA_DIRS is the right thing, because all sorts of
-         * libraries will start reading files from there, like dconf, dbus,
-         * service files, mimetypes, etc. It would be preferable to have
-         * something that targeted just gtk-doc files."
-         *
-         * So instead of adapting XDG_DATA_DIRS, add the directory here, with
-         * the path hard-coded.
-         *
-         * https://bugzilla.gnome.org/show_bug.cgi?id=792068
-         */
-#ifdef FLATPAK_BUILD
-        find_books_in_data_dir (book_manager, "/run/host/usr/share");
-#endif
+        json_array_foreach_element(array, print_doc, book_manager);
+
+        soup_buffer_free (buffer);
+        soup_message_body_free (body);
+        g_object_unref (parser);
+        g_hash_table_unref (hash);
+        g_object_unref (request);
+        g_object_unref (session);
 }
 
 static void

@@ -24,6 +24,7 @@
 #define DH_BOOK_H
 
 #include <gio/gio.h>
+#include <json-glib/json-glib.h>
 #include <devhelp/dh-completion.h>
 
 G_BEGIN_DECLS
@@ -52,6 +53,8 @@ struct _DhBookClass {
 GType        dh_book_get_type        (void) G_GNUC_CONST;
 
 DhBook *     dh_book_new             (GFile *index_file);
+
+DhBook *     dh_book_new_from_json   (JsonObject *object);
 
 GFile *      dh_book_get_index_file  (DhBook *book);
 

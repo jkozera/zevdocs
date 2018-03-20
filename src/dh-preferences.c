@@ -80,7 +80,8 @@ dh_preferences_class_init (DhPreferencesClass *klass)
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, fixed_font_button);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_store);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_group_by_language_button);
-        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_enabled_toggle);
+        // TODO:
+        // gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_enabled_toggle);
 }
 
 static void
@@ -253,7 +254,7 @@ preferences_bookshelf_add_book_to_store (DhPreferences *prefs,
         GtkTreeIter  book_iter;
 
         /* If grouping by language we need to add the language categories */
-        if (group_by_language) {
+        if (group_by_language && !g_str_equal(dh_book_get_language (book), "")) {
                 gchar       *indented_title;
                 GtkTreeIter  language_iter;
                 gboolean     language_iter_found;
@@ -367,7 +368,11 @@ preferences_bookshelf_add_book_to_store (DhPreferences *prefs,
                                                  NULL,
                                                  &next_book_iter,
                                                  &next_book_iter_found);
-                if (!next_book_iter_found) {
+
+                if (g_str_equal(dh_book_get_language (book), "")) {
+                        gtk_list_store_prepend (priv->bookshelf_store,
+                                                &book_iter);
+                } else if (!next_book_iter_found) {
                         gtk_list_store_append (priv->bookshelf_store,
                                                &book_iter);
                 } else {
