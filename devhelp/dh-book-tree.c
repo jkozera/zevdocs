@@ -68,6 +68,7 @@ enum {
         COL_BOOK,
         COL_WEIGHT,
         COL_UNDERLINE,
+        COL_ICON,
         N_COLUMNS
 };
 
@@ -586,7 +587,7 @@ book_tree_populate_tree (DhBookTree *tree)
         GList *l;
 
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree), NULL);
-        priv->store = dh_book_tree_model_new();
+        priv->store = dh_book_tree_model_new(gtk_widget_get_scale_factor(tree));
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree),
                                  GTK_TREE_MODEL (priv->store));
 
@@ -733,19 +734,25 @@ static void
 book_tree_add_columns (DhBookTree *tree)
 {
         GtkCellRenderer   *cell;
+        GtkCellRendererPixbuf *cell2;
         GtkTreeViewColumn *column;
 
         column = gtk_tree_view_column_new ();
 
         cell = gtk_cell_renderer_text_new ();
+        cell2 = gtk_cell_renderer_pixbuf_new ();
         g_object_set (cell,
                       "ellipsize", PANGO_ELLIPSIZE_END,
                       NULL);
+        gtk_tree_view_column_pack_start (column, cell2, FALSE);
         gtk_tree_view_column_pack_start (column, cell, TRUE);
         gtk_tree_view_column_set_attributes (column, cell,
                                              "text", COL_TITLE,
                                              "weight", COL_WEIGHT,
                                              "underline", COL_UNDERLINE,
+                                             NULL);
+        gtk_tree_view_column_set_attributes (column, cell2,
+                                             "surface", COL_ICON,
                                              NULL);
 
         gtk_tree_view_append_column (GTK_TREE_VIEW (tree), column);
@@ -762,7 +769,7 @@ dh_book_tree_init (DhBookTree *tree)
         gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (tree), FALSE);
         gtk_tree_view_set_enable_search (GTK_TREE_VIEW (tree), FALSE);
 
-        priv->store = dh_book_tree_model_new();
+        priv->store = dh_book_tree_model_new(gtk_widget_get_scale_factor(tree));
         priv->selected_link = NULL;
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree),
                                  GTK_TREE_MODEL (priv->store));

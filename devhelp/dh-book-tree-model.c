@@ -19,6 +19,7 @@
 
 #include "dh-book-tree-model.h"
 #include <gmodule.h>
+#include <cairo/cairo-gobject.h>
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
 #include <libsoup/soup.h>
@@ -40,6 +41,7 @@ typedef struct {
         gchar *symbol_tp;
         DhLink *link;
         DhBook *book;
+        cairo_surface_t *surface;
 } DhBookTreeModelNode;
 
 static gint
@@ -49,10 +51,37 @@ compare_strs (gconstpointer a,
         return g_strcmp0(a, b);
 }
 
+void
+set_surface_for_node(JsonObject          *object,
+                     DhBookTreeModelNode *node,
+                     gint scale)
+{
+        GError *err;
+        const void* data;
+        size_t len;
+
+        if (scale == 1) {
+                data = g_base64_decode(json_object_get_string_member(object, "Icon"), &len);
+        } else {
+                data = g_base64_decode(json_object_get_string_member(object, "Icon2x"), &len);
+                scale = (int)(2.0 * (2.0 / (double)scale));
+        }
+        err = NULL;
+        node->surface = gdk_cairo_surface_create_from_pixbuf(
+                gdk_pixbuf_new_from_stream(
+                        g_memory_input_stream_new_from_data(data, len, NULL),
+                        NULL, &err
+                ),
+                2,
+                NULL
+        );
+}
+
 static DhBookTreeModelNode*
-new_dynamic_symbols_node(JsonObject* object, const gchar* symbol_type, gint count, GtkTreePath *parent, gint num, const gchar* title, const gchar* tp, const char* URL)
+new_dynamic_symbols_node(JsonObject* object, const gchar* symbol_type, gint count, GtkTreePath *parent, gint num, const gchar* title, const gchar* tp, const char* URL, gint scale)
 {
         DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        set_surface_for_node(object, node, scale);
         JsonObject *counts;
         JsonObjectIter iter;
         GList *symbols;
@@ -97,10 +126,11 @@ new_dynamic_symbols_node(JsonObject* object, const gchar* symbol_type, gint coun
 
 
 static DhBookTreeModelNode*
-new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar* title)
+new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar* title, gint scale)
 {
         DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
         node->lazy_children_url = NULL;
+        set_surface_for_node(object, node, scale);
         JsonObject *counts;
         JsonObjectIter iter;
         GList *symbols, *symbol;
@@ -140,7 +170,7 @@ new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar*
                                                                          symbol->data,
                                                                          json_object_get_int_member(counts, symbol->data),
                                                                          node->path,
-                                                                         i++, NULL, "symbols", NULL));
+                                                                         i++, NULL, "symbols", NULL, scale));
                 symbol = symbol->next;
         }
         g_list_free(symbols);
@@ -148,17 +178,18 @@ new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar*
 }
 
 static DhBookTreeModelNode*
-new_node (JsonObject* object, GtkTreePath *parent, gint num)
+new_node (JsonObject* object, GtkTreePath *parent, gint num, gint scale)
 {
         DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
         node->lazy_children_url = NULL;
+        set_surface_for_node(object, node, scale);
         const gchar* title;
         size_t len;
 
         title = json_object_get_string_member(object, "Title");
 
         if (g_str_equal (json_object_get_string_member(object, "SourceId"), "com.kapeli")) {
-                return new_symbols_node (object, parent, num, title);
+                return new_symbols_node (object, parent, num, title, scale);
         } else {
                 len = strlen (title);
                 node->title = malloc (len + 1);
@@ -184,8 +215,9 @@ new_node (JsonObject* object, GtkTreePath *parent, gint num)
                                                                          0,
                                                                          "Chapters",
                                                                          "chapters",
-                                                                         NULL));
-                g_list_append(node->children, new_symbols_node (object, node->path, 1, NULL));
+                                                                         NULL,
+                                                                         scale));
+                g_list_append(node->children, new_symbols_node (object, node->path, 1, NULL, scale));
         }
 
         return node;
@@ -229,6 +261,7 @@ typedef struct {
         gint stamp;
         const gchar *currently_adding_language;
         JsonArray *array;
+        gint scale;
 } DhBookTreeModelPrivate;
 
 static void dh_book_tree_model_tree_model_init (GtkTreeModelIface *iface);
@@ -261,7 +294,7 @@ print_doc (JsonArray *array,
         priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (user_data));
 
         object = json_node_get_object(element_node);
-        node = new_node (object, NULL, index_);
+        node = new_node (object, NULL, index_, priv->scale);
         priv->root_nodes = g_list_append (priv->root_nodes, node);
 }
 
@@ -302,7 +335,7 @@ add_docs_for_cur_lang (JsonArray *array,
         int idx;
         DhBookTreeModelPrivate *priv;
         GList *l;
-        DhBookTreeModelNode *node;
+        DhBookTreeModelNode *node, *newnode;
         const gchar *title;
         const gchar *language;
 
@@ -319,7 +352,8 @@ add_docs_for_cur_lang (JsonArray *array,
                 priv->root_nodes = g_list_append (priv->root_nodes,
                                                   new_node (object,
                                                             NULL,
-                                                            g_list_length(priv->root_nodes)));
+                                                            g_list_length(priv->root_nodes),
+                                                            priv->scale));
         } else {
                 l = priv->root_nodes;
                 idx = 0;
@@ -333,10 +367,9 @@ add_docs_for_cur_lang (JsonArray *array,
                         }
                         l = l->next;
                 }
-                node->children = g_list_append (node->children,
-                                                new_node (object,
-                                                          gtk_tree_path_new_from_indices(idx, -1),
-                                                          priv->langcount++));
+                newnode = new_node (object, gtk_tree_path_new_from_indices(idx, -1), priv->langcount++, priv->scale);
+                node->surface = newnode->surface;
+                node->children = g_list_append (node->children, newnode);
         }
 }
 
@@ -419,9 +452,13 @@ dh_book_tree_model_init (DhBookTreeModel *model)
  * Returns: a new #DhBookTreeModel object.
  */
 DhBookTreeModel *
-dh_book_tree_model_new (void)
+dh_book_tree_model_new (int scale)
 {
-        return g_object_new (DH_TYPE_BOOK_TREE_MODEL, NULL);
+        DhBookTreeModel *ret = g_object_new (DH_TYPE_BOOK_TREE_MODEL, NULL);
+        DhBookTreeModelPrivate *priv;
+        priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (ret));
+        priv->scale = scale;
+        return ret;
 }
 
 static gboolean
@@ -492,7 +529,7 @@ dh_book_tree_model_get_column_type (GtkTreeModel *tree_model,
                 return PANGO_TYPE_UNDERLINE;
 
         case DH_BOOK_TREE_MODEL_COL_ICON:
-                return GDK_TYPE_PIXBUF;
+                return CAIRO_GOBJECT_TYPE_SURFACE;
 
         default:
                 return G_TYPE_INVALID;
@@ -500,7 +537,7 @@ dh_book_tree_model_get_column_type (GtkTreeModel *tree_model,
 }
 
 static void
-lazy_fetch_children(DhBookTreeModelNode *node)
+lazy_fetch_children(DhBookTreeModelNode *node, gint scale)
 {
         SoupSession *session;
         const char *uri;
@@ -542,7 +579,8 @@ lazy_fetch_children(DhBookTreeModelNode *node)
                                                                          g_strjoin("/",
                                                                                    "http://localhost:12340",
                                                                                    json_array_get_string_element(subarray, 1),
-                                                                                   NULL)));
+                                                                                   NULL),
+                                                                         scale));
         }
 
 
@@ -560,13 +598,16 @@ dh_book_tree_model_iter_has_child (GtkTreeModel *tree_model,
 {
         GList *list;
         DhBookTreeModelNode *node;
+        DhBookTreeModelPrivate *priv;
+
+        priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (tree_model));
         list = iter->user_data;
         if (list == NULL) {
                 return FALSE;
         }
         node = list->data;
         if (node->lazy_children_url && !node->lazy_has_children && !node->children) {
-                lazy_fetch_children(node);
+                lazy_fetch_children(node, priv->scale);
         }
         return g_list_length (node->children) > 0 || (node->lazy_children_url && node->lazy_has_children);
 }
@@ -647,6 +688,10 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
                 return;
 
         case DH_BOOK_TREE_MODEL_COL_ICON:
+                if (node->surface != NULL) {
+                        g_value_init(value, CAIRO_GOBJECT_TYPE_SURFACE);
+                        g_value_set_boxed(value, node->surface);
+                }
                 return;
 
         default:
@@ -674,7 +719,7 @@ dh_book_tree_model_iter_nth_child (GtkTreeModel *tree_model,
 
         node = list->data;
         if (node->lazy_children_url && !node->children) {
-                lazy_fetch_children(node);
+                lazy_fetch_children(node, priv->scale);
         }
         list = g_list_nth (node->children, n);
         if (list == NULL) {

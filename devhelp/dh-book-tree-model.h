@@ -58,7 +58,7 @@ enum {
 
 GType           dh_book_tree_model_get_type  (void);
 
-DhBookTreeModel *dh_book_tree_model_new       (void);
+DhBookTreeModel *dh_book_tree_model_new       (int scale);
 
 G_END_DECLS
 
