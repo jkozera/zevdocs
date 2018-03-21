@@ -108,6 +108,8 @@ dh_book_dispose (GObject *object)
         g_clear_object (&priv->completion);
         g_clear_object (&priv->index_file_monitor);
 
+        cairo_surface_destroy(priv->icon_surface);
+
         if (priv->monitor_event_timeout_id != 0) {
                 g_source_remove (priv->monitor_event_timeout_id);
                 priv->monitor_event_timeout_id = 0;

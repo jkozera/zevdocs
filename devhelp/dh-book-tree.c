@@ -589,6 +589,9 @@ book_tree_populate_tree (DhBookTree *tree)
         book_manager = dh_book_manager_get_singleton ();
 
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree), NULL);
+        if (priv->store) {
+                g_object_unref (priv->store);
+        }
         priv->store = dh_book_tree_model_new(dh_book_manager_get_group_by_language (book_manager));
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree),
                                  GTK_TREE_MODEL (priv->store));

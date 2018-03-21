@@ -123,7 +123,6 @@ static void set_model_cb(DhKeywordModel *model, gpointer user_data)
 {
         DhSidebar *sidebar = DH_SIDEBAR (user_data);
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
-        printf("SETMODEL!\n");
         gtk_tree_view_set_model (priv->hitlist_view,
                                  GTK_TREE_MODEL (model));
 }

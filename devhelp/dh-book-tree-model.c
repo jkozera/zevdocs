@@ -50,6 +50,13 @@ compare_strs (gconstpointer a,
         return g_strcmp0(a, b);
 }
 
+static DhBookTreeModelNode* new_empty_node ()
+{
+        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        memset(node, 0, sizeof(DhBookTreeModelNode));
+        return node;
+}
+
 static DhBookTreeModelNode*
 new_dynamic_symbols_node(JsonObject  *object,
                          const gchar *symbol_type,
@@ -61,7 +68,7 @@ new_dynamic_symbols_node(JsonObject  *object,
                          const char  *URL,
                          const char  *book_title)
 {
-        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        DhBookTreeModelNode *node = new_empty_node();
         JsonObject *counts;
         JsonObjectIter iter;
         GList *symbols;
@@ -107,7 +114,7 @@ new_dynamic_symbols_node(JsonObject  *object,
         } else {
                 node->lazy_children_url = NULL;
         }
-        node->symbol_tp = tp;
+        node->symbol_tp = g_strdup(tp);
         node->symbolchapterpath = malloc(strlen(symbol_type)+1);
         node->object = json_object_ref(object);
         strcpy(node->symbolchapterpath, symbol_type);
@@ -120,7 +127,7 @@ new_dynamic_symbols_node(JsonObject  *object,
 static DhBookTreeModelNode*
 new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar* title, const gchar* book_title)
 {
-        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        DhBookTreeModelNode *node = new_empty_node();
         node->lazy_children_url = NULL;
         JsonObject *counts;
         JsonObjectIter iter;
@@ -181,7 +188,7 @@ new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar*
 static DhBookTreeModelNode*
 new_node (JsonObject* object, GtkTreePath *parent, gint num)
 {
-        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        DhBookTreeModelNode *node = new_empty_node();
         node->lazy_children_url = NULL;
         const gchar* title;
         size_t len;
@@ -234,7 +241,7 @@ new_node (JsonObject* object, GtkTreePath *parent, gint num)
 
 static DhBookTreeModelNode*
 new_lang_node (const gchar* title, GtkTreePath *parent, gint num) {
-        DhBookTreeModelNode *node = malloc (sizeof(DhBookTreeModelNode));
+        DhBookTreeModelNode *node = new_empty_node();
         node->lazy_children_url = NULL;
         size_t len;
         len = strlen (title);
@@ -278,14 +285,47 @@ G_DEFINE_TYPE_WITH_CODE (DhBookTreeModel, dh_book_tree_model, G_TYPE_OBJECT,
                          G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL,
                                                 dh_book_tree_model_tree_model_init));
 
+static void
+free_node(DhBookTreeModelNode *node) {
+        free(node->title);
+        if (node->symbolchapterpath != NULL) {
+                free(node->symbolchapterpath);
+        }
+        if (node->object != NULL) {
+                json_object_unref (node->object);
+        }
+        if (node->path != NULL) {
+                gtk_tree_path_free (node->path);
+        }
+        if (node->lazy_children_url != NULL) {
+                free(node->lazy_children_url);
+        }
+        if (node->symbol_tp != NULL) {
+                free(node->symbol_tp);
+        }
+        if (node->link != NULL) {
+                dh_link_unref (node->link);
+        }
+        g_list_free_full(node->children, (GDestroyNotify)free_node);
+        free(node);
+}
 
+
+static void
+dh_book_tree_model_finalize (GObject *object)
+{
+        DhBookTreeModel *model = DH_BOOK_TREE_MODEL (object);
+        DhBookTreeModelPrivate *priv = dh_book_tree_model_get_instance_private (model);
+        g_list_free_full (priv->root_nodes, (GDestroyNotify)free_node);
+        G_OBJECT_CLASS (dh_book_tree_model_parent_class)->finalize (object);
+}
 
 static void
 dh_book_tree_model_class_init (DhBookTreeModelClass *klass)
 {
         GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-        //object_class->finalize = dh_book_tree_model_finalize;
+        object_class->finalize = dh_book_tree_model_finalize;
 }
 
 static void

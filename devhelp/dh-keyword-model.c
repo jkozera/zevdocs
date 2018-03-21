@@ -481,7 +481,7 @@ websocket_message_cb (SoupWebsocketConnection *self,
         DhLink *link;
         SearchContext *ctx = user_data;
         GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
-        DhBook *book;
+        DhLink *book_link;
 
         const gchar* msg = g_bytes_get_data(message, &len);
         if (len < 2) {
@@ -495,16 +495,19 @@ websocket_message_cb (SoupWebsocketConnection *self,
                 g_signal_emit(ctx->model, signals[SIGNAL_FILTER_COMPLETE], 0);
                 const char *data = "";
                 soup_websocket_connection_close(self, 0, data);
+
                 return;
         }
 
         root = json_parser_get_root(parser);
         object = json_node_get_object(root);
 
+        book_link = dh_link_new_book ("",
+                                      "",
+                                      json_object_get_string_member(object, "DocsetName"),
+                                      "");
         link = dh_link_new (DH_LINK_TYPE_KEYWORD,
-                            dh_link_new_book (
-                                "", "", json_object_get_string_member(object, "DocsetName"), ""
-                            ),
+                            book_link,
                             json_object_get_string_member(object, "Res"),
                             g_strjoin("/",
                                       "http://localhost:12340",
@@ -512,6 +515,7 @@ websocket_message_cb (SoupWebsocketConnection *self,
                                       NULL)
                             );
         g_queue_push_tail(&ctx->priv->links, link);
+        g_object_unref (parser);
 }
 
 void
@@ -526,7 +530,7 @@ websocket_connected_cb (GObject *source_object,
         soup_websocket_connection_send_text(conn, kws);
 }
 
-static GQueue *
+static void
 search_books (DhKeywordModel *model,
               SearchSettings  *settings,
               guint            max_hits,
@@ -534,10 +538,9 @@ search_books (DhKeywordModel *model,
 {
         clear_links(model);
         DhKeywordModelPrivate *priv = dh_keyword_model_get_instance_private (model);
-        GQueue *ret = g_queue_new();
 
         if (settings->search_context->keywords == NULL) {
-                return ret;
+                return NULL;
         }
 
         SoupSession *session;
@@ -566,8 +569,9 @@ search_books (DhKeywordModel *model,
                                              NULL,
                                              websocket_connected_cb,
                                              ctx);
-
-        return ret;
+        free(protocols);
+        g_hash_table_unref(hash);
+        g_object_unref(request);
 }
 
 static GQueue *
@@ -635,7 +639,7 @@ handle_book_id_only (DhSearchContext  *search_context,
  *   will be shown. If keyword matches both a page link and a non-page one,
  *   the page link is the one given as exact match.
  */
-static GQueue *
+static void
 keyword_model_search (DhKeywordModel   *model,
                       DhSearchContext  *search_context,
                       DhLink          **exact_link)
@@ -647,13 +651,6 @@ keyword_model_search (DhKeywordModel   *model,
         GQueue *other_books = NULL;
         DhLink *in_book_exact_link = NULL;
         DhLink *other_books_exact_link = NULL;
-        GQueue *out;
-
-        out = handle_book_id_only (search_context, exact_link);
-        if (out != NULL)
-                return out;
-
-        out = g_queue_new ();
 
         settings.search_context = search_context;
         settings.book_id = priv->current_book_id;
@@ -681,58 +678,11 @@ keyword_model_search (DhKeywordModel   *model,
          */
         settings.book_id = NULL;
         settings.skip_book_id = priv->current_book_id;
-        return search_books (model, &settings,
-                                    max_hits,
-                                    &other_books_exact_link);
+        search_books (model, &settings,
+                      max_hits,
+                      &other_books_exact_link);
+        return;
 
-        /* Now that we got prefix searches in current and other books, decide
-         * which the preferred exact link is. If the exact match is in other
-         * books, prefer those to the current book.
-         */
-        if (in_book_exact_link != NULL) {
-                *exact_link = in_book_exact_link;
-                _dh_util_queue_concat (out, in_book);
-                _dh_util_queue_concat (out, other_books);
-        } else if (other_books_exact_link != NULL) {
-                *exact_link = other_books_exact_link;
-                _dh_util_queue_concat (out, other_books);
-                _dh_util_queue_concat (out, in_book);
-        } else {
-                *exact_link = NULL;
-                _dh_util_queue_concat (out, in_book);
-                _dh_util_queue_concat (out, other_books);
-        }
-
-        if (out->length >= max_hits)
-                return out;
-
-        /* Look for non-prefixed matches in current book. */
-        settings.prefix = FALSE;
-
-        if (priv->current_book_id != NULL) {
-                settings.book_id = priv->current_book_id;
-                settings.skip_book_id = NULL;
-
-                /*in_book = search_books (model, &settings,
-                                        max_hits - out->length,
-                                        NULL);
-
-                _dh_util_queue_concat (out, in_book);
-                if (out->length >= max_hits)
-                        return out;*/
-        }
-
-        /* If still room for more items, look for non-prefixed items in other
-         * books.
-         */
-        settings.book_id = NULL;
-        settings.skip_book_id = priv->current_book_id;
-        /*other_books = search_books (model, &settings,
-                                    max_hits - out->length,
-                                    NULL);
-        _dh_util_queue_concat (out, other_books);*/
-
-        return out;
 }
 
 /**
@@ -770,7 +720,6 @@ dh_keyword_model_filter (DhKeywordModel *model,
 {
         DhKeywordModelPrivate *priv;
         DhSearchContext *search_context;
-        GQueue *new_links = NULL;
         DhLink *exact_link = NULL;
 
         g_return_val_if_fail (DH_IS_KEYWORD_MODEL (model), NULL);
