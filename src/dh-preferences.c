@@ -692,8 +692,10 @@ preferences_bookshelf_remove_book (GObject* obj, GdkEvent *ev, gpointer user_dat
         uri = g_strjoin("/", "http://localhost:12340/item", id);
         request = soup_message_new ("DELETE", uri);
         soup_session_send_message (session, request);
-        //soup_message_unref(request);
-        //soup_session_unref(session);
+
+        g_object_unref(request);
+        g_object_unref(session);
+
         dh_book_manager_refresh (dh_book_manager_get_singleton ());
 }
 
@@ -736,9 +738,8 @@ websocket_message_cb (SoupWebsocketConnection *self,
         size_t len;
         gint received, total;
         gboolean next;
-        DhLink *link;
         GtkTreeIter iter;
-        gchar *docset, *iter_docset;
+        const gchar *docset, *iter_docset;
 
         const gchar* msg = g_bytes_get_data(message, &len);
         if (len < 2) {
@@ -747,7 +748,6 @@ websocket_message_cb (SoupWebsocketConnection *self,
 
         parser = json_parser_new();
         json_parser_load_from_data(parser, msg, len, &error);
-
 
         root = json_parser_get_root(parser);
         object = json_node_get_object(root);
@@ -775,6 +775,8 @@ websocket_message_cb (SoupWebsocketConnection *self,
         if (received == total) {
                 dh_book_manager_refresh (dh_book_manager_get_singleton ());
         }
+
+        g_object_unref(parser);
 }
 
 static void
@@ -821,6 +823,7 @@ open_progress_ws(DhPreferences *prefs)
                                              NULL,
                                              websocket_connected_cb,
                                              priv);
+        g_hash_table_unref(hash);
         free(protocols);
 }
 
@@ -854,10 +857,15 @@ gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
                                  json,
                                  strlen(json));
 
+
         soup_session_send_message (session, request);
 
         char **protocols = malloc(sizeof(char*));
         *protocols = NULL;
+
+        g_free(json);
+        g_object_unref(request);
+        g_object_unref(session);
 
         open_progress_ws (prefs);
         return FALSE;
