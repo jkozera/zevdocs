@@ -13,22 +13,22 @@
     </p>
     <p>
       The documentation must be installed locally, so an internet connection is
-      not needed to use Devhelp.
+      not needed to use ZevDocs.
     </p>
     <p>
-      Devhelp works natively with GTK-Doc, so the GTK+ and GNOME libraries are
+      ZevDocs works natively with GTK-Doc, so the GTK+ and GNOME libraries are
       well supported. But other development platforms can be supported as well,
       as long as the API documentation is available in HTML and a *.devhelp2
       index file is generated.
     </p>
     <p>
-      Devhelp integrates with other applications such as Glade, Builder or
+      ZevDocs integrates with other applications such as Glade, Builder or
       Anjuta, and plugins are available for different text editors (gedit, Vim,
       Emacs, Geany, …).
     </p>
   </description>
-  <url type="homepage">https://wiki.gnome.org/Apps/Devhelp/</url>
-  <url type="bugtracker">https://bugzilla.gnome.org/browse.cgi?product=devhelp</url>
+  <url type="homepage">https://github.com/jkozera/zevdocs/</url>
+  <url type="bugtracker">https://github.com/jkozera/zevdocs/issues/</url>
   <url type="donation">http://www.gnome.org/friends/</url>
   <screenshots>
     <screenshot type="default">
@@ -37,5 +37,37 @@
   </screenshots>
   <project_group>GNOME</project_group>
   <translation type="gettext">devhelp</translation>
-  <update_contact>swilmet@gnome.org</update_contact>
+  <update_contact>jerzy.kozera@gmail.com</update_contact>
+  <content_rating type="oars-1.1">
+    <content_attribute id="violence-cartoon">none</content_attribute>
+    <content_attribute id="violence-fantasy">none</content_attribute>
+    <content_attribute id="violence-realistic">none</content_attribute>
+    <content_attribute id="violence-bloodshed">none</content_attribute>
+    <content_attribute id="violence-sexual">none</content_attribute>
+    <content_attribute id="violence-desecration">none</content_attribute>
+    <content_attribute id="violence-slavery">none</content_attribute>
+    <content_attribute id="violence-worship">none</content_attribute>
+    <content_attribute id="drugs-alcohol">none</content_attribute>
+    <content_attribute id="drugs-narcotics">none</content_attribute>
+    <content_attribute id="drugs-tobacco">none</content_attribute>
+    <content_attribute id="sex-nudity">none</content_attribute>
+    <content_attribute id="sex-themes">none</content_attribute>
+    <content_attribute id="sex-homosexuality">none</content_attribute>
+    <content_attribute id="sex-prostitution">none</content_attribute>
+    <content_attribute id="sex-adultery">none</content_attribute>
+    <content_attribute id="sex-appearance">none</content_attribute>
+    <content_attribute id="language-profanity">none</content_attribute>
+    <content_attribute id="language-humor">none</content_attribute>
+    <content_attribute id="language-discrimination">none</content_attribute>
+    <content_attribute id="social-chat">none</content_attribute>
+    <content_attribute id="social-info">none</content_attribute>
+    <content_attribute id="social-audio">none</content_attribute>
+    <content_attribute id="social-location">none</content_attribute>
+    <content_attribute id="social-contacts">none</content_attribute>
+    <content_attribute id="money-purchasing">none</content_attribute>
+    <content_attribute id="money-gambling">none</content_attribute>
+  </content_rating>
+  <releases>
+    <release version="0.1.0" date="2018-03-21" />
+  </releases>
 </component>

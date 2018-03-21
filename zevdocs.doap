@@ -13,37 +13,29 @@ It provides an easy way to navigate through libraries and to search by
 function, struct, or macro.
 
 The documentation must be installed locally, so an internet connection is
-not needed to use Devhelp.
+not needed to use ZevDocs.
 
-Devhelp works natively with GTK-Doc, so the GTK+ and GNOME libraries are
+ZevDocs works natively with GTK-Doc, so the GTK+ and GNOME libraries are
 well supported. But other development platforms can be supported as well,
 as long as the API documentation is available in HTML and a *.devhelp2
 index file is generated.
 
-Devhelp integrates with other applications such as Glade, Builder or
+ZevDocs integrates with other applications such as Glade, Builder or
 Anjuta, and plugins are available for different text editors (gedit, Vim,
 Emacs, Geany, …).
   </description>
 
-  <homepage rdf:resource="https://wiki.gnome.org/Apps/Devhelp" />
+  <homepage rdf:resource="https://github.com/jkozera/zevdocs/" />
   <mailing-list rdf:resource="https://mail.gnome.org/mailman/listinfo/gnome-devtools" />
-  <download-page rdf:resource="https://download.gnome.org/sources/devhelp/" />
-  <bug-database rdf:resource="https://bugzilla.gnome.org/browse.cgi?product=devhelp" />
+  <download-page rdf:resource="https://github.com/jkozera/" />
+  <bug-database rdf:resource="https://github.com/jkozera/zevdocs/issues/" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#apps" />
   <programming-language>C</programming-language>
 
   <maintainer>
     <foaf:Person>
-      <foaf:name>Frederic Peters</foaf:name>
-      <foaf:mbox rdf:resource="mailto:fpeters@0d.be" />
-      <gnome:userid>fpeters</gnome:userid>
-    </foaf:Person>
-  </maintainer>
-  <maintainer>
-    <foaf:Person>
-      <foaf:name>Sébastien Wilmet</foaf:name>
-      <foaf:mbox rdf:resource="mailto:swilmet@gnome.org" />
-      <gnome:userid>swilmet</gnome:userid>
+      <foaf:name>Jerzy Kozera</foaf:name>
+      <foaf:mbox rdf:resource="mailto:jerzy.kozera@gmail.com" />
     </foaf:Person>
   </maintainer>
 </Project>

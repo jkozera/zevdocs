@@ -146,7 +146,7 @@ about_cb (GSimpleAction *action,
         parent_window = (GtkWindow *) dh_app_get_active_main_window (app, FALSE);
 
         gtk_show_about_dialog (parent_window,
-                               /* Translators: please don't translate "Devhelp" (it's marked as
+                               /* Translators: please don't translate "ZevDocs" (it's marked as
                                 * translatable for transliteration only).
                                 */
                                "name", _("ZevDocs"),
@@ -398,7 +398,7 @@ static gboolean option_version;
 static GOptionEntry options[] = {
         { "new-window", 'n',
           0, G_OPTION_ARG_NONE, NULL,
-          N_("Opens a new Devhelp window"),
+          N_("Opens a new ZevDocs window"),
           NULL
         },
         { "search", 's',
@@ -418,7 +418,7 @@ static GOptionEntry options[] = {
         },
         { "quit", 'q',
           0, G_OPTION_ARG_NONE, NULL,
-          N_("Quit any running Devhelp"),
+          N_("Quit any running ZevDocs"),
           NULL
         },
         { NULL }
@@ -491,7 +491,7 @@ dh_app_class_init (DhAppClass *klass)
 static void
 dh_app_init (DhApp *app)
 {
-        /* Translators: please don't translate "Devhelp" (it's marked as
+        /* Translators: please don't translate "ZevDocs" (it's marked as
          * translatable for transliteration only).
          */
         g_set_application_name (_("ZevDocs"));

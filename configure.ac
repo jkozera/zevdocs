@@ -1,6 +1,6 @@
 AC_PREREQ([2.64])
 AC_INIT([ZevDocs],
-        [3.28.1],
+        [0.1.0],
         [https://github.com/jkozera/zevdocs/issues/],
         [zevdocs],
         [https://github.com/jkozera/zevdocs/])
