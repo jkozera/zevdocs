@@ -830,7 +830,7 @@ dh_book_tree_init (DhBookTree *tree)
 }
 
 /**
- * dh_book_tree_new:
+ * dh_book_\tree_new:
  *
  * Returns: (transfer floating): a new #DhBookTree widget.
  */

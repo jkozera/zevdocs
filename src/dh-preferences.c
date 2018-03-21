@@ -768,6 +768,7 @@ websocket_message_cb (SoupWebsocketConnection *self,
                                            -1);
                         break;
                 }
+                g_free(iter_docset);
                 next = gtk_tree_model_iter_next(priv->bookshelf_store_downloads, &iter);
         }
         gtk_widget_queue_draw(priv->bookshelf_download_treeview);

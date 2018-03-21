@@ -382,6 +382,7 @@ add_docs_for_cur_lang (JsonArray *array,
         int idx;
         DhBookTreeModelPrivate *priv;
         GList *l;
+        GtkTreePath *path;
         DhBookTreeModelNode *node, *newnode;
         const gchar *title;
         const gchar *language;
@@ -413,7 +414,9 @@ add_docs_for_cur_lang (JsonArray *array,
                         }
                         l = l->next;
                 }
-                newnode = new_node (object, gtk_tree_path_new_from_indices(idx, -1), priv->langcount++);
+                path = gtk_tree_path_new_from_indices(idx, -1),
+                newnode = new_node (object, path, priv->langcount++);
+                gtk_tree_path_free(path);
                 node->book = newnode->book;  // needed for icons
                 node->children = g_list_append (node->children, newnode);
         }

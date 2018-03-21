@@ -397,6 +397,8 @@ dh_book_new_from_json (JsonObject *object, gint scale)
 {
         DhBookPrivate *priv;
         DhBook *book;
+        GInputStream *istream;
+        GdkPixbuf *pixbuf;
         gchar *language;
         size_t len;
 
@@ -429,15 +431,14 @@ dh_book_new_from_json (JsonObject *object, gint scale)
                 scale = (int)(2.0 * (2.0 / (double)scale));
         }
         err = NULL;
+        istream = g_memory_input_stream_new_from_data(data, len, NULL);
+        pixbuf = gdk_pixbuf_new_from_stream(istream, NULL, &err);
         priv->icon_surface = gdk_cairo_surface_create_from_pixbuf(
-                gdk_pixbuf_new_from_stream(
-                        g_memory_input_stream_new_from_data(data, len, NULL),
-                        NULL, &err
-                ),
-                scale,
-                NULL
+                pixbuf, scale, NULL
         );
-
+        gdk_pixbuf_unref(pixbuf);
+        g_object_unref(istream);
+        g_free(data);
         g_free(language);
 
         return book;
@@ -483,6 +484,7 @@ dh_book_get_id (DhBook *book)
         return priv->id;
 }
 
+const static gchar *EMPTY_STRING = "";
 const gchar *
 dh_book_get_id_for_removing (DhBook *book)
 {
@@ -493,7 +495,7 @@ dh_book_get_id_for_removing (DhBook *book)
         priv = dh_book_get_instance_private (book);
 
         if (priv->id_for_removing == NULL) {
-                return g_strdup("");
+                return EMPTY_STRING;
         } else {
                 return priv->id_for_removing;
         }
