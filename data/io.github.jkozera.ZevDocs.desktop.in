@@ -8,7 +8,7 @@ Exec=zevdocs
 Terminal=false
 Type=Application
 # Translators: Do NOT translate or transliterate this text (this is an icon file name)!
-Icon=zevdocs
+Icon=io.github.jkozera.ZevDocs
 Categories=GNOME;GTK;Development;
 StartupNotify=true
 DBusActivatable=true

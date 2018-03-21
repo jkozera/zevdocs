@@ -155,8 +155,8 @@ about_cb (GSimpleAction *action,
                                "authors", authors,
                                "translator-credits", _("translator-credits"),
                                "website", "https://github.com/jkozera/zevdocs",
-                               "website-label", _("ZevHelp Website"),
-                               "logo-icon-name", "zevhelp",
+                               "website-label", _("ZevDocs Website"),
+                               "logo-icon-name", "io.github.jkozera.ZevDocs",
                                "license-type", GTK_LICENSE_GPL_2_0,
                                "copyright", "Copyright 2001-2018 – the Devhelp team",
                                NULL);
@@ -495,7 +495,7 @@ dh_app_init (DhApp *app)
          * translatable for transliteration only).
          */
         g_set_application_name (_("ZevDocs"));
-        gtk_window_set_default_icon_name ("zevdocs");
+        gtk_window_set_default_icon_name ("io.github.jkozera.ZevDocs");
 
         g_application_add_main_option_entries (G_APPLICATION (app), options);
 }

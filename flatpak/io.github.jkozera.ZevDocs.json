@@ -8,6 +8,7 @@
         "nightly"
     ],
     "desktop-file-name-prefix" : "(Nightly) ",
+    "rename-icon" : "zevdocs",
     "finish-args" : [
         "--share=ipc",
         "--socket=x11",
