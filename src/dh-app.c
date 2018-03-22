@@ -156,7 +156,7 @@ about_cb (GSimpleAction *action,
                                "translator-credits", _("translator-credits"),
                                "website", "https://github.com/jkozera/zevdocs",
                                "website-label", _("ZevDocs Website"),
-                               "logo-icon-name", "io.github.jkozera.ZevDocs",
+                               "logo-icon-name", "zevdocs",
                                "license-type", GTK_LICENSE_GPL_2_0,
                                "copyright", "Copyright 2001-2018 – the Devhelp team",
                                NULL);

@@ -9,6 +9,7 @@
     ],
     "desktop-file-name-prefix" : "(Nightly) ",
     "rename-icon" : "zevdocs",
+    "copy-icon" : "zevdocs",
     "finish-args" : [
         "--share=ipc",
         "--socket=x11",
