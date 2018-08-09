@@ -1,20 +1,22 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 /*
+ * This file is part of Devhelp.
+ *
  * Copyright (C) 2010 Lanedo GmbH
- * Copyright (C) 2017 Sébastien Wilmet <swilmet@gnome.org>
+ * Copyright (C) 2017, 2018 Sébastien Wilmet <swilmet@gnome.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Devhelp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * Devhelp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef DH_BOOK_MANAGER_H
@@ -47,25 +49,11 @@ struct _DhBookManagerClass {
 
 GType           dh_book_manager_get_type                (void) G_GNUC_CONST;
 
-DhBookManager * dh_book_manager_get_singleton           (void);
-
-GList *         dh_book_manager_get_books               (DhBookManager *book_manager);
-
-gboolean        dh_book_manager_get_group_by_language   (DhBookManager *book_manager);
-
-void            dh_book_manager_set_group_by_language   (DhBookManager *book_manager,
-                                                         gboolean       group_by_language);
-void            dh_book_manager_set_scale               (gint scale);
-
-void            dh_book_manager_refresh                 (DhBookManager *manager);
-
-DhBookManager * dh_book_manager_new                     (gint scale);
+G_DEPRECATED
+DhBookManager * dh_book_manager_new                     (void);
 
 G_DEPRECATED
 void            dh_book_manager_populate                (DhBookManager *book_manager);
-
-G_GNUC_INTERNAL
-void            _dh_book_manager_unref_singleton        (void);
 
 G_END_DECLS
 

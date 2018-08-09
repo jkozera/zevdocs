@@ -1,0 +1,51 @@
+How to contribute to Devhelp
+============================
+
+Devhelp is hosted on the GNOME GitLab instance, you can fork the repository and
+then do a merge request:
+
+    https://gitlab.gnome.org/GNOME/devhelp
+
+Read the following wiki page to know the conventions for the commit messages:
+
+    https://wiki.gnome.org/Git/CommitMessages
+
+C code conventions
+------------------
+
+Devhelp follows the Linux kernel coding style, with some exceptions:
+- Indentation: 8 spaces, not tabs.
+- One space before *each* opening parenthesis.
+- Multi-line comments must be like this:
+        /* First line.
+         * Second line.
+         */
+
+GObject classes must not be created with a G_DECLARE macro, it causes more
+problems than it solves:
+https://blogs.gnome.org/swilmet/2015/10/10/changing-quickly-between-a-final-and-derivable-gobject-class/
+
+g_auto macros are not used, because:
+1. It makes debugging more difficult in case of a memory handling problem.
+2. It breaks the uniformity of memory handling in C. Uniformity is an important
+   principle for programming language design, as explained in the book
+   “The Psychology of Computer Programming”:
+   https://www.amazon.com/Psychology-Computer-Programming-Silver-Anniversary/dp/0932633420/
+3. The developer needs to be very careful when using g_auto in certain
+   circumstances:
+   https://blog.fishsoup.net/2015/11/05/attributecleanup-mixed-declarations-and-code-and-goto/
+
+See also:
+https://developer.gnome.org/programming-guidelines/unstable/
+
+Flatpak
+-------
+
+The Devhelp maintainers maintain both the nightly and the stable versions of
+the Devhelp Flatpak.
+
+The nightly version is in flatpak/ and the gnome-apps-nightly module:
+https://gitlab.gnome.org/GNOME/gnome-apps-nightly
+
+The stable version is on Flathub:
+https://github.com/flathub/org.gnome.Devhelp

@@ -8,11 +8,9 @@
 ]>
 <book id="index">
   <bookinfo>
-    <title>&package_name; Reference Manual</title>
+    <title>&package_name; &package_api_version; Reference Manual</title>
     <releaseinfo>
       For &package_string;.
-      The latest version of this documentation can be found on-line at
-      <ulink role="online-location" url="https://developer.gnome.org/devhelp/">https://developer.gnome.org/devhelp/</ulink>.
     </releaseinfo>
   </bookinfo>
 
@@ -22,11 +20,17 @@
     <chapter id="general">
       <title>General</title>
       <xi:include href="xml/init.xml"/>
+      <xi:include href="xml/dh-profile.xml"/>
+      <xi:include href="xml/dh-profile-builder.xml"/>
+      <xi:include href="xml/dh-settings.xml"/>
+      <xi:include href="xml/dh-settings-builder.xml"/>
     </chapter>
 
     <chapter id="data">
       <title>The Data</title>
-      <xi:include href="xml/dh-book-manager.xml"/>
+      <xi:include href="xml/dh-book-list.xml"/>
+      <xi:include href="xml/dh-book-list-directory.xml"/>
+      <xi:include href="xml/dh-book-list-builder.xml"/>
       <xi:include href="xml/dh-book.xml"/>
       <xi:include href="xml/dh-link.xml"/>
     </chapter>
@@ -38,6 +42,20 @@
       <xi:include href="xml/dh-keyword-model.xml"/>
     </chapter>
 
+    <chapter id="viewing-html-pages">
+      <title>Viewing HTML Pages</title>
+      <xi:include href="xml/dh-notebook.xml"/>
+      <xi:include href="xml/dh-search-bar.xml"/>
+      <xi:include href="xml/dh-tab.xml"/>
+      <xi:include href="xml/dh-tab-label.xml"/>
+      <xi:include href="xml/dh-web-view.xml"/>
+    </chapter>
+
+    <chapter id="putting-it-all-together">
+      <title>Putting It All Together</title>
+      <xi:include href="xml/dh-application-window.xml"/>
+    </chapter>
+
     <chapter id="assistant">
       <title>Assistant</title>
       <xi:include href="xml/dh-assistant-view.xml"/>
@@ -46,6 +64,11 @@
     <chapter id="misc">
       <title>Misc</title>
       <xi:include href="xml/dh-completion.xml"/>
+    </chapter>
+
+    <chapter id="deprecated">
+      <title>Deprecated</title>
+      <xi:include href="xml/dh-book-manager.xml"/>
     </chapter>
   </part>
 
@@ -76,6 +99,10 @@
     <index id="api-index-3-28" role="3.28">
       <title>Index of new symbols in 3.28</title>
       <xi:include href="xml/api-index-3.28.xml"><xi:fallback /></xi:include>
+    </index>
+    <index id="api-index-3-30" role="3.30">
+      <title>Index of new symbols in 3.30</title>
+      <xi:include href="xml/api-index-3.30.xml"><xi:fallback /></xi:include>
     </index>
   </part>
 </book>

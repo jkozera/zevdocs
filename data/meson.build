@@ -1,12 +1,21 @@
 subdir('icons')
 
 install_data(
-        ['org.gnome.devhelp.gschema.xml',
-         'org.gnome.libdevhelp-3.gschema.xml'],
+        'org.gnome.devhelp.gschema.xml',
         install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'glib-2.0/schemas')
 )
 
-appdata = 'org.gnome.Devhelp.appdata.xml'
+libdevhelp_gschema_conf = configuration_data()
+libdevhelp_gschema_conf.set('LIBDEVHELP_API_VERSION', LIBDEVHELP_API_VERSION)
+configure_file(
+        input : 'org.gnome.libdevhelp.gschema.xml.in',
+        output : 'org.gnome.libdevhelp-@0@.gschema.xml'.format(LIBDEVHELP_API_VERSION),
+        configuration : libdevhelp_gschema_conf,
+        install : true,
+        install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'glib-2.0/schemas')
+)
+
+appdata = 'io.github.jkozera.ZevDocs.appdata.xml'
 I18N.merge_file(
         appdata,
         input : appdata + '.in',
@@ -16,7 +25,7 @@ I18N.merge_file(
         install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'metainfo')
 )
 
-desktop_file = 'org.gnome.Devhelp.desktop'
+desktop_file = 'io.github.jkozera.ZevDocs.desktop'
 I18N.merge_file(
         desktop_file,
         type : 'desktop',

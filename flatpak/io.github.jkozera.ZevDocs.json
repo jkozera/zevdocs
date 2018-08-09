@@ -43,7 +43,7 @@
         {
             "name" : "zevdocs",
             "config-opts" : [
-                "--enable-flatpak-build"
+                "-Dflatpak_build=true"
             ],
             "sources" : [
                 {

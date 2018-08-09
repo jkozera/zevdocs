@@ -1,23 +1,36 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 /*
+ * This file is part of Devhelp.
+ *
  * Copyright (C) 2018 Sébastien Wilmet <swilmet@gnome.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Devhelp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * Devhelp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "dh-tab-label.h"
 #include "dh-web-view.h"
+
+/**
+ * SECTION:dh-tab-label
+ * @Title: DhTabLabel
+ * @Short_description: A #DhTab label, used by #DhNotebook
+ *
+ * The #DhTabLabel widget is used for the tab labels in #DhNotebook.
+ *
+ * It contains the title as returned by dh_web_view_get_devhelp_title(), plus a
+ * close button.
+ */
 
 struct _DhTabLabelPrivate {
         /* Weak ref */
@@ -145,6 +158,14 @@ dh_tab_label_class_init (DhTabLabelClass *klass)
         object_class->set_property = dh_tab_label_set_property;
         object_class->dispose = dh_tab_label_dispose;
 
+        /**
+         * DhTabLabel:tab:
+         *
+         * The associated #DhTab. #DhTabLabel has a weak reference to the
+         * #DhTab.
+         *
+         * Since: 3.30
+         */
         properties[PROP_TAB] =
                 g_param_spec_object ("tab",
                                      "tab",
@@ -176,7 +197,7 @@ create_close_button (void)
 
 static void
 close_button_clicked_cb (GtkButton  *close_button,
-			 DhTabLabel *tab_label)
+                         DhTabLabel *tab_label)
 {
         if (tab_label->priv->tab != NULL)
                 gtk_widget_destroy (GTK_WIDGET (tab_label->priv->tab));
@@ -216,6 +237,13 @@ dh_tab_label_init (DhTabLabel *tab_label)
         gtk_container_add (GTK_CONTAINER (tab_label), close_button);
 }
 
+/**
+ * dh_tab_label_new:
+ * @tab: the associated #DhTab.
+ *
+ * Returns: (transfer floating): a new #DhTabLabel.
+ * Since: 3.30
+ */
 GtkWidget *
 dh_tab_label_new (DhTab *tab)
 {
@@ -226,7 +254,13 @@ dh_tab_label_new (DhTab *tab)
                              NULL);
 }
 
-/* Returns: (transfer none) (nullable): the #DhTabLabel:tab. */
+/**
+ * dh_tab_label_get_tab:
+ * @tab_label: a #DhTabLabel.
+ *
+ * Returns: (transfer none) (nullable): the #DhTabLabel:tab.
+ * Since: 3.30
+ */
 DhTab *
 dh_tab_label_get_tab (DhTabLabel *tab_label)
 {

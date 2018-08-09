@@ -6,7 +6,7 @@
 project(
         'devhelp', 'c',
         meson_version : '>= 0.43',
-        version : '3.28.1'
+        version : '3.30.0'
 )
 
 GNOME = import('gnome')
@@ -14,11 +14,11 @@ PKG_CONFIG = import('pkgconfig')
 I18N = import('i18n')
 
 # API version, used for parallel installability.
-DEVHELP_API_VERSION = '3'
+LIBDEVHELP_API_VERSION = '3'
 
 # It would be nice to get rid of this variant, to use only the short version
 # everywhere.
-DEVHELP_API_VERSION_FULL = '3.0'
+LIBDEVHELP_API_VERSION_FULL = '3.0'
 
 # Libtool version numbers, remember to change them just *before* a release.
 # A good time to update it is for the GNOME x.y.90 version, at API freeze,
@@ -26,19 +26,21 @@ DEVHELP_API_VERSION_FULL = '3.0'
 #   (Interfaces removed:    CURRENT++, AGE=0, REVISION=0)
 #   (Interfaces added:      CURRENT++, AGE++, REVISION=0)
 #   (No interfaces changed:                   REVISION++)
-lt_current=5
-lt_revision=0
-lt_age=0
-LIBDEVHELP_LT_VERSION='@0@.@1@.@2@'.format(lt_current, lt_revision, lt_age)
+lt_current = 6
+lt_revision = 0
+lt_age = 0
+LIBDEVHELP_LT_VERSION = '@0@.@1@.@2@'.format(lt_current, lt_revision, lt_age)
 
+WEBKITGTK_DEP_STR = 'webkit2gtk-4.0'
 libdevhelp_deps_array = [
-        ['gio-2.0', '>= 2.40'],
+        ['gio-2.0', '>= 2.56'],
         ['gtk+-3.0', '>= 3.22'],
-        ['webkit2gtk-4.0', '>= 2.19.2']
+        ['json-glib-1.0', '>= 1.0.0'],
+        [WEBKITGTK_DEP_STR, '>= 2.20']
 ]
 
 LIBDEVHELP_DEPS_STR = []
-LIBDEVHELP_DEPS = []
+LIBDEVHELP_DEPS = [meson.get_compiler('c').find_library('m')]
 foreach dep : libdevhelp_deps_array
         dep_name = dep[0]
         dep_version = dep[1]
@@ -48,8 +50,8 @@ endforeach
 
 DEVHELP_APP_DEPS = [
         LIBDEVHELP_DEPS,
+        dependency('amtk-5', version : '>= 5.0'),
         dependency('gsettings-desktop-schemas'),
-        meson.get_compiler('c').find_library('m')
 ]
 
 # config.h
@@ -70,6 +72,7 @@ config_data.set_quoted(
         join_paths(get_option('prefix'), get_option('localedir'))
 )
 config_data.set_quoted('PACKAGE_VERSION', meson.project_version())
+config_data.set_quoted('LIBDEVHELP_API_VERSION', LIBDEVHELP_API_VERSION)
 config_data.set('FLATPAK_BUILD', get_option('flatpak_build'))
 
 configure_file(
@@ -152,9 +155,19 @@ subdir('devhelp')
 subdir('src')
 subdir('unit-tests')
 
+if get_option('gtk_doc')
+        subdir('docs/reference')
+endif
+
+meson.add_install_script(
+        'meson_post_install.py',
+        join_paths(get_option('prefix'), get_option('datadir'))
+)
+
 # Print a summary of the configuration
 output = 'Configuration:\n\n'
 output += '        Devhelp version ' + meson.project_version() + '\n\n'
 output += '        Prefix:             ' + get_option('prefix') + '\n'
-output += '        Flatpak build mode: ' + get_option('flatpak_build').to_string()
+output += '        API documentation:  ' + get_option('gtk_doc').to_string() + '\n'
+output += '        Flatpak build mode: ' + get_option('flatpak_build').to_string() + '\n'
 message(output)

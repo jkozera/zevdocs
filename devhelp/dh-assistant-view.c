@@ -1,31 +1,31 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 /*
+ * This file is part of Devhelp.
+ *
  * Copyright (C) 2008 Imendio AB
  * Copyright (C) 2008 Sven Herzberg
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Devhelp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * Devhelp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
- * USA
+ * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "config.h"
 #include "dh-assistant-view.h"
 #include <string.h>
 #include <glib/gi18n-lib.h>
-#include "dh-util-lib.h"
 #include "dh-book.h"
-#include "dh-book-manager.h"
+#include "dh-book-list.h"
+#include "dh-util-lib.h"
 
 /**
  * SECTION:dh-assistant-view
@@ -435,7 +435,7 @@ dh_assistant_view_search (DhAssistantView *view,
                           const gchar     *str)
 {
         DhAssistantViewPrivate *priv;
-        DhBookManager       *book_manager;
+        DhBookList          *book_list;
         const gchar         *name;
         DhLink              *link;
         DhLink              *exact_link;
@@ -461,9 +461,12 @@ dh_assistant_view_search (DhAssistantView *view,
         prefix_link = NULL;
         exact_link = NULL;
 
-        book_manager = dh_book_manager_get_singleton ();
+        /* TODO: take a DhProfile parameter, or add a "profile" construct-only
+         * property.
+         */
+        book_list = dh_book_list_get_default ();
 
-        for (books = dh_book_manager_get_books (book_manager);
+        for (books = dh_book_list_get_books (book_list);
              !exact_link && books;
              books = g_list_next (books)) {
                 GList *l;

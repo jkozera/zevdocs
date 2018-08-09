@@ -27,7 +27,7 @@ Emacs, Geany, …).
 
   <homepage rdf:resource="https://github.com/jkozera/zevdocs/" />
   <mailing-list rdf:resource="https://mail.gnome.org/mailman/listinfo/gnome-devtools" />
-  <download-page rdf:resource="https://github.com/jkozera/" />
+  <download-page rdf:resource="https://github.com/jkozera/zevdocs/" />
   <bug-database rdf:resource="https://github.com/jkozera/zevdocs/issues/" />
   <category rdf:resource="http://api.gnome.org/doap-extensions#apps" />
   <programming-language>C</programming-language>

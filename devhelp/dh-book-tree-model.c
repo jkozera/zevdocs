@@ -24,7 +24,7 @@
 #include <json-glib/json-glib.h>
 #include <libsoup/soup.h>
 #include "dh-book.h"
-#include "dh-book-manager.h"
+#include "dh-book-list.h"
 #include "dh-search-context.h"
 #include "dh-util-lib.h"
 #include "dh-link.h"
@@ -75,7 +75,7 @@ new_dynamic_symbols_node(JsonObject  *object,
         const gchar *member_name;
         JsonNode *member_node;
         size_t len;
-        GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
         DhBook *book;
 
         if (title == NULL) {
@@ -135,7 +135,7 @@ new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar*
         const gchar *member_name;
         JsonNode *member_node;
         size_t len;
-        GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
         DhBook *book;
         gint i;
 
@@ -192,7 +192,7 @@ new_node (JsonObject* object, GtkTreePath *parent, gint num)
         node->lazy_children_url = NULL;
         const gchar* title;
         size_t len;
-        GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
         DhBook *book;
 
         title = json_object_get_string_member(object, "Title");
@@ -706,7 +706,7 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
 {
 
         GList *list;
-        GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
         DhBook *book;
         DhBookTreeModelNode *node;
         list = iter->user_data;

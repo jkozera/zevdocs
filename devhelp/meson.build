@@ -1,45 +1,65 @@
 libdevhelp_public_headers = [
         'devhelp.h',
+        'dh-application-window.h',
         'dh-assistant-view.h',
         'dh-book.h',
+        'dh-book-list.h',
+        'dh-book-list-builder.h',
+        'dh-book-list-directory.h',
         'dh-book-manager.h',
         'dh-book-tree.h',
+        'dh-book-tree-model.h',
         'dh-completion.h',
         'dh-init.h',
         'dh-keyword-model.h',
         'dh-link.h',
-        'dh-sidebar.h'
+        'dh-notebook.h',
+        'dh-profile.h',
+        'dh-profile-builder.h',
+        'dh-search-bar.h',
+        'dh-settings.h',
+        'dh-settings-builder.h',
+        'dh-sidebar.h',
+        'dh-tab.h',
+        'dh-tab-label.h',
+        'dh-web-view.h'
 ]
 
 libdevhelp_public_c_files = [
+        'dh-application-window.c',
         'dh-assistant-view.c',
         'dh-book.c',
+        'dh-book-list.c',
+        'dh-book-list-builder.c',
+        'dh-book-list-directory.c',
         'dh-book-manager.c',
         'dh-book-tree.c',
+        'dh-book-tree-model.c',
         'dh-completion.c',
         'dh-init.c',
         'dh-keyword-model.c',
         'dh-link.c',
-        'dh-sidebar.c'
-]
-
-libdevhelp_private_headers = [
-        'dh-error.h',
-        'dh-parser.h',
-        'dh-search-context.h',
-        'dh-settings.h',
-        'dh-util-lib.h'
+        'dh-notebook.c',
+        'dh-profile.c',
+        'dh-profile-builder.c',
+        'dh-search-bar.c',
+        'dh-settings.c',
+        'dh-settings-builder.c',
+        'dh-sidebar.c',
+        'dh-tab.c',
+        'dh-tab-label.c',
+        'dh-web-view.c'
 ]
 
 libdevhelp_private_c_files = [
+        'dh-book-list-simple.c',
         'dh-error.c',
         'dh-parser.c',
         'dh-search-context.c',
-        'dh-settings.c',
         'dh-util-lib.c'
 ]
 
-install_headers_first_subdir = 'devhelp-@0@'.format(DEVHELP_API_VERSION)
+install_headers_first_subdir = 'devhelp-@0@'.format(LIBDEVHELP_API_VERSION)
 install_headers_subdir = join_paths(install_headers_first_subdir, 'devhelp')
 install_headers_fulldir = join_paths(
         get_option('prefix'),
@@ -74,18 +94,10 @@ STATIC_LIBDEVHELP_DECLARED_DEP = declare_dependency(
 
 symbol_map = join_paths(meson.current_source_dir(), 'symbol.map')
 
-ldflag = '-Wl,--version-script'
-c_compiler = meson.get_compiler('c')
-
-ldflags = []
-if c_compiler.has_argument(ldflag)
-        ldflags += '@0@,@1@'.format(ldflag, symbol_map)
-endif
-
 libdevhelp = shared_library(
-        'devhelp-@0@'.format(DEVHELP_API_VERSION),
+        'devhelp-@0@'.format(LIBDEVHELP_API_VERSION),
         link_whole : libdevhelp_static,
-        link_args : ldflags,
+        link_args : '-Wl,--version-script,' + symbol_map,
         link_depends : symbol_map,
         version : LIBDEVHELP_LT_VERSION,
         install : true
@@ -104,11 +116,28 @@ install_headers(
 )
 
 PKG_CONFIG.generate(
-        filebase : 'libdevhelp-@0@'.format(DEVHELP_API_VERSION_FULL),
+        filebase : 'libdevhelp-@0@'.format(LIBDEVHELP_API_VERSION_FULL),
         name : meson.project_name(),
         description : meson.project_name(),
         version : meson.project_version(),
         libraries : libdevhelp,
         subdirs : install_headers_first_subdir,
         requires : LIBDEVHELP_DEPS_STR
+)
+
+GNOME.generate_gir(
+        libdevhelp,
+        export_packages : 'libdevhelp-@0@'.format(LIBDEVHELP_API_VERSION_FULL),
+        sources : [
+                libdevhelp_public_headers,
+                libdevhelp_public_c_files,
+                libdevhelp_enums
+        ],
+        namespace : 'Devhelp',
+        nsversion : LIBDEVHELP_API_VERSION_FULL,
+        identifier_prefix : 'Dh',
+        includes : ['Gtk-3.0', 'WebKit2-4.0', 'Json-1.0'],
+        header : 'devhelp/devhelp.h',
+        include_directories : ROOT_INCLUDE_DIR,
+        install : true
 )

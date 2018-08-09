@@ -1,25 +1,28 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 /*
+ * This file is part of Devhelp.
+ *
  * Copyright (C) 2018 Sébastien Wilmet <swilmet@gnome.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Devhelp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * Devhelp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef DH_WEB_VIEW_H
 #define DH_WEB_VIEW_H
 
 #include <webkit2/webkit2.h>
+#include <devhelp/dh-profile.h>
 
 G_BEGIN_DECLS
 
@@ -43,13 +46,19 @@ struct _DhWebView {
 struct _DhWebViewClass {
         WebKitWebViewClass parent_class;
 
-	/* Padding for future expansion */
+        /* Signals */
+        void    (* open_new_tab)        (DhWebView   *view,
+                                         const gchar *uri);
+
+        /* Padding for future expansion */
         gpointer padding[12];
 };
 
 GType           dh_web_view_get_type            (void);
 
-DhWebView *     dh_web_view_new                 (void);
+DhWebView *     dh_web_view_new                 (DhProfile *profile);
+
+DhProfile *     dh_web_view_get_profile         (DhWebView *view);
 
 const gchar *   dh_web_view_get_devhelp_title   (DhWebView *view);
 

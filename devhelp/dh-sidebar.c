@@ -1,5 +1,7 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 /*
+ * This file is part of Devhelp.
+ *
  * Copyright (C) 2001-2003 CodeFactory AB
  * Copyright (C) 2001-2003 Mikael Hallendal <micke@imendio.com>
  * Copyright (C) 2005-2008 Imendio AB
@@ -7,18 +9,18 @@
  * Copyright (C) 2013 Aleksander Morgado <aleksander@gnu.org>
  * Copyright (C) 2015, 2017, 2018 Sébastien Wilmet <swilmet@gnome.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Devhelp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * Devhelp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "dh-sidebar.h"
@@ -45,13 +47,14 @@
  * #GtkTreeView. The two #GtkTreeView's cannot be both visible at the same time,
  * it's either one or the other.
  *
- * The #DhSidebar::link-selected signal is emitted when one element in one of
- * the #GtkTreeView's is selected. When that happens, the Devhelp application
- * opens the link in a #WebKitWebView shown at the right side of the main
- * window.
+ * #DhSidebar emits the #DhSidebar::link-selected signal. When that happens, the
+ * Devhelp application opens the #DhLink in a #WebKitWebView shown at the right
+ * side of the main window.
  */
 
 typedef struct {
+        DhProfile *profile;
+
         /* A GtkSearchEntry. */
         GtkEntry *entry;
 
@@ -71,50 +74,65 @@ enum {
         N_SIGNALS
 };
 
+enum {
+        PROP_0,
+        PROP_PROFILE,
+        N_PROPERTIES
+};
+
 static guint signals[N_SIGNALS] = { 0 };
+static GParamSpec *properties[N_PROPERTIES];
 
 G_DEFINE_TYPE_WITH_PRIVATE (DhSidebar, dh_sidebar, GTK_TYPE_GRID)
 
 static void
-dh_sidebar_dispose (GObject *object)
+set_profile (DhSidebar *sidebar,
+             DhProfile *profile)
 {
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (DH_SIDEBAR (object));
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
 
-        g_clear_object (&priv->hitlist_model);
+        g_return_if_fail (profile == NULL || DH_IS_PROFILE (profile));
 
-        if (priv->idle_complete_id != 0) {
-                g_source_remove (priv->idle_complete_id);
-                priv->idle_complete_id = 0;
-        }
-
-        if (priv->idle_search_id != 0) {
-                g_source_remove (priv->idle_search_id);
-                priv->idle_search_id = 0;
-        }
-
-        G_OBJECT_CLASS (dh_sidebar_parent_class)->dispose (object);
+        g_assert (priv->profile == NULL);
+        g_set_object (&priv->profile, profile);
 }
 
 static void
-dh_sidebar_class_init (DhSidebarClass *klass)
+dh_sidebar_get_property (GObject    *object,
+                         guint       prop_id,
+                         GValue     *value,
+                         GParamSpec *pspec)
 {
-        GObjectClass *object_class = G_OBJECT_CLASS (klass);
+        DhSidebar *sidebar = DH_SIDEBAR (object);
 
-        object_class->dispose = dh_sidebar_dispose;
+        switch (prop_id) {
+                case PROP_PROFILE:
+                        g_value_set_object (value, dh_sidebar_get_profile (sidebar));
+                        break;
 
-        /**
-         * DhSidebar::link-selected:
-         * @sidebar: a #DhSidebar.
-         * @link: the selected #DhLink.
-         */
-        signals[SIGNAL_LINK_SELECTED] =
-                g_signal_new ("link-selected",
-                              G_TYPE_FROM_CLASS (klass),
-                              G_SIGNAL_RUN_LAST,
-                              G_STRUCT_OFFSET (DhSidebarClass, link_selected),
-                              NULL, NULL, NULL,
-                              G_TYPE_NONE,
-                              1, DH_TYPE_LINK);
+                default:
+                        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                        break;
+        }
+}
+
+static void
+dh_sidebar_set_property (GObject      *object,
+                         guint         prop_id,
+                         const GValue *value,
+                         GParamSpec   *pspec)
+{
+        DhSidebar *sidebar = DH_SIDEBAR (object);
+
+        switch (prop_id) {
+                case PROP_PROFILE:
+                        set_profile (sidebar, g_value_get_object (value));
+                        break;
+
+                default:
+                        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+                        break;
+        }
 }
 
 /******************************************************************************/
@@ -134,15 +152,15 @@ search_idle_cb (gpointer user_data)
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
         const gchar *search_text;
         const gchar *book_id;
-        DhLink *book_link;
+        DhLink *selected_link;
         DhLink *exact_link;
 
         priv->idle_search_id = 0;
 
         search_text = gtk_entry_get_text (priv->entry);
 
-        book_link = dh_book_tree_get_selected_book (priv->book_tree);
-        book_id = book_link != NULL ? dh_link_get_book_id (book_link) : NULL;
+        selected_link = dh_book_tree_get_selected_link (priv->book_tree);
+        book_id = selected_link != NULL ? dh_link_get_book_id (selected_link) : NULL;
 
         /* Disconnect the model, see the doc of dh_keyword_model_filter(). */
         gtk_tree_view_set_model (priv->hitlist_view, NULL);
@@ -150,7 +168,7 @@ search_idle_cb (gpointer user_data)
         exact_link = dh_keyword_model_filter (priv->hitlist_model,
                                               search_text,
                                               book_id,
-                                              NULL);
+                                              priv->profile);
 
         g_signal_connect(priv->hitlist_model,
                          "filter-complete", (GCallback)set_model_cb, sidebar);
@@ -159,8 +177,8 @@ search_idle_cb (gpointer user_data)
         if (exact_link != NULL)
                 g_signal_emit (sidebar, signals[SIGNAL_LINK_SELECTED], 0, exact_link);
 
-        if (book_link != NULL)
-                dh_link_unref (book_link);
+        if (selected_link != NULL)
+                dh_link_unref (selected_link);
 
         return G_SOURCE_REMOVE;
 }
@@ -174,8 +192,44 @@ setup_search_idle (DhSidebar *sidebar)
                 priv->idle_search_id = g_idle_add (search_idle_cb, sidebar);
 }
 
+/******************************************************************************/
+
+/* Create DhCompletion objects, because if all the DhCompletion objects need to
+ * be created (synchronously) at the time of the first completion, it can make
+ * the GUI not responsive (measured time was for example 40ms to create the
+ * DhCompletion's for 17 books, which is not a lot of books). On application
+ * startup it is less a problem.
+ */
 static void
-book_manager_changed_cb (DhSidebar *sidebar)
+create_completion_objects (DhBookList *book_list)
+{
+        GList *books;
+        GList *l;
+
+        books = dh_book_list_get_books (book_list);
+
+        for (l = books; l != NULL; l = l->next) {
+                DhBook *cur_book = DH_BOOK (l->data);
+                dh_book_get_completion (cur_book);
+        }
+}
+
+static void
+add_book_cb (DhBookList *book_list,
+             DhBook     *book,
+             DhSidebar  *sidebar)
+{
+        /* See comment of create_completion_objects(). */
+        dh_book_get_completion (book);
+
+        /* Update current search if any. */
+        setup_search_idle (sidebar);
+}
+
+static void
+remove_book_cb (DhBookList *book_list,
+                DhBook     *book,
+                DhSidebar  *sidebar)
 {
         /* Update current search if any. */
         setup_search_idle (sidebar);
@@ -183,58 +237,39 @@ book_manager_changed_cb (DhSidebar *sidebar)
 
 /******************************************************************************/
 
+/* Returns: (transfer full) (nullable): */
+static DhLink *
+hitlist_get_selected_link (DhSidebar *sidebar)
+{
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
+        GtkTreeSelection *selection;
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+        DhLink *link;
+
+        selection = gtk_tree_view_get_selection (priv->hitlist_view);
+        if (!gtk_tree_selection_get_selected (selection, &model, &iter))
+                return NULL;
+
+        gtk_tree_model_get (model, &iter,
+                            DH_KEYWORD_MODEL_COL_LINK, &link,
+                            -1);
+
+        return link;
+}
+
 static void
 hitlist_selection_changed_cb (GtkTreeSelection *selection,
                               DhSidebar        *sidebar)
 {
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
-        GtkTreeIter iter;
+        DhLink *link;
 
-        if (gtk_tree_selection_get_selected (selection, NULL, &iter)) {
-                DhLink *link;
+        link = hitlist_get_selected_link (sidebar);
 
-                gtk_tree_model_get (GTK_TREE_MODEL (priv->hitlist_model), &iter,
-                                    DH_KEYWORD_MODEL_COL_LINK, &link,
-                                    -1);
-
+        if (link != NULL) {
                 g_signal_emit (sidebar, signals[SIGNAL_LINK_SELECTED], 0, link);
                 dh_link_unref (link);
         }
-}
-
-/* Make it possible to jump back to the currently selected item, useful when the
- * html view has been scrolled away.
- */
-static gboolean
-hitlist_button_press_cb (GtkTreeView    *hitlist_view,
-                         GdkEventButton *event,
-                         DhSidebar      *sidebar)
-{
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
-        GtkTreePath *path;
-        GtkTreeIter iter;
-        DhLink *link;
-
-        gtk_tree_view_get_path_at_pos (hitlist_view, event->x, event->y, &path,
-                                       NULL, NULL, NULL);
-        if (path == NULL)
-                return GDK_EVENT_PROPAGATE;
-
-        gtk_tree_model_get_iter (GTK_TREE_MODEL (priv->hitlist_model), &iter, path);
-        gtk_tree_path_free (path);
-
-        gtk_tree_model_get (GTK_TREE_MODEL (priv->hitlist_model),
-                            &iter,
-                            DH_KEYWORD_MODEL_COL_LINK, &link,
-                            -1);
-
-        g_signal_emit (sidebar, signals[SIGNAL_LINK_SELECTED], 0, link);
-        dh_link_unref (link);
-
-        /* Always propagate the event so the tree view can update
-         * the selection etc.
-         */
-        return GDK_EVENT_PROPAGATE;
 }
 
 static gboolean
@@ -254,46 +289,6 @@ entry_key_press_event_cb (GtkEntry    *entry,
                 }
 
                 return GDK_EVENT_STOP;
-        }
-
-        if (event->keyval == GDK_KEY_Return ||
-            event->keyval == GDK_KEY_KP_Enter) {
-                GtkTreeIter iter;
-                DhLink *link;
-                gchar *name;
-
-                /* Get the first entry found.
-                 *
-                 * FIXME: is it really useful to do that? If there is an exact
-                 * match it already gets selected, so it seems that the feature
-                 * here just selects a random symbol (the one that appears to be
-                 * the first in the list).
-                 * I've never used this feature -- swilmet.
-                 * This has been implemented in
-                 * commit 455440a93d1b55d5a1e53ecabb2ee33093eec965
-                 * and https://bugzilla.gnome.org/show_bug.cgi?id=114558
-                 * but maybe at that time the search didn't jump to the exact
-                 * match if there was one.
-                 */
-                if (gtk_widget_is_visible (GTK_WIDGET (priv->hitlist_view)) &&
-                    gtk_tree_model_get_iter_first (GTK_TREE_MODEL (priv->hitlist_model), &iter)) {
-                        gtk_tree_model_get (GTK_TREE_MODEL (priv->hitlist_model),
-                                            &iter,
-                                            DH_KEYWORD_MODEL_COL_LINK, &link,
-                                            DH_KEYWORD_MODEL_COL_NAME, &name,
-                                            -1);
-
-                        gtk_entry_set_text (entry, name);
-                        g_free (name);
-
-                        gtk_editable_select_region (GTK_EDITABLE (entry), 0, 0);
-                        gtk_editable_set_position (GTK_EDITABLE (entry), -1);
-
-                        g_signal_emit (sidebar, signals[SIGNAL_LINK_SELECTED], 0, link);
-                        dh_link_unref (link);
-
-                        return GDK_EVENT_STOP;
-                }
         }
 
         return GDK_EVENT_PROPAGATE;
@@ -338,24 +333,19 @@ complete_idle_cb (gpointer user_data)
 {
         DhSidebar *sidebar = DH_SIDEBAR (user_data);
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
-        DhBookManager *book_manager;
         GList *books;
         GList *l;
         GList *completion_objects = NULL;
         const gchar *search_text;
         gchar *completed;
 
-        book_manager = dh_book_manager_get_singleton ();
-        books = dh_book_manager_get_books (book_manager);
+        books = dh_book_list_get_books (dh_profile_get_book_list (priv->profile));
         for (l = books; l != NULL; l = l->next) {
                 DhBook *cur_book = DH_BOOK (l->data);
+                DhCompletion *completion;
 
-                if (dh_book_get_enabled (cur_book)) {
-                        DhCompletion *completion;
-
-                        completion = dh_book_get_completion (cur_book);
-                        completion_objects = g_list_prepend (completion_objects, completion);
-                }
+                completion = dh_book_get_completion (cur_book);
+                completion_objects = g_list_prepend (completion_objects, completion);
         }
 
         search_text = gtk_entry_get_text (priv->entry);
@@ -467,7 +457,9 @@ hitlist_cell_icon_func (GtkTreeViewColumn *tree_column,
         PangoStyle style;
         PangoWeight weight;
         gboolean current_book_flag;
-        GList *books = dh_book_manager_get_books (dh_book_manager_get_singleton ());
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (DH_SIDEBAR (data));
+
+        GList *books = dh_book_list_get_books (dh_profile_get_book_list (priv->profile));
         DhBook *book;
 
         gtk_tree_model_get (hitlist_model, iter,
@@ -499,17 +491,19 @@ book_tree_link_selected_cb (DhBookTree *book_tree,
 }
 
 static void
-dh_sidebar_init (DhSidebar *sidebar)
+dh_sidebar_constructed (GObject *object)
 {
+        DhSidebar *sidebar = DH_SIDEBAR (object);
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
+        GtkTreeSelection *selection;
         GtkCellRenderer *cell, *cell2;
-        DhBookManager *book_manager;
+        DhBookList *book_list;
 
-        gtk_orientable_set_orientation (GTK_ORIENTABLE (sidebar),
-                                        GTK_ORIENTATION_VERTICAL);
+        if (G_OBJECT_CLASS (dh_sidebar_parent_class)->constructed != NULL)
+                G_OBJECT_CLASS (dh_sidebar_parent_class)->constructed (object);
 
-        gtk_widget_set_hexpand (GTK_WIDGET (sidebar), TRUE);
-        gtk_widget_set_vexpand (GTK_WIDGET (sidebar), TRUE);
+        if (priv->profile == NULL)
+                priv->profile = g_object_ref (dh_profile_get_default ());
 
         /* Setup the search entry */
         priv->entry = GTK_ENTRY (gtk_search_entry_new ());
@@ -552,12 +546,15 @@ dh_sidebar_init (DhSidebar *sidebar)
         gtk_tree_view_set_enable_search (priv->hitlist_view, FALSE);
         gtk_widget_show (GTK_WIDGET (priv->hitlist_view));
 
-        g_signal_connect (priv->hitlist_view,
-                          "button-press-event",
-                          G_CALLBACK (hitlist_button_press_cb),
-                          sidebar);
+        selection = gtk_tree_view_get_selection (priv->hitlist_view);
 
-        g_signal_connect (gtk_tree_view_get_selection (priv->hitlist_view),
+        /* Set BROWSE mode. When clicking again on the same (already selected)
+         * row, it re-emits the ::changed signal, which is convenient to come
+         * back to that symbol when the HTML view has been scrolled away.
+         */
+        gtk_tree_selection_set_mode (selection, GTK_SELECTION_BROWSE);
+
+        g_signal_connect (selection,
                           "changed",
                           G_CALLBACK (hitlist_selection_changed_cb),
                           sidebar);
@@ -594,33 +591,21 @@ dh_sidebar_init (DhSidebar *sidebar)
         gtk_widget_set_vexpand (GTK_WIDGET (priv->sw_hitlist), TRUE);
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->sw_hitlist));
 
-        /* Setup book manager */
-        dh_book_manager_set_scale (gtk_widget_get_scale_factor (GTK_WIDGET(sidebar)));
-        book_manager = dh_book_manager_get_singleton ();
+        /* DhBookList */
+        book_list = dh_profile_get_book_list (priv->profile);
+        create_completion_objects (book_list);
 
-        g_signal_connect_object (book_manager,
-                                 "book-created",
-                                 G_CALLBACK (book_manager_changed_cb),
+        g_signal_connect_object (book_list,
+                                 "add-book",
+                                 G_CALLBACK (add_book_cb),
                                  sidebar,
-                                 G_CONNECT_SWAPPED);
+                                 G_CONNECT_AFTER);
 
-        g_signal_connect_object (book_manager,
-                                 "book-enabled",
-                                 G_CALLBACK (book_manager_changed_cb),
+        g_signal_connect_object (book_list,
+                                 "remove-book",
+                                 G_CALLBACK (remove_book_cb),
                                  sidebar,
-                                 G_CONNECT_SWAPPED);
-
-        g_signal_connect_object (book_manager,
-                                 "book-deleted",
-                                 G_CALLBACK (book_manager_changed_cb),
-                                 sidebar,
-                                 G_CONNECT_SWAPPED);
-
-        g_signal_connect_object (book_manager,
-                                 "book-disabled",
-                                 G_CALLBACK (book_manager_changed_cb),
-                                 sidebar,
-                                 G_CONNECT_SWAPPED);
+                                 G_CONNECT_AFTER);
 
         /* Setup the book tree */
         priv->sw_book_tree = GTK_SCROLLED_WINDOW (gtk_scrolled_window_new (NULL, NULL));
@@ -630,7 +615,7 @@ dh_sidebar_init (DhSidebar *sidebar)
                                         GTK_POLICY_NEVER,
                                         GTK_POLICY_AUTOMATIC);
 
-        priv->book_tree = dh_book_tree_new ();
+        priv->book_tree = dh_book_tree_new (priv->profile);
         gtk_widget_show (GTK_WIDGET (priv->book_tree));
         g_signal_connect (priv->book_tree,
                           "link-selected",
@@ -644,12 +629,99 @@ dh_sidebar_init (DhSidebar *sidebar)
         gtk_widget_show_all (GTK_WIDGET (sidebar));
 }
 
+static void
+dh_sidebar_dispose (GObject *object)
+{
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (DH_SIDEBAR (object));
+
+        g_clear_object (&priv->profile);
+        g_clear_object (&priv->hitlist_model);
+
+        if (priv->idle_complete_id != 0) {
+                g_source_remove (priv->idle_complete_id);
+                priv->idle_complete_id = 0;
+        }
+
+        if (priv->idle_search_id != 0) {
+                g_source_remove (priv->idle_search_id);
+                priv->idle_search_id = 0;
+        }
+
+        G_OBJECT_CLASS (dh_sidebar_parent_class)->dispose (object);
+}
+
+static void
+dh_sidebar_class_init (DhSidebarClass *klass)
+{
+        GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+        object_class->get_property = dh_sidebar_get_property;
+        object_class->set_property = dh_sidebar_set_property;
+        object_class->constructed = dh_sidebar_constructed;
+        object_class->dispose = dh_sidebar_dispose;
+
+        /**
+         * DhSidebar::link-selected:
+         * @sidebar: a #DhSidebar.
+         * @link: the selected #DhLink.
+         *
+         * The ::link-selected signal is emitted when:
+         * 1. One row in one of the #GtkTreeView's is selected and contains a
+         *    #DhLink (i.e. when the row is not a language group);
+         * 2. Or if there is an exact match returned by
+         *    dh_keyword_model_filter() when a search occurs.
+         *
+         * Note that dh_sidebar_get_selected_link() takes into account only the
+         * former, not the latter. So the last @link emitted with this signal is
+         * not necessarily the same as the current return value of
+         * dh_sidebar_get_selected_link().
+         */
+        signals[SIGNAL_LINK_SELECTED] =
+                g_signal_new ("link-selected",
+                              G_TYPE_FROM_CLASS (klass),
+                              G_SIGNAL_RUN_LAST,
+                              G_STRUCT_OFFSET (DhSidebarClass, link_selected),
+                              NULL, NULL, NULL,
+                              G_TYPE_NONE,
+                              1, DH_TYPE_LINK);
+
+        /**
+         * DhSidebar:profile:
+         *
+         * The #DhProfile. If set to %NULL, the default profile as returned by
+         * dh_profile_get_default() is used.
+         *
+         * Since: 3.30
+         */
+        properties[PROP_PROFILE] =
+                g_param_spec_object ("profile",
+                                     "Profile",
+                                     "",
+                                     DH_TYPE_PROFILE,
+                                     G_PARAM_READWRITE |
+                                     G_PARAM_CONSTRUCT_ONLY |
+                                     G_PARAM_STATIC_STRINGS);
+
+        g_object_class_install_properties (object_class, N_PROPERTIES, properties);
+}
+
+static void
+dh_sidebar_init (DhSidebar *sidebar)
+{
+        gtk_orientable_set_orientation (GTK_ORIENTABLE (sidebar),
+                                        GTK_ORIENTATION_VERTICAL);
+
+        gtk_widget_set_hexpand (GTK_WIDGET (sidebar), TRUE);
+        gtk_widget_set_vexpand (GTK_WIDGET (sidebar), TRUE);
+}
+
 /**
  * dh_sidebar_new:
  * @book_manager: (nullable): a #DhBookManager. This parameter is deprecated,
  * you should just pass %NULL.
  *
  * Returns: (transfer floating): a new #DhSidebar widget.
+ * Deprecated: 3.30: Use dh_sidebar_new2() instead.
  */
 GtkWidget *
 dh_sidebar_new (DhBookManager *book_manager)
@@ -658,9 +730,83 @@ dh_sidebar_new (DhBookManager *book_manager)
 }
 
 /**
+ * dh_sidebar_new2:
+ * @profile: (nullable): a #DhProfile, or %NULL for the default profile.
+ *
+ * Returns: (transfer floating): a new #DhSidebar widget.
+ * Since: 3.30
+ */
+DhSidebar *
+dh_sidebar_new2 (DhProfile *profile)
+{
+        g_return_val_if_fail (profile == NULL || DH_IS_PROFILE (profile), NULL);
+
+        return g_object_new (DH_TYPE_SIDEBAR,
+                             "profile", profile,
+                             NULL);
+}
+
+/**
+ * dh_sidebar_get_profile:
+ * @sidebar: a #DhSidebar.
+ *
+ * Returns: (transfer none): the #DhProfile of @sidebar.
+ * Since: 3.30
+ */
+DhProfile *
+dh_sidebar_get_profile (DhSidebar *sidebar)
+{
+        DhSidebarPrivate *priv;
+
+        g_return_val_if_fail (DH_IS_SIDEBAR (sidebar), NULL);
+
+        priv = dh_sidebar_get_instance_private (sidebar);
+        return priv->profile;
+}
+
+/**
+ * dh_sidebar_get_selected_link:
+ * @sidebar: a #DhSidebar.
+ *
+ * Note: the return value of this function is not necessarily the same as the
+ * last #DhLink emitted by the #DhSidebar::link-selected signal. See the
+ * documentation of #DhSidebar::link-selected.
+ *
+ * Returns: (transfer full) (nullable): the currently selected #DhLink in the
+ * visible #GtkTreeView of @sidebar, or %NULL if the selection is empty or if a
+ * language group row is selected. Unref with dh_link_unref() when no longer
+ * needed.
+ * Since: 3.30
+ */
+DhLink *
+dh_sidebar_get_selected_link (DhSidebar *sidebar)
+{
+        DhSidebarPrivate *priv;
+        gboolean book_tree_visible;
+        gboolean hitlist_visible;
+
+        g_return_val_if_fail (DH_IS_SIDEBAR (sidebar), NULL);
+
+        priv = dh_sidebar_get_instance_private (sidebar);
+
+        book_tree_visible = gtk_widget_get_visible (GTK_WIDGET (priv->sw_book_tree));
+        hitlist_visible = gtk_widget_get_visible (GTK_WIDGET (priv->sw_hitlist));
+
+        g_return_val_if_fail ((book_tree_visible || hitlist_visible) &&
+                              !(book_tree_visible && hitlist_visible), NULL);
+
+        if (book_tree_visible)
+                return dh_book_tree_get_selected_link (priv->book_tree);
+
+        return hitlist_get_selected_link (sidebar);
+}
+
+/**
  * dh_sidebar_select_uri:
  * @sidebar: a #DhSidebar.
  * @uri: the URI to select.
+ *
+ * Calls dh_book_tree_select_uri().
  */
 void
 dh_sidebar_select_uri (DhSidebar   *sidebar,

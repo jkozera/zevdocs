@@ -1,3 +1,80 @@
+News in 3.30.0, 2018-07-16
+--------------------------
+* A few small improvements.
+* Translation updates.
+
+News in 3.29.3, 2018-06-17
+--------------------------
+* Devhelp has moved to the GNOME GitLab instance. The bugzilla tickets have not
+  yet been migrated to the GitLab issues, so before filing a new issue on
+  GitLab, please search the bugzilla first. All links are available as usual
+  on:
+  https://wiki.gnome.org/Apps/Devhelp
+
+* Finally write a HACKING file.
+* Do not show a GtkInfoBar on error, use the WebKitWebView default
+  implementation to simplify the code.
+* Code refactorings: from DhWindow extract DhNotebook, DhSearchBar and
+  bind_sidebar_and_notebook() function, and delegate more work to DhWebView.
+* Make the following classes re-usable and move them to the libdevhelp:
+  DhWebView, DhTab, DhTabLabel, DhNotebook and DhSearchBar.
+  And move dh_window_bind_sidebar_and_notebook() to the libdevhelp.
+* Flatpak: run Amtk and Devhelp unit tests after building those modules.
+* Application icons: rename filenames to org.gnome.Devhelp.*, to simplify the
+  Flatpak manifest.
+* Build system: fix the remaining places where the libdevhelp API/major version
+  was hardcoded, use the variable instead, to easily bump it in the future.
+* Other small improvements.
+* Translation updates.
+
+News in 3.29.2, 2018-05-21
+--------------------------
+* A new, more flexible book management architecture in the libdevhelp:
+
+ - DhBookManager is now completely empty and entirely deprecated, the minimum
+   amount of API is kept to not break Anjuta. It has been replaced by a more
+   flexible infrastructure: DhProfile, DhSettings and DhBookList. If an
+   application uses only the default libdevhelp widgets it will still work fine
+   – even if the code of the application is not adapted – because in that case
+   it will use the default DhProfile, which contains the same content as how
+   DhBookManager was implemented.
+
+ - Whether a DhBook is enabled/selected is now decoupled from DhBook:
+   dh_book_get_enabled() and dh_book_set_enabled() have been removed, as well
+   as the DhBook::enabled and DhBook::disabled signals. For a book to be
+   enabled it now needs to be part of a DhBookList, which is more flexible
+   because there can be several different DhBookLists in parallel.
+
+ - Allow custom search paths to load DhBooks, with DhBookListDirectory.
+
+* Port other Devhelp classes to DhProfile and DhBookList.
+* Listen to external changes to the "books-disabled" GSettings key.
+* Some code cleanup and minor bug fixes.
+* Flatpak: convert manifest to YAML.
+* Translation updates.
+
+News in 3.29.1, 2018-04-15
+--------------------------
+* Switch build system from Autotools to Meson (and remove Autotools).
+* Update the license from GPLv2+ to GPLv3+.
+* Clear separation between the library and the app: move library to its own
+  directory (still in the same git repo), split some source files in two,
+  correctly handle GSettings in the library, and in the app use only really
+  public libdevhelp APIs.
+* Add a profile infrastructure in the library, for example to have a generic
+  profile and a GNOME profile in the future.
+* Overhaul preferences dialog implementation.
+* Use the Amtk library to create the menus and the GtkShortcutsWindow. It
+  permits to avoid information duplication, and will permit to provide a
+  higher-level libdevhelp API.
+* A few other small improvements.
+* Translation updates.
+
+News in 3.28.1, 2018-04-08
+--------------------------
+* AppData: update screenshots.
+* Translation updates.
+
 News in 3.28.0, 2018-03-10
 --------------------------
 * Improve default GSettings values.

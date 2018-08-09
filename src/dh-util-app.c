@@ -1,65 +1,26 @@
 /* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*- */
 /*
+ * This file is part of Devhelp.
+ *
  * Copyright (C) 2001 Mikael Hallendal <micke@imendio.com>
  * Copyright (C) 2004, 2008 Imendio AB
  * Copyright (C) 2015, 2017, 2018 Sébastien Wilmet <swilmet@gnome.org>
  *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
+ * Devhelp is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published
+ * by the Free Software Foundation, either version 3 of the License,
+ * or (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * Devhelp is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program; if not, see <http://www.gnu.org/licenses/>.
+ * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include "dh-util-app.h"
-
-/* Set the given fonts on the given view. */
-void
-dh_util_view_set_font (WebKitWebView *view,
-                       const gchar   *font_name_fixed,
-                       const gchar   *font_name_variable)
-{
-        PangoFontDescription *font_desc_fixed;
-        PangoFontDescription *font_desc_variable;
-        guint font_size_fixed;
-        guint font_size_variable;
-        guint font_size_fixed_px;
-        guint font_size_variable_px;
-        WebKitSettings *settings;
-
-        g_return_if_fail (WEBKIT_IS_WEB_VIEW (view));
-        g_return_if_fail (font_name_fixed != NULL);
-        g_return_if_fail (font_name_variable != NULL);
-
-        /* Get the font size. */
-        font_desc_fixed = pango_font_description_from_string (font_name_fixed);
-        font_desc_variable = pango_font_description_from_string (font_name_variable);
-        font_size_fixed = pango_font_description_get_size (font_desc_fixed) / PANGO_SCALE;
-        font_size_variable = pango_font_description_get_size (font_desc_variable) / PANGO_SCALE;
-        font_size_fixed_px = webkit_settings_font_size_to_pixels (font_size_fixed);
-        font_size_variable_px = webkit_settings_font_size_to_pixels (font_size_variable);
-
-        /* Set the fonts. */
-        settings = webkit_web_view_get_settings (view);
-        webkit_settings_set_zoom_text_only (settings, TRUE);
-        webkit_settings_set_monospace_font_family (settings, font_name_fixed);
-        webkit_settings_set_default_monospace_font_size (settings, font_size_fixed_px);
-        webkit_settings_set_serif_font_family (settings, font_name_variable);
-        webkit_settings_set_default_font_size (settings, font_size_variable_px);
-
-        g_debug ("Set font-fixed to '%s' (%i) and font-variable to '%s' (%i).",
-                 font_name_fixed, font_size_fixed_px, font_name_variable, font_size_variable_px);
-
-        pango_font_description_free (font_desc_fixed);
-        pango_font_description_free (font_desc_variable);
-}
 
 static void
 introspect_window_gsettings (GSettings *window_settings,

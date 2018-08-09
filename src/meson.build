@@ -4,12 +4,8 @@ devhelp_app_sources = [
         'dh-main.c',
         'dh-preferences.c',
         'dh-settings-app.c',
-        'dh-tab.c',
-        'dh-tab-label.c',
         'dh-util-app.c',
-        'dh-web-view.c',
-        'dh-window.c',
-        'tepl-info-bar.c'
+        'dh-window.c'
 ]
 
 devhelp_app_sources += GNOME.compile_resources(
