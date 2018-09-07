@@ -119,13 +119,13 @@ _dh_profile_new (DhSettings *settings,
  * Since: 3.30
  */
 DhProfile *
-dh_profile_get_default (void)
+dh_profile_get_default (gint scale)
 {
         if (default_instance == NULL) {
                 DhProfileBuilder *builder;
 
                 builder = dh_profile_builder_new ();
-                default_instance = dh_profile_builder_create_object (builder);
+                default_instance = dh_profile_builder_create_object (builder, scale);
                 g_object_unref (builder);
         }
 

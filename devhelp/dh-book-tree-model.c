@@ -75,7 +75,9 @@ new_dynamic_symbols_node(JsonObject  *object,
         const gchar *member_name;
         JsonNode *member_node;
         size_t len;
-        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default (
+                -1  // at this point it should be created outside
+        ));
         DhBook *book;
 
         if (title == NULL) {
@@ -135,7 +137,9 @@ new_symbols_node(JsonObject* object, GtkTreePath *parent, gint num, const gchar*
         const gchar *member_name;
         JsonNode *member_node;
         size_t len;
-        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default (
+                -1  // at this point it should be already created outside
+        ));
         DhBook *book;
         gint i;
 
@@ -192,7 +196,9 @@ new_node (JsonObject* object, GtkTreePath *parent, gint num)
         node->lazy_children_url = NULL;
         const gchar* title;
         size_t len;
-        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default (
+                -1  // at this point it should be already created outside
+        ));
         DhBook *book;
 
         title = json_object_get_string_member(object, "Title");
@@ -451,7 +457,7 @@ dh_book_tree_model_init (DhBookTreeModel *model)
  * Returns: a new #DhBookTreeModel object.
  */
 DhBookTreeModel *
-dh_book_tree_model_new (gboolean group_by_language)
+dh_book_tree_model_new (gboolean group_by_language, gint scale)
 {
         DhBookTreeModel *model = DH_BOOK_TREE_MODEL (g_object_new (DH_TYPE_BOOK_TREE_MODEL, NULL));
         DhBookTreeModelPrivate *priv = dh_book_tree_model_get_instance_private (model);
@@ -706,7 +712,9 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
 {
 
         GList *list;
-        GList *books = dh_book_list_get_books (dh_book_list_get_default ());
+        GList *books = dh_book_list_get_books (dh_book_list_get_default (
+                -1 // at this point it should be already created outside
+        ));
         DhBook *book;
         DhBookTreeModelNode *node;
         list = iter->user_data;

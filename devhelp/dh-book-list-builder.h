@@ -59,7 +59,8 @@ DhBookListBuilder *
 void            dh_book_list_builder_add_sub_book_list                  (DhBookListBuilder *builder,
                                                                          DhBookList        *sub_book_list);
 
-void            dh_book_list_builder_add_default_sub_book_lists         (DhBookListBuilder *builder);
+void            dh_book_list_builder_add_default_sub_book_lists         (DhBookListBuilder *builder,
+                                                                         gint scale);
 
 void            dh_book_list_builder_read_books_disabled_setting        (DhBookListBuilder *builder,
                                                                          DhSettings        *settings);

@@ -32,12 +32,9 @@
 enum {
         COLUMN_BOOK = 0,
         COLUMN_TITLE,
-        COLUMN_WEIGHT,
-        COLUMN_INCONSISTENT,
         COLUMN_ID_FOR_REMOVING,
         N_COLUMNS
 };
-
 
 enum {
         COLUMN_DL_TITLE = 0,
@@ -53,7 +50,6 @@ typedef struct {
         GtkListStore *bookshelf_store;
         GtkListStore *bookshelf_store_downloads;
         GtkTreeView *bookshelf_download_treeview;
-        GtkTreeView *bookshelf_treeview;
         DhBookList *full_book_list;
         GtkButton *bookshelf_delete_button;
 
@@ -110,7 +106,6 @@ dh_preferences_class_init (DhPreferencesClass *klass)
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_view);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_store_downloads);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_download_treeview);
-        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_treeview);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_delete_button);
 
         // Fonts tab
@@ -258,22 +253,23 @@ bookshelf_populate_store (DhPreferences *prefs)
                 gchar *indented_title = NULL;
                 const gchar *title;
                 const gchar *language;
-		const gchar *id_for_removing;
+		        const gchar *id_for_removing;
+                language = dh_book_get_language (book);
 
                 /* Insert book */
 
-                if (group_by_language) {
+                if (group_by_language && !g_str_equal(language, "")) {
                         indented_title = g_strdup_printf ("     %s", dh_book_get_title (book));
                         title = indented_title;
                 } else {
                         title = dh_book_get_title (book);
                 }
+                id_for_removing = dh_book_get_id_for_removing(book);
 
                 gtk_list_store_insert_with_values (priv->bookshelf_store, NULL, -1,
                                                    COLUMN_BOOK, book,
                                                    COLUMN_TITLE, title,
-                                                   COLUMN_WEIGHT, PANGO_WEIGHT_NORMAL,
-						   COLUMN_ID_FOR_REMOVING, id_for_removing,
+                                                   COLUMN_ID_FOR_REMOVING, id_for_removing,
                                                    -1);
 
                 g_free (indented_title);
@@ -283,7 +279,9 @@ bookshelf_populate_store (DhPreferences *prefs)
                 if (!group_by_language)
                         continue;
 
-                language = dh_book_get_language (book);
+                if (g_str_equal (language, "")) { // Dash docset
+                        continue;
+                }
                 if (g_slist_find_custom (inserted_languages, language, (GCompareFunc)g_strcmp0) != NULL)
                         /* Already inserted. */
                         continue;
@@ -291,8 +289,7 @@ bookshelf_populate_store (DhPreferences *prefs)
                 gtk_list_store_insert_with_values (priv->bookshelf_store, NULL, -1,
                                                    COLUMN_BOOK, NULL,
                                                    COLUMN_TITLE, language,
-                                                   COLUMN_WEIGHT, PANGO_WEIGHT_BOLD,
-						   COLUMN_ID_FOR_REMOVING, "",
+                                                   COLUMN_ID_FOR_REMOVING, "",
                                                    -1);
 
                 inserted_languages = g_slist_prepend (inserted_languages, g_strdup (language));
@@ -579,7 +576,7 @@ static void
 preferences_bookshelf_remove_book (GObject* obj, GdkEvent *ev, gpointer user_data)
 {
         DhPreferencesPrivate *priv = user_data;
-        GtkTreeSelection *selection = gtk_tree_view_get_selection(priv->bookshelf_treeview);
+        GtkTreeSelection *selection = gtk_tree_view_get_selection(priv->bookshelf_view);
         SoupSession *session;
         SoupMessage *request;
         GtkTreeModel *model;
@@ -598,7 +595,9 @@ preferences_bookshelf_remove_book (GObject* obj, GdkEvent *ev, gpointer user_dat
         g_object_unref(request);
         g_object_unref(session);
 
-        // TODO dh_book_manager_refresh (dh_book_manager_get_singleton ());
+        dh_book_list_refresh (dh_book_list_get_default(
+                -1 // at this point it should be already created outside
+        ));
 }
 
 static void
@@ -626,7 +625,7 @@ preferences_bookshelf_tree_selection_changed_cb (GtkTreeSelection *selection,
 }
 
 
-void
+static void
 websocket_message_cb (SoupWebsocketConnection *self,
                       gint                     type,
                       GBytes                  *message,
@@ -676,8 +675,9 @@ websocket_message_cb (SoupWebsocketConnection *self,
         gtk_widget_queue_draw(priv->bookshelf_download_treeview);
 
         if (received == total) {
-                // TODO
-                // dh_book_manager_refresh (dh_book_manager_get_singleton ());
+            dh_book_list_refresh (dh_book_list_get_default(
+                    -1  // at this point it should be already created outside
+            ));
         }
 
         g_object_unref(parser);
@@ -795,6 +795,7 @@ init_bookshelf_store (DhPreferences *prefs)
         priv->bookshelf_store = gtk_list_store_new (N_COLUMNS,
                                                     DH_TYPE_BOOK,
                                                     G_TYPE_STRING, /* Title */
+                                                    G_TYPE_STRING, /* id_for_removing */
                                                     PANGO_TYPE_WEIGHT);
 
         gtk_tree_sortable_set_default_sort_func (GTK_TREE_SORTABLE (priv->bookshelf_store),
@@ -844,6 +845,38 @@ bookshelf_cell_data_func_toggle (GtkTreeViewColumn *column,
 }
 
 static void
+bookshelf_cell_data_func_text (GtkTreeViewColumn *column,
+                               GtkCellRenderer   *cell,
+                               GtkTreeModel      *model,
+                               GtkTreeIter       *iter,
+                               gpointer           data)
+{
+        DhBook *book = NULL;
+        gchar *title = NULL;
+        PangoWeight weight;
+
+        gtk_tree_model_get (model,
+                            iter,
+                            COLUMN_BOOK, &book,
+                            COLUMN_TITLE, &title,
+                            -1);
+
+        if (book != NULL)
+                weight = PANGO_WEIGHT_NORMAL;
+        else
+                weight = PANGO_WEIGHT_BOLD; /* For the language group. */
+
+        g_object_set (cell,
+                      "text", title,
+                      "weight", weight,
+                      NULL);
+
+        g_clear_object (&book);
+        g_free (title);
+}
+
+
+static void
 init_bookshelf_view (DhPreferences *prefs)
 {
         DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
@@ -851,30 +884,14 @@ init_bookshelf_view (DhPreferences *prefs)
         GtkCellRenderer *cell_renderer_text;
         GtkTreeViewColumn *column;
 
-        /* Enabled column */
-        cell_renderer_toggle = gtk_cell_renderer_toggle_new ();
-        gtk_tree_view_insert_column_with_data_func (priv->bookshelf_view,
-                                                    -1,
-                                                    _("Enabled"),
-                                                    cell_renderer_toggle,
-                                                    bookshelf_cell_data_func_toggle,
-                                                    prefs,
-                                                    NULL);
-
-        g_signal_connect_object (cell_renderer_toggle,
-                                 "toggled",
-                                 G_CALLBACK (bookshelf_row_toggled_cb),
-                                 prefs,
-                                 0);
-
         /* Title column */
         cell_renderer_text = gtk_cell_renderer_text_new ();
-        column = gtk_tree_view_column_new_with_attributes (_("Title"),
-                                                           cell_renderer_text,
-                                                           "text", COLUMN_TITLE,
-                                                           "weight", COLUMN_WEIGHT,
-                                                           NULL);
-        gtk_tree_view_append_column (priv->bookshelf_view, column);
+        gtk_tree_view_insert_column_with_data_func(priv->bookshelf_view,
+                                                   -1,
+                                                   _("Title"),
+                                                   cell_renderer_text,
+                                                   bookshelf_cell_data_func_text,
+                                                   NULL, NULL);
 }
 
 static void
@@ -887,7 +904,7 @@ init_bookshelf_tab (DhPreferences *prefs)
         g_assert (priv->full_book_list == NULL);
 
         builder = dh_book_list_builder_new ();
-        dh_book_list_builder_add_default_sub_book_lists (builder);
+        dh_book_list_builder_add_default_sub_book_lists (builder, gtk_widget_get_scale_factor(GTK_WIDGET(prefs)));
         /* Do not call dh_book_list_builder_read_books_disabled_setting(), we
          * need the full list.
          */
@@ -916,14 +933,14 @@ init_bookshelf_tab (DhPreferences *prefs)
                                  0);
 
 	// !!!!!
-        g_signal_connect_object (builder,
+        g_signal_connect_object (dh_book_list_get_default(gtk_widget_get_scale_factor(GTK_WIDGET(prefs))),
                                  "refresh",
                                  G_CALLBACK (preferences_bookshelf_refresh_cb),
                                  prefs,
                                  0);
 
         /* setup GSettings bindings */
-        g_signal_connect (gtk_tree_view_get_selection(priv->bookshelf_treeview),
+        g_signal_connect (gtk_tree_view_get_selection(priv->bookshelf_view),
                           "changed",
                           G_CALLBACK (preferences_bookshelf_tree_selection_changed_cb),
                           priv);

@@ -464,7 +464,9 @@ dh_assistant_view_search (DhAssistantView *view,
         /* TODO: take a DhProfile parameter, or add a "profile" construct-only
          * property.
          */
-        book_list = dh_book_list_get_default ();
+        book_list = dh_book_list_get_default (
+                gtk_widget_get_scale_factor(GTK_WIDGET(view))
+        );
 
         for (books = dh_book_list_get_books (book_list);
              !exact_link && books;

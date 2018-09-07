@@ -9,7 +9,7 @@
     ],
     "desktop-file-name-prefix" : "(Nightly) ",
     "rename-icon" : "zevdocs",
-    "copy-icon" : "zevdocs",
+    "copy-icon" : true,
     "finish-args" : [
         "--share=ipc",
         "--socket=x11",
@@ -40,6 +40,17 @@
         "*.a"
     ],
     "modules" : [
+        {
+            "name" : "amtk",
+            "buildsystem" : "autotools",
+            "builddir" : true,
+            "sources" : [
+                {
+                    "type" : "git",
+                    "url" : "https://git.gnome.org/browse/amtk"
+                }
+            ]
+        },
         {
             "name" : "zevdocs",
             "config-opts" : [

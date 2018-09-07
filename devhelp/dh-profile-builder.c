@@ -131,7 +131,7 @@ dh_profile_builder_set_book_list (DhProfileBuilder *builder,
  * Since: 3.30
  */
 DhProfile *
-dh_profile_builder_create_object (DhProfileBuilder *builder)
+dh_profile_builder_create_object (DhProfileBuilder *builder, gint scale)
 {
         g_return_val_if_fail (DH_IS_PROFILE_BUILDER (builder), NULL);
 
@@ -143,7 +143,7 @@ dh_profile_builder_create_object (DhProfileBuilder *builder)
                 dh_profile_builder_set_settings (builder, dh_settings_get_default ());
 
         if (builder->priv->book_list == NULL)
-                dh_profile_builder_set_book_list (builder, dh_book_list_get_default ());
+                dh_profile_builder_set_book_list (builder, dh_book_list_get_default (scale));
 
         return _dh_profile_new (builder->priv->settings,
                                 builder->priv->book_list);

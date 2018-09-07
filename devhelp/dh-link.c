@@ -193,7 +193,8 @@ dh_link_new (DhLinkType   type,
 
         link = dh_link_new_common (type, name, relative_url);
 
-        link->book.link = dh_link_ref (book_link);
+        if (book_link != NULL)
+                link->book.link = dh_link_ref (book_link);
 
         return link;
 }
@@ -387,7 +388,11 @@ dh_link_belongs_to_page (DhLink      *link,
 gchar *
 dh_link_get_uri (DhLink *link)
 {
-        return link->relative_url;
+        if (link->relative_url == NULL) {
+                return NULL;
+        } else {
+                return g_strdup(link->relative_url);
+        }
 }
 
 /**

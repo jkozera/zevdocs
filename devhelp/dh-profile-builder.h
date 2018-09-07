@@ -62,7 +62,8 @@ void                    dh_profile_builder_set_settings         (DhProfileBuilde
 void                    dh_profile_builder_set_book_list        (DhProfileBuilder *builder,
                                                                  DhBookList       *book_list);
 
-DhProfile *             dh_profile_builder_create_object        (DhProfileBuilder *builder);
+DhProfile *             dh_profile_builder_create_object        (DhProfileBuilder *builder,
+                                                                 gint scale);
 
 G_END_DECLS
 

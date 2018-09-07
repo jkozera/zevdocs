@@ -21,6 +21,7 @@
 #include "dh-book-list.h"
 #include "dh-book-list-builder.h"
 #include "dh-settings.h"
+#include "devhelp.h"
 
 /**
  * SECTION:dh-book-list
@@ -37,21 +38,25 @@
  * #DhBook::updated signals. It is for example handled by #DhBookListDirectory.
  */
 
+
+enum {
+    SIGNAL_ADD_BOOK,
+    SIGNAL_REMOVE_BOOK,
+    SIGNAL_REFRESH,
+    N_SIGNALS
+};
+
+guint signals[N_SIGNALS] = { 0 };
+
 struct _DhBookListPrivate {
         /* The list of DhBook's. */
         GList *books;
 	
-	gint scale;
+	    gint scale;
 };
 
-enum {
-        SIGNAL_ADD_BOOK,
-        SIGNAL_REMOVE_BOOK,
-        N_SIGNALS
-};
 
 static DhBookList *default_instance = NULL;
-static guint signals[N_SIGNALS] = { 0 };
 
 G_DEFINE_TYPE_WITH_PRIVATE (DhBookList, dh_book_list, G_TYPE_OBJECT)
 
@@ -124,6 +129,14 @@ dh_book_list_set_books_default (DhBookList *book_list, GList* list)
 }
 
 static void
+dh_book_list_refresh_default (DhBookList* book_list)
+{
+        g_return_if_fail (DH_IS_BOOK_LIST (book_list));
+
+        // not implemented
+}
+
+static void
 dh_book_list_class_init (DhBookListClass *klass)
 {
         GObjectClass *object_class = G_OBJECT_CLASS (klass);
@@ -135,6 +148,7 @@ dh_book_list_class_init (DhBookListClass *klass)
         klass->remove_book = dh_book_list_remove_book_default;
         klass->get_books = dh_book_list_get_books_default;
         klass->set_books = dh_book_list_set_books_default;
+        klass->refresh = dh_book_list_refresh_default;
 
         /**
          * DhBookList::add-book:
@@ -181,6 +195,15 @@ dh_book_list_class_init (DhBookListClass *klass)
                               NULL, NULL, NULL,
                               G_TYPE_NONE,
                               1, DH_TYPE_BOOK);
+
+        signals[SIGNAL_REFRESH] =
+                g_signal_new ("refresh",
+                          G_TYPE_FROM_CLASS (klass),
+                          G_SIGNAL_RUN_LAST,
+                          0,
+                          NULL, NULL, NULL,
+                          G_TYPE_NONE,
+                          0);
 }
 
 static void
@@ -216,22 +239,25 @@ dh_book_list_new (void)
  * Since: 3.30
  */
 DhBookList *
-dh_book_list_get_default (void)
+dh_book_list_get_default (gint scale)
 {
-        if (default_instance == NULL) {
-                DhSettings *default_settings;
-                DhBookListBuilder *builder;
+    GFile *directory;
 
-                default_settings = dh_settings_get_default ();
+    if (default_instance == NULL) {
+        directory = g_file_new_for_path ("");
+        default_instance = DH_BOOK_LIST(dh_book_list_directory_new (directory, scale));
+        g_object_unref (directory);
+    }
 
-                builder = dh_book_list_builder_new ();
-                dh_book_list_builder_add_default_sub_book_lists (builder);
-                dh_book_list_builder_read_books_disabled_setting (builder, default_settings);
-                default_instance = dh_book_list_builder_create_object (builder);
-                g_object_unref (builder);
-        }
+    return default_instance;
+}
 
-        return default_instance;
+void
+dh_book_list_refresh (DhBookList* book_list)
+{
+        g_return_if_fail (DH_IS_BOOK_LIST (book_list));
+
+        DH_BOOK_LIST_GET_CLASS (book_list)->refresh (book_list);
 }
 
 void

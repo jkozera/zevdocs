@@ -18,13 +18,12 @@
  * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "config.h"
 #include <cairo/cairo-gobject.h>
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
 #include <libsoup/soup.h>
 #include "dh-book-list-directory.h"
-#include "dh-util-lib.h"
+#include "dh-book-manager.h"
 
 /**
  * SECTION:dh-book-list-directory
@@ -77,6 +76,7 @@ struct _DhBookListDirectoryPrivate {
 
 enum {
         PROP_0,
+        PROP_SCALE,    // must be set before directory
         PROP_DIRECTORY,
         N_PROPERTIES
 };
@@ -307,7 +307,6 @@ create_book_from_json_object (DhBookListDirectory *book_dir,
 {
         DhBookListDirectoryPrivate *priv;
         DhBook *book;
-        gboolean book_enabled;
 
         priv = dh_book_list_directory_get_instance_private (book_dir);
 
@@ -404,6 +403,17 @@ set_directory (DhBookListDirectory *list_directory,
         find_books (list_directory);
 }
 
+void
+dh_book_list_directory_refresh (DhBookList * object)
+{
+        DhBookListDirectory *list_directory = DH_BOOK_LIST_DIRECTORY (object);
+
+        find_books (list_directory);
+
+        g_signal_emit_by_name (list_directory, "refresh");
+}
+
+
 static void
 dh_book_list_directory_get_property (GObject    *object,
                                      guint       prop_id,
@@ -411,10 +421,15 @@ dh_book_list_directory_get_property (GObject    *object,
                                      GParamSpec *pspec)
 {
         DhBookListDirectory *list_directory = DH_BOOK_LIST_DIRECTORY (object);
+        DhBookListDirectoryPrivate *priv = dh_book_list_directory_get_instance_private (object);
 
         switch (prop_id) {
                 case PROP_DIRECTORY:
                         g_value_set_object (value, dh_book_list_directory_get_directory (list_directory));
+                        break;
+
+                case PROP_SCALE:
+                        g_value_set_object (value, priv->scale);
                         break;
 
                 default:
@@ -430,10 +445,15 @@ dh_book_list_directory_set_property (GObject      *object,
                                      GParamSpec   *pspec)
 {
         DhBookListDirectory *list_directory = DH_BOOK_LIST_DIRECTORY (object);
+        DhBookListDirectoryPrivate *priv = dh_book_list_directory_get_instance_private (object);
 
         switch (prop_id) {
                 case PROP_DIRECTORY:
                         set_directory (list_directory, g_value_get_object (value));
+                        break;
+
+                case PROP_SCALE:
+                        priv->scale = g_value_get_int(value);
                         break;
 
                 default:
@@ -476,6 +496,9 @@ dh_book_list_directory_class_init (DhBookListDirectoryClass *klass)
         object_class->dispose = dh_book_list_directory_dispose;
         object_class->finalize = dh_book_list_directory_finalize;
 
+        DhBookListClass *list_class = DH_BOOK_LIST_CLASS (klass);
+        list_class->refresh = dh_book_list_directory_refresh;
+
         /**
          * DhBookListDirectory:directory:
          *
@@ -491,6 +514,17 @@ dh_book_list_directory_class_init (DhBookListDirectoryClass *klass)
                                      G_PARAM_READWRITE |
                                      G_PARAM_CONSTRUCT_ONLY |
                                      G_PARAM_STATIC_STRINGS);
+
+        properties[PROP_SCALE] =
+                g_param_spec_int("scale",
+                                 "UI Scale",
+                                 "",
+                                 1,
+                                 10,
+                                 1,
+                                 G_PARAM_READWRITE |
+                                 G_PARAM_CONSTRUCT_ONLY |
+                                 G_PARAM_STATIC_STRINGS);
 
         g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 }
@@ -521,7 +555,7 @@ dh_book_list_directory_init (DhBookListDirectory *list_directory)
  * Since: 3.30
  */
 DhBookListDirectory *
-dh_book_list_directory_new (GFile *directory)
+dh_book_list_directory_new (GFile *directory, gint scale)
 {
         GList *l;
 
@@ -535,9 +569,11 @@ dh_book_list_directory_new (GFile *directory)
                         return g_object_ref (cur_list_directory);
         }
 
-        return g_object_new (DH_TYPE_BOOK_LIST_DIRECTORY,
-                             "directory", directory,
-                             NULL);
+        DhBookListDirectory* dir = g_object_new (DH_TYPE_BOOK_LIST_DIRECTORY,
+                                                 "scale", scale,
+                                                 "directory", directory,
+                                                 NULL);
+        return dir;
 }
 
 /**

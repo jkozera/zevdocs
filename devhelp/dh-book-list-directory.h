@@ -52,9 +52,10 @@ struct _DhBookListDirectoryClass {
 
 GType                   dh_book_list_directory_get_type         (void);
 
-DhBookListDirectory *   dh_book_list_directory_new              (GFile *directory);
+DhBookListDirectory *   dh_book_list_directory_new              (GFile *directory, gint scale);
 
 GFile *                 dh_book_list_directory_get_directory    (DhBookListDirectory *list_directory);
+void                    dh_book_list_directory_refresh          (DhBookList * object);
 
 G_END_DECLS
 

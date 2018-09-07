@@ -57,7 +57,7 @@ G_GNUC_INTERNAL
 DhProfile *     _dh_profile_new                 (DhSettings *settings,
                                                  DhBookList *book_list);
 
-DhProfile *     dh_profile_get_default          (void);
+DhProfile *     dh_profile_get_default          (gint scale);
 
 G_GNUC_INTERNAL
 void            _dh_profile_unref_default       (void);

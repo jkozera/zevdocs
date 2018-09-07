@@ -104,7 +104,7 @@ dh_book_list_builder_new (void)
  */
 void
 dh_book_list_builder_add_sub_book_list (DhBookListBuilder *builder,
-                                        DhBookList        *sub_book_list)
+                                       DhBookList        *sub_book_list)
 {
         g_return_if_fail (DH_IS_BOOK_LIST_BUILDER (builder));
         g_return_if_fail (DH_IS_BOOK_LIST (sub_book_list));
@@ -115,14 +115,11 @@ dh_book_list_builder_add_sub_book_list (DhBookListBuilder *builder,
 
 static void
 add_book_list_directory (DhBookListBuilder *builder,
-			 const gchar       *directory_path)
+			 const gchar       *directory_path,
+			 gint scale)
 {
-        GFile *directory;
-        DhBookListDirectory *sub_book_list;
 
-        directory = g_file_new_for_path (directory_path);
-        sub_book_list = dh_book_list_directory_new (directory);
-        g_object_unref (directory);
+        DhBookListDirectory *sub_book_list = dh_book_list_get_default(scale);
 
         dh_book_list_builder_add_sub_book_list (builder, DH_BOOK_LIST (sub_book_list));
         g_object_unref (sub_book_list);
@@ -130,13 +127,13 @@ add_book_list_directory (DhBookListBuilder *builder,
 
 static void
 add_default_sub_book_lists_in_data_dir (DhBookListBuilder *builder,
-					const gchar       *data_dir)
+					const gchar       *data_dir, gint scale)
 {
         gchar *dir;
 
         g_return_if_fail (data_dir != NULL);
 
-        add_book_list_directory (builder, data_dir);
+        add_book_list_directory (builder, data_dir, scale);
 }
 
 /**
@@ -168,14 +165,14 @@ add_default_sub_book_lists_in_data_dir (DhBookListBuilder *builder,
  * Since: 3.30
  */
 void
-dh_book_list_builder_add_default_sub_book_lists (DhBookListBuilder *builder)
+dh_book_list_builder_add_default_sub_book_lists (DhBookListBuilder *builder, gint scale)
 {
         const gchar * const *system_dirs;
         gint i;
 
         g_return_if_fail (DH_IS_BOOK_LIST_BUILDER (builder));
 
-        add_default_sub_book_lists_in_data_dir (builder, ""); // zealcore handles it
+        add_default_sub_book_lists_in_data_dir (builder, "", scale); // zealcore handles it
 }
 
 /**

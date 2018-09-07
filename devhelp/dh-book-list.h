@@ -42,7 +42,6 @@ struct _DhBookList {
 
         DhBookListPrivate *priv;
 };
-
 /**
  * DhBookListClass:
  * @parent_class: The parent class.
@@ -66,6 +65,7 @@ struct _DhBookListClass {
         /* Vfuncs */
         GList * (* get_books)           (DhBookList *book_list);
         void * (* set_books)            (DhBookList *book_list, GList *books);
+        void  (* refresh)              (DhBookList *book_list);
 
         /*< private >*/
 
@@ -77,7 +77,9 @@ GType           dh_book_list_get_type           (void);
 
 DhBookList *    dh_book_list_new                (void);
 
-DhBookList *    dh_book_list_get_default        (void);
+DhBookList *    dh_book_list_get_default        (gint scale);
+
+void            dh_book_list_refresh            (DhBookList* book_list);
 
 G_GNUC_INTERNAL
 void            _dh_book_list_unref_default     (void);

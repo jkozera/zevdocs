@@ -49,7 +49,7 @@
 
 typedef struct {
         DhProfile *profile;
-        GtkTreeStore *store;
+        GtkTreeModel *store;
         DhLink *selected_link;
         GtkMenu *context_menu;
 } DhBookTreePrivate;
@@ -460,7 +460,7 @@ add_book_cb (DhBookList *book_list,
              DhBook     *book,
              DhBookTree *tree)
 {
-        book_tree_add_book_to_store (tree, book);
+        // book_tree_add_book_to_store (tree, book);
 }
 
 static void
@@ -580,12 +580,11 @@ book_tree_init_selection (DhBookTree *tree)
                                     COL_LINK, &link,
                                     -1);
 
-                if (link == NULL || dh_link_get_link_type (link) != DH_LINK_TYPE_BOOK)
-                        g_warn_if_reached ();
-
-                g_clear_pointer (&priv->selected_link, (GDestroyNotify)dh_link_unref);
-                priv->selected_link = link;
-                gtk_tree_selection_select_iter (selection, &iter);
+                if (!(link == NULL || dh_link_get_link_type (link) != DH_LINK_TYPE_BOOK)) {
+                    g_clear_pointer (&priv->selected_link, (GDestroyNotify) dh_link_unref);
+                    priv->selected_link = link;
+                    gtk_tree_selection_select_iter(selection, &iter);
+                }
         }
 
         g_signal_handlers_unblock_by_func (selection,
@@ -597,15 +596,20 @@ static void
 book_tree_populate_tree (DhBookTree *tree)
 {
         DhBookTreePrivate *priv = dh_book_tree_get_instance_private (tree);
+        DhSettings *settings;
         GList *books;
         GList *l;
 
-        books = dh_book_list_get_books (dh_profile_get_book_list (priv->profile));
-
-        for (l = books; l != NULL; l = l->next) {
-                DhBook *book = DH_BOOK (l->data);
-                book_tree_add_book_to_store (tree, book);
+        gtk_tree_view_set_model(GTK_TREE_VIEW(tree), NULL);
+        if (priv->store) {
+            g_object_unref (priv->store);
         }
+        settings = dh_settings_get_default ();
+        priv->store = GTK_TREE_MODEL(dh_book_tree_model_new(
+            dh_settings_get_group_books_by_language (settings),
+            1
+        ));
+        gtk_tree_view_set_model(GTK_TREE_VIEW(tree), priv->store);
 
         book_tree_init_selection (tree);
 }
@@ -669,6 +673,13 @@ dh_book_tree_set_property (GObject      *object,
 }
 
 static void
+refresh_tree (GObject    *object,
+              DhBookTree *tree)
+{
+    book_tree_populate_tree (tree);
+}
+
+static void
 dh_book_tree_constructed (GObject *object)
 {
         DhBookTree *tree = DH_BOOK_TREE (object);
@@ -680,7 +691,9 @@ dh_book_tree_constructed (GObject *object)
                 G_OBJECT_CLASS (dh_book_tree_parent_class)->constructed (object);
 
         if (priv->profile == NULL)
-                priv->profile = g_object_ref (dh_profile_get_default ());
+                priv->profile = g_object_ref (dh_profile_get_default (gtk_widget_get_scale_factor(
+                        GTK_WIDGET (tree)
+                )));
 
         book_tree_setup_selection (tree);
 
@@ -702,6 +715,12 @@ dh_book_tree_constructed (GObject *object)
         g_signal_connect_object (settings,
                                  "notify::group-books-by-language",
                                  G_CALLBACK (group_books_by_language_notify_cb),
+                                 tree,
+                                 0);
+
+        g_signal_connect_object (dh_book_list_get_default(gtk_widget_get_scale_factor(GTK_WIDGET (tree))),
+                                 "refresh",
+                                 G_CALLBACK (refresh_tree),
                                  tree,
                                  0);
 
@@ -884,7 +903,7 @@ dh_book_tree_init (DhBookTree *tree)
         gtk_tree_view_set_headers_visible (GTK_TREE_VIEW (tree), FALSE);
         gtk_tree_view_set_enable_search (GTK_TREE_VIEW (tree), FALSE);
 
-        priv->store = dh_book_tree_model_new(FALSE);
+        priv->store = dh_book_tree_model_new(FALSE, gtk_widget_get_scale_factor (GTK_WIDGET(tree)));
 
         gtk_tree_view_set_model (GTK_TREE_VIEW (tree),
                                  GTK_TREE_MODEL (priv->store));

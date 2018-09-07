@@ -107,7 +107,7 @@ dh_notebook_constructed (GObject *object)
                 G_OBJECT_CLASS (dh_notebook_parent_class)->constructed (object);
 
         if (notebook->priv->profile == NULL)
-                set_profile (notebook, dh_profile_get_default ());
+                set_profile (notebook, dh_profile_get_default (gtk_widget_get_scale_factor(GTK_WIDGET (notebook))));
 }
 
 static void

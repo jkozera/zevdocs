@@ -472,7 +472,9 @@ dh_web_view_constructed (GObject *object)
         webkit_settings_set_enable_plugins (webkit_settings, FALSE);
 
         if (view->priv->profile == NULL)
-                set_profile (view, dh_profile_get_default ());
+                set_profile (view, dh_profile_get_default (gtk_widget_get_scale_factor(
+                        GTK_WIDGET(view)
+                )));
 
         dh_settings = dh_profile_get_settings (view->priv->profile);
         g_signal_connect_object (dh_settings,

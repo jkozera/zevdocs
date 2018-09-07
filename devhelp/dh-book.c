@@ -399,7 +399,7 @@ dh_book_new_from_json (JsonObject *object, gint scale)
         istream = g_memory_input_stream_new_from_data(data, len, NULL);
         pixbuf = gdk_pixbuf_new_from_stream(istream, NULL, &err);
         priv->icon_surface = gdk_cairo_surface_create_from_pixbuf(
-                pixbuf, scale, NULL
+                pixbuf, 1, NULL
         );
         gdk_pixbuf_unref(pixbuf);
         g_object_unref(istream);

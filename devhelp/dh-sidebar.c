@@ -503,7 +503,9 @@ dh_sidebar_constructed (GObject *object)
                 G_OBJECT_CLASS (dh_sidebar_parent_class)->constructed (object);
 
         if (priv->profile == NULL)
-                priv->profile = g_object_ref (dh_profile_get_default ());
+                priv->profile = g_object_ref (dh_profile_get_default (gtk_widget_get_scale_factor(
+                        GTK_WIDGET (sidebar)
+                )));
 
         /* Setup the search entry */
         priv->entry = GTK_ENTRY (gtk_search_entry_new ());

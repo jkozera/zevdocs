@@ -469,7 +469,7 @@ typedef struct {
         DhKeywordModelPrivate *priv;
 } SearchContext;
 
-void
+static void
 websocket_message_cb (SoupWebsocketConnection *self,
                       gint                     type,
                       GBytes                  *message,
@@ -745,7 +745,7 @@ dh_keyword_model_filter (DhKeywordModel *model,
         priv = dh_keyword_model_get_instance_private (model);
 
         if (profile == NULL)
-                profile = dh_profile_get_default ();
+                profile = dh_profile_get_default (-1);  // should be already created
 
         book_list = dh_profile_get_book_list (profile);
 
