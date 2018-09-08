@@ -70,7 +70,14 @@ main (int argc, char **argv)
                 strcat(env, getenv("HOME"));
                 strcat(env, "/.local/share");
                 setenv("XDG_DATA_DIRS", env, 1);
-                execl("/app/bin/zealcore", "zealcore", (char*) NULL);
+                if (getenv("SNAP")) {
+                    char path[10000] = {0};
+                    strcat(path, getenv("SNAP"));
+                    strcat(path, "/app/bin/zealcore");
+                    execl(path, "zealcore", (char *) NULL);
+                } else {
+                    execl("/app/bin/zealcore", "zealcore", (char *) NULL);
+                }
                 return 0;
         }
 
