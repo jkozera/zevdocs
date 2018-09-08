@@ -36,7 +36,7 @@ I18N.merge_file(
         install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'applications')
 )
 
-service_file = 'org.gnome.Devhelp.service'
+service_file = 'io.github.jkozera.ZevDocs.service'
 service_conf = configuration_data()
 service_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
 configure_file(

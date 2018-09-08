@@ -4,9 +4,9 @@
 # See: https://github.com/mesonbuild/meson/issues/2607
 
 project(
-        'devhelp', 'c',
+        'zevdocs', 'c',
         meson_version : '>= 0.43',
-        version : '3.30.0'
+        version : '0.2.0'
 )
 
 GNOME = import('gnome')
