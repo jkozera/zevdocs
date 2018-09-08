@@ -9,10 +9,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: devhelp\n"
-"Report-Msgid-Bugs-To: https://bugzilla.gnome.org/enter_bug.cgi?"
-"product=devhelp&keywords=I18N+L10N&component=General\n"
-"POT-Creation-Date: 2018-02-10 09:48+0000\n"
-"PO-Revision-Date: 2018-03-05 14:12+0100\n"
+"Report-Msgid-Bugs-To: https://gitlab.gnome.org/GNOME/devhelp/issues\n"
+"POT-Creation-Date: 2018-08-30 18:43+0000\n"
+"PO-Revision-Date: 2018-08-31 16:49+0200\n"
 "Last-Translator: Milo Casagrande <milo@milo.name>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "Language: it\n"
@@ -20,18 +19,18 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n!=1);\n"
-"X-Generator: Poedit 2.0.6\n"
+"X-Generator: Poedit 2.1.1\n"
 
 #. Translators: please don't translate "Devhelp" (it's marked as
 #. * translatable for transliteration only).
 #.
-#: data/org.gnome.Devhelp.appdata.xml.in:6
-#: data/org.gnome.Devhelp.desktop.in.in:3 src/dh-app.c:112 src/dh-app.c:480
+#: data/org.gnome.Devhelp.appdata.xml.in:6 data/org.gnome.Devhelp.desktop.in:3
+#: src/dh-app.c:154 src/dh-app.c:499
 msgid "Devhelp"
 msgstr "Devhelp"
 
-#: data/org.gnome.Devhelp.appdata.xml.in:7
-#: data/org.gnome.Devhelp.desktop.in.in:4 src/dh-app.c:114
+#: data/org.gnome.Devhelp.appdata.xml.in:7 data/org.gnome.Devhelp.desktop.in:4
+#: src/dh-app.c:156
 msgid "A developer tool for browsing and searching API documentation"
 msgstr ""
 "Uno strumento per sviluppatori per esplorare e cercare la documentazione "
@@ -77,109 +76,198 @@ msgstr ""
 "sono disponibili diversi plugin per altri editor di testo (gedit, Vim, "
 "Emacs, Geany, …)."
 
-#: data/org.gnome.Devhelp.desktop.in.in:5
+#: data/org.gnome.Devhelp.desktop.in:5
 msgid "API Documentation Browser"
 msgstr "Esplorazione documentazione API"
 
 #. Translators: Search terms to find this application. Do NOT translate or localize the semicolons! The list MUST also end with a semicolon!
-#: data/org.gnome.Devhelp.desktop.in.in:7
+#: data/org.gnome.Devhelp.desktop.in:7
 msgid "documentation;information;manual;developer;api;"
 msgstr "documentazione;informazioni;manuale;manuali;sviluppo;api;"
 
 #. Translators: Do NOT translate or transliterate this text (this is an icon file name)!
-#: data/org.gnome.Devhelp.desktop.in.in:12
+#: data/org.gnome.Devhelp.desktop.in:12
 #: plugins/gedit-plugin/devhelp.plugin.desktop.in:10
-msgid "devhelp"
-msgstr "devhelp"
+msgid "org.gnome.Devhelp"
+msgstr "org.gnome.Devhelp"
 
-#: data/org.gnome.devhelp.gschema.xml:18
+#: data/org.gnome.devhelp.gschema.xml:16
 msgid "Main window maximized state"
 msgstr "Stato di massimizzazione della finestra principale"
 
-#: data/org.gnome.devhelp.gschema.xml:19
+#: data/org.gnome.devhelp.gschema.xml:17
 msgid "Whether the main window should start maximized."
 msgstr "Indica se la finestra principale deve essere avviata massimizzata."
 
-#: data/org.gnome.devhelp.gschema.xml:23
+#: data/org.gnome.devhelp.gschema.xml:21
 msgid "Width of the main window"
 msgstr "Larghezza della finestra principale"
 
-#: data/org.gnome.devhelp.gschema.xml:24
+#: data/org.gnome.devhelp.gschema.xml:22
 msgid "The width of the main window."
 msgstr "La larghezza della finestra principale."
 
-#: data/org.gnome.devhelp.gschema.xml:28
+#: data/org.gnome.devhelp.gschema.xml:26
 msgid "Height of main window"
 msgstr "Altezza della finestra principale"
 
-#: data/org.gnome.devhelp.gschema.xml:29
+#: data/org.gnome.devhelp.gschema.xml:27
 msgid "The height of the main window."
 msgstr "L'altezza della finestra principale."
 
-#: data/org.gnome.devhelp.gschema.xml:35
+#: data/org.gnome.devhelp.gschema.xml:33
 msgid "Width of the index and search pane"
 msgstr "Larghezza del riquadro di ricerca e indicizzazione"
 
-#: data/org.gnome.devhelp.gschema.xml:36
+#: data/org.gnome.devhelp.gschema.xml:34
 msgid "The width of the index and search pane."
 msgstr "La larghezza del riquadro di ricerca e indicizzazione."
 
-#: data/org.gnome.devhelp.gschema.xml:42
-msgid "Books disabled"
-msgstr "Libri disabilitati"
-
 #: data/org.gnome.devhelp.gschema.xml:43
-msgid "List of books disabled by the user."
-msgstr "Elenco di libri disabilitati dall'utente."
-
-#: data/org.gnome.devhelp.gschema.xml:47
-msgid "Group by language"
-msgstr "Raggruppa per linguaggio"
-
-#: data/org.gnome.devhelp.gschema.xml:48
-msgid "Whether books should be grouped by language in the UI"
-msgstr "Indica se raggruppare le guide nella UI in base al linguaggio"
-
-#: data/org.gnome.devhelp.gschema.xml:57
 msgid "Width of the assistant window"
 msgstr "Larghezza della finestra assistente"
 
-#: data/org.gnome.devhelp.gschema.xml:58
+#: data/org.gnome.devhelp.gschema.xml:44
 msgid "The width of the assistant window."
 msgstr "La larghezza della finestra assistente."
 
-#: data/org.gnome.devhelp.gschema.xml:62
+#: data/org.gnome.devhelp.gschema.xml:48
 msgid "Height of assistant window"
 msgstr "Altezza della finestra assistente"
 
-#: data/org.gnome.devhelp.gschema.xml:63
+#: data/org.gnome.devhelp.gschema.xml:49
 msgid "The height of the assistant window."
 msgstr "L'altezza della finestra assistente."
 
-#: data/org.gnome.devhelp.gschema.xml:69
+#: data/org.gnome.libdevhelp.gschema.xml.in:9
+msgid "Books disabled"
+msgstr "Libri disabilitati"
+
+#: data/org.gnome.libdevhelp.gschema.xml.in:10
+msgid "List of books disabled by the user."
+msgstr "Elenco di libri disabilitati dall'utente."
+
+#: data/org.gnome.libdevhelp.gschema.xml.in:14
+msgid "Group books by language"
+msgstr "Raggruppa i libri per linguaggio"
+
+#: data/org.gnome.libdevhelp.gschema.xml.in:15
+msgid ""
+"Whether books should be grouped by programming language in the user "
+"interface."
+msgstr ""
+"Indica se raggruppare i libri in base al linguaggio nell'interfaccia utente"
+
+#: data/org.gnome.libdevhelp.gschema.xml.in:21
 msgid "Use system fonts"
 msgstr "Usa i tipi di carattere di sistema"
 
-#: data/org.gnome.devhelp.gschema.xml:70
+#: data/org.gnome.libdevhelp.gschema.xml.in:22
 msgid "Use the system default fonts."
 msgstr "Usa i tipi di carattere di sistema predefiniti."
 
-#: data/org.gnome.devhelp.gschema.xml:74
+#: data/org.gnome.libdevhelp.gschema.xml.in:26
 msgid "Font for text"
 msgstr "Tipo di carattere per il testo"
 
-#: data/org.gnome.devhelp.gschema.xml:75
+#: data/org.gnome.libdevhelp.gschema.xml.in:27
 msgid "Font for text with variable width."
 msgstr "Tipo di carattere per il testo ad ampiezza variabile."
 
-#: data/org.gnome.devhelp.gschema.xml:79
+#: data/org.gnome.libdevhelp.gschema.xml.in:31
 msgid "Font for fixed width text"
 msgstr "Tipo di carattere per testo ad ampiezza fissa"
 
-#: data/org.gnome.devhelp.gschema.xml:80
+#: data/org.gnome.libdevhelp.gschema.xml.in:32
 msgid "Font for text with fixed width, such as code examples."
 msgstr ""
 "Tipo di carattere per il testo ad ampiezza fissa, come esempi di codice."
+
+#: devhelp/dh-assistant-view.c:400
+msgid "Book:"
+msgstr "Libro:"
+
+#: devhelp/dh-book.c:313
+#, c-format
+msgid "Language: %s"
+msgstr "Linguaggio: %s"
+
+#: devhelp/dh-book.c:314
+msgid "Language: Undefined"
+msgstr "Linguaggio: non definito"
+
+#: devhelp/dh-book-tree.c:755
+msgid "_Collapse All"
+msgstr "Ridu_ci tutti"
+
+#. i18n: a documentation book
+#: devhelp/dh-link.c:551
+msgid "Book"
+msgstr "Libro"
+
+#. i18n: a "page" in a documentation book
+#: devhelp/dh-link.c:555
+msgid "Page"
+msgstr "Pagina"
+
+#. i18n: a search hit in the documentation, could be a
+#. * function, macro, struct, etc
+#: devhelp/dh-link.c:560
+msgid "Keyword"
+msgstr "Parola chiave"
+
+#. i18n: in the programming language context, if you don't
+#. * have an ESTABLISHED term for it, leave it
+#. * untranslated.
+#: devhelp/dh-link.c:566
+msgid "Function"
+msgstr "Function"
+
+#. i18n: in the programming language context, if you don't
+#. * have an ESTABLISHED term for it, leave it
+#. * untranslated.
+#: devhelp/dh-link.c:572
+msgid "Struct"
+msgstr "Struct"
+
+#. i18n: in the programming language context, if you don't
+#. * have an ESTABLISHED term for it, leave it
+#. * untranslated.
+#: devhelp/dh-link.c:578
+msgid "Macro"
+msgstr "Macro"
+
+#. i18n: in the programming language context, if you don't
+#. * have an ESTABLISHED term for it, leave it
+#. * untranslated.
+#: devhelp/dh-link.c:584
+msgid "Enum"
+msgstr "Enum"
+
+#. i18n: in the programming language context, if you don't
+#. * have an ESTABLISHED term for it, leave it
+#. * untranslated.
+#: devhelp/dh-link.c:590
+msgid "Type"
+msgstr "Type"
+
+#. i18n: in the programming language context, if you don't
+#. * have an ESTABLISHED term for it, leave it
+#. * untranslated.
+#: devhelp/dh-link.c:596
+msgid "Property"
+msgstr "Proprietà"
+
+#. i18n: in the programming language context, if you don't
+#. * have an ESTABLISHED term for it, leave it
+#. * untranslated.
+#: devhelp/dh-link.c:602
+msgid "Signal"
+msgstr "Segnale"
+
+#: devhelp/dh-web-view.c:652
+msgid "Empty Page"
+msgstr "Pagina vuota"
 
 #: plugins/gedit-plugin/devhelp.plugin.desktop.in:6
 msgid "Devhelp support"
@@ -190,37 +278,37 @@ msgstr "Supporto DevHelp"
 msgid "Show API Documentation"
 msgstr "Mostra documentazione API"
 
-#: src/dh-app.c:116
+#: src/dh-app.c:158
 msgid "translator-credits"
 msgstr ""
 "Milo Casagrande <milo@milo.name>\n"
 "Francesco Marletta <francesco.marletta@tiscali.it>"
 
-#: src/dh-app.c:118
+#: src/dh-app.c:160
 msgid "Devhelp Website"
 msgstr "Sito web di DevHelp"
 
-#: src/dh-app.c:384
+#: src/dh-app.c:403
 msgid "Opens a new Devhelp window"
 msgstr "Apre una nuova finestra di Devhelp"
 
-#: src/dh-app.c:389
+#: src/dh-app.c:408
 msgid "Search for a keyword"
 msgstr "Cerca per parola chiave"
 
-#: src/dh-app.c:390 src/dh-app.c:395
+#: src/dh-app.c:409 src/dh-app.c:414
 msgid "KEYWORD"
 msgstr "PAROLACHIAVE"
 
-#: src/dh-app.c:394
+#: src/dh-app.c:413
 msgid "Search and display any hit in the assistant window"
 msgstr "Cerca e mostra ogni corrispondenza nella finestra assistente"
 
-#: src/dh-app.c:399
+#: src/dh-app.c:418
 msgid "Display the version and exit"
 msgstr "Mostra la versione ed esce"
 
-#: src/dh-app.c:404
+#: src/dh-app.c:423
 msgid "Quit any running Devhelp"
 msgstr "Termina ogni Devhelp in esecuzione"
 
@@ -229,131 +317,41 @@ msgstr "Termina ogni Devhelp in esecuzione"
 msgid "Devhelp — Assistant"
 msgstr "Devhelp — Assistente"
 
-#: src/dh-assistant-view.c:400
-msgid "Book:"
-msgstr "Libro:"
-
-#: src/dh-book.c:348
-#, c-format
-msgid "Language: %s"
-msgstr "Linguaggio: %s"
-
-#: src/dh-book.c:349
-msgid "Language: Undefined"
-msgstr "Linguaggio: non definito"
-
-#: src/dh-book-tree.c:655
-msgid "_Collapse All"
-msgstr "Ridu_ci tutti"
-
-#. i18n: a documentation book
-#: src/dh-link.c:549
-msgid "Book"
-msgstr "Libro"
-
-#. i18n: a "page" in a documentation book
-#: src/dh-link.c:553
-msgid "Page"
-msgstr "Pagina"
-
-#. i18n: a search hit in the documentation, could be a
-#. * function, macro, struct, etc
-#: src/dh-link.c:558
-msgid "Keyword"
-msgstr "Parola chiave"
-
-#. i18n: in the programming language context, if you don't
-#. * have an ESTABLISHED term for it, leave it
-#. * untranslated.
-#: src/dh-link.c:564
-msgid "Function"
-msgstr "Function"
-
-#. i18n: in the programming language context, if you don't
-#. * have an ESTABLISHED term for it, leave it
-#. * untranslated.
-#: src/dh-link.c:570
-msgid "Struct"
-msgstr "Struct"
-
-#. i18n: in the programming language context, if you don't
-#. * have an ESTABLISHED term for it, leave it
-#. * untranslated.
-#: src/dh-link.c:576
-msgid "Macro"
-msgstr "Macro"
-
-#. i18n: in the programming language context, if you don't
-#. * have an ESTABLISHED term for it, leave it
-#. * untranslated.
-#: src/dh-link.c:582
-msgid "Enum"
-msgstr "Enum"
-
-#. i18n: in the programming language context, if you don't
-#. * have an ESTABLISHED term for it, leave it
-#. * untranslated.
-#: src/dh-link.c:588
-msgid "Type"
-msgstr "Type"
-
-#. i18n: in the programming language context, if you don't
-#. * have an ESTABLISHED term for it, leave it
-#. * untranslated.
-#: src/dh-link.c:594
-msgid "Property"
-msgstr "Proprietà"
-
-#. i18n: in the programming language context, if you don't
-#. * have an ESTABLISHED term for it, leave it
-#. * untranslated.
-#: src/dh-link.c:600
-msgid "Signal"
-msgstr "Segnale"
-
-#: src/dh-preferences.ui:40
-msgid "Preferences"
-msgstr "Preferenze"
-
-#: src/dh-preferences.ui:76
-msgid "_Group by language"
-msgstr "Ra_ggruppare per linguaggio"
-
-#: src/dh-preferences.ui:107
+#: src/dh-preferences.c:551
 msgid "Enabled"
 msgstr "Abilitato"
 
-#: src/dh-preferences.ui:122
+#: src/dh-preferences.c:565
 msgid "Title"
 msgstr "Titolo"
 
-#: src/dh-preferences.ui:151
+#: src/dh-preferences.ui:26
+msgid "Preferences"
+msgstr "Preferenze"
+
+#: src/dh-preferences.ui:62
+msgid "_Group by language"
+msgstr "Ra_ggruppare per linguaggio"
+
+#: src/dh-preferences.ui:104
 msgid "Book Shelf"
 msgstr "Raccolta libri"
 
-#: src/dh-preferences.ui:172
+#: src/dh-preferences.ui:125
 msgid "_Use system fonts"
 msgstr "_Usare i tipi di carattere di sistema"
 
-#: src/dh-preferences.ui:196
+#: src/dh-preferences.ui:149
 msgid "_Variable width: "
 msgstr "Larghezza _variabile: "
 
-#: src/dh-preferences.ui:209
+#: src/dh-preferences.ui:162
 msgid "_Fixed width:"
 msgstr "Larghezza _fissa:"
 
-#: src/dh-preferences.ui:270
+#: src/dh-preferences.ui:223
 msgid "Fonts"
 msgstr "Tipi di carattere"
-
-#: src/dh-window.c:161 src/dh-window.c:1006 src/dh-window.c:1139
-msgid "Empty Page"
-msgstr "Pagina vuota"
-
-#: src/dh-window.c:892
-msgid "Error opening the requested link."
-msgstr "Errore nell'aprire il collegamento richiesto."
 
 #: src/dh-window.ui:7 src/dh-window.ui:45
 msgid "_Side Panel"
@@ -367,36 +365,31 @@ msgstr "Stam_pa"
 msgid "_Find"
 msgstr "Tr_ova"
 
-# GNOME-2-22
-# tradotto come in Ephy, non so se anche
-# gli originali coincidono --Luca
 #: src/dh-window.ui:23 src/dh-window.ui:61
 msgid "_Larger Text"
 msgstr "Testo più _grande"
 
-# GNOME-2-22
 #: src/dh-window.ui:27 src/dh-window.ui:65
 msgid "S_maller Text"
 msgstr "Testo più _piccolo"
 
-# GNOME-2-22
 #: src/dh-window.ui:31 src/dh-window.ui:69
 msgid "_Normal Size"
 msgstr "Dimensione _normale"
 
-#: src/dh-window.ui:39 src/menus.ui:30
+#: src/dh-window.ui:39 src/menus.ui:29
 msgid "New _Window"
 msgstr "Nuova _finestra"
 
-#: src/dh-window.ui:75 src/menus.ui:36
+#: src/dh-window.ui:75 src/menus.ui:35
 msgid "_Preferences"
 msgstr "Preferen_ze"
 
-#: src/dh-window.ui:81 src/menus.ui:42
+#: src/dh-window.ui:81 src/menus.ui:41
 msgid "_Keyboard Shortcuts"
 msgstr "_Scorciatoie da tastiera"
 
-#: src/dh-window.ui:85 src/menus.ui:46
+#: src/dh-window.ui:85 src/menus.ui:45
 msgid "_Help"
 msgstr "A_iuto"
 
@@ -404,19 +397,19 @@ msgstr "A_iuto"
 msgid "_About Devhelp"
 msgstr "I_nformazioni su Devhelp"
 
-#: src/dh-window.ui:93 src/menus.ui:54
+#: src/dh-window.ui:93 src/menus.ui:53
 msgid "_Quit"
 msgstr "_Esci"
 
-#: src/dh-window.ui:122
+#: src/dh-window.ui:121
 msgid "Back"
 msgstr "Indietro"
 
-#: src/dh-window.ui:141
+#: src/dh-window.ui:140
 msgid "Forward"
 msgstr "Avanti"
 
-#: src/dh-window.ui:187
+#: src/dh-window.ui:186
 msgid "New Tab"
 msgstr "Nuova scheda"
 
@@ -468,7 +461,7 @@ msgstr "Stampa"
 #: src/help-overlay.ui:75
 msgctxt "shortcut window"
 msgid "Close the current window"
-msgstr "Chiude la finestra corrente"
+msgstr "Chiude la finestra attuale"
 
 #: src/help-overlay.ui:82
 msgctxt "shortcut window"
@@ -495,9 +488,24 @@ msgctxt "shortcut window"
 msgid "Reset Zoom"
 msgstr "Ripristina l'ingrandimento"
 
-#: src/menus.ui:50
+#: src/menus.ui:49
 msgid "_About"
 msgstr "I_nformazioni"
+
+#~ msgid "Larger text"
+#~ msgstr "Testo più grande"
+
+#~ msgid "Smaller text"
+#~ msgstr "Testo più _piccolo"
+
+#~ msgid "Normal size"
+#~ msgstr "Dimensione _normale"
+
+#~ msgid "devhelp"
+#~ msgstr "devhelp"
+
+#~ msgid "Error opening the requested link."
+#~ msgstr "Errore nell'aprire il collegamento richiesto."
 
 #~ msgid "Developer’s Help program"
 #~ msgstr "Programma di aiuto per sviluppatori"

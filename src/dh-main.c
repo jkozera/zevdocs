@@ -23,7 +23,6 @@
 #include <locale.h>
 #include <glib/gi18n.h>
 #include <devhelp/devhelp.h>
-#include <amtk/amtk.h>
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -60,7 +59,7 @@ static void wait_for_core ()
 int
 main (int argc, char **argv)
 {
-        DhApp *application;
+        g_autoptr(DhApp) application;
         gint status;
         int pid_status;
         pid_t zealcore_pid = fork();
@@ -81,13 +80,10 @@ main (int argc, char **argv)
         textdomain (GETTEXT_PACKAGE);
 
         dh_init ();
-        amtk_init ();
 
         application = dh_app_new ();
         status = g_application_run (G_APPLICATION (application), argc, argv);
-        g_object_unref (application);
 
-        amtk_finalize ();
         dh_finalize ();
         dh_settings_app_unref_singleton ();
 

@@ -78,6 +78,7 @@
  * affect the case sensitivity for the other search terms.
  */
 
+
 typedef struct {
         gchar *current_book_id;
 

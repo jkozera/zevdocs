@@ -1028,6 +1028,7 @@ dh_preferences_show_dialog (GtkWindow *parent)
 
         if (prefs == NULL) {
                 prefs = g_object_new (DH_TYPE_PREFERENCES,
+                                      "modal", TRUE,
                                       "use-header-bar", TRUE,
                                       NULL);
 
