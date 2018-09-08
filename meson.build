@@ -6,7 +6,7 @@
 project(
         'zevdocs', 'c',
         meson_version : '>= 0.43',
-        version : '0.2.1'
+        version : '0.2.2'
 )
 
 GNOME = import('gnome')
