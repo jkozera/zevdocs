@@ -90,9 +90,12 @@ void            dh_settings_get_selected_fonts                  (DhSettings  *se
                                                                  gchar      **fixed_font);
 
 gboolean        dh_settings_get_use_system_fonts                (DhSettings *settings);
+gboolean        dh_settings_get_dark_mode                       (DhSettings *settings);
 
 void            dh_settings_set_use_system_fonts                (DhSettings *settings,
                                                                  gboolean    use_system_fonts);
+void            dh_settings_set_dark_mode                       (DhSettings *settings,
+                                                                 gboolean    dark_mode);
 
 const gchar *   dh_settings_get_variable_font                   (DhSettings *settings);
 

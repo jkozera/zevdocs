@@ -444,6 +444,32 @@ update_fonts (DhWebView *view)
 
         set_fonts (WEBKIT_WEB_VIEW (view), variable_font, fixed_font);
 
+        if (dh_settings_get_dark_mode(settings)) {
+            webkit_user_content_manager_add_style_sheet(
+                    webkit_web_view_get_user_content_manager(WEBKIT_WEB_VIEW (view)),
+                    webkit_user_style_sheet_new(
+                            // from
+                            // https://github.com/zealdocs/zeal/blob/318eef91e715ff568fcfa935840dc0772b66884d/src/app/resources/browser/darkmode.css
+                            "html {\n"
+                            "    -webkit-filter: invert() hue-rotate(180deg) contrast(70%);\n"
+                            "    filter: invert() hue-rotate(180deg) contrast(70%);\n"
+                            "}\n"
+                            "html img {\n"
+                            "    -webkit-filter: invert() hue-rotate(180deg) contrast(120%);\n"
+                            "    filter: invert() hue-rotate(180deg) contrast(120%);\n"
+                            "}",
+                            WEBKIT_USER_CONTENT_INJECT_ALL_FRAMES,
+                            WEBKIT_USER_STYLE_LEVEL_USER,
+                            NULL, NULL
+                    )
+            );
+        } else {
+            webkit_user_content_manager_remove_all_style_sheets(
+                    webkit_web_view_get_user_content_manager(WEBKIT_WEB_VIEW (view))
+            );
+        }
+
+
         g_free (variable_font);
         g_free (fixed_font);
 }
@@ -587,8 +613,11 @@ dh_web_view_new (DhProfile *profile)
 {
         g_return_val_if_fail (profile == NULL || DH_IS_PROFILE (profile), NULL);
 
+        WebKitUserContentManager *mgr = webkit_user_content_manager_new();
+
         return g_object_new (DH_TYPE_WEB_VIEW,
                              "profile", profile,
+                             "user-content-manager", mgr,
                              NULL);
 }
 

@@ -95,6 +95,7 @@ struct _DhSettingsPrivate {
 
         guint group_books_by_language : 1;
         guint use_system_fonts : 1;
+        guint dark_mode : 1;
 };
 
 enum {
@@ -103,6 +104,7 @@ enum {
         PROP_USE_SYSTEM_FONTS,
         PROP_VARIABLE_FONT,
         PROP_FIXED_FONT,
+        PROP_DARK_MODE,
         N_PROPERTIES
 };
 
@@ -253,6 +255,10 @@ dh_settings_get_property (GObject    *object,
                         g_value_set_string (value, dh_settings_get_fixed_font (settings));
                         break;
 
+                case PROP_DARK_MODE:
+                        g_value_set_boolean (value, dh_settings_get_dark_mode (settings));
+                        break;
+
                 default:
                         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
                         break;
@@ -282,6 +288,10 @@ dh_settings_set_property (GObject      *object,
 
                 case PROP_FIXED_FONT:
                         dh_settings_set_fixed_font (settings, g_value_get_string (value));
+                        break;
+
+                case PROP_DARK_MODE:
+                        dh_settings_set_dark_mode (settings, g_value_get_boolean(value));
                         break;
 
                 default:
@@ -396,6 +406,15 @@ dh_settings_class_init (DhSettingsClass *klass)
                                      G_PARAM_READWRITE |
                                      G_PARAM_CONSTRUCT |
                                      G_PARAM_STATIC_STRINGS);
+
+        properties[PROP_DARK_MODE] =
+                g_param_spec_boolean ("dark-mode",
+                                      "dark-mode",
+                                      "",
+                                      FALSE,
+                                      G_PARAM_READWRITE |
+                                      G_PARAM_CONSTRUCT |
+                                      G_PARAM_STATIC_STRINGS);
 
         g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 
@@ -754,6 +773,14 @@ dh_settings_get_use_system_fonts (DhSettings *settings)
         return settings->priv->use_system_fonts;
 }
 
+gboolean
+dh_settings_get_dark_mode (DhSettings *settings)
+{
+        g_return_val_if_fail (DH_IS_SETTINGS (settings), FALSE);
+
+        return settings->priv->dark_mode;
+}
+
 /**
  * dh_settings_set_use_system_fonts:
  * @settings: a #DhSettings.
@@ -774,6 +801,22 @@ dh_settings_set_use_system_fonts (DhSettings *settings,
         if (settings->priv->use_system_fonts != use_system_fonts) {
                 settings->priv->use_system_fonts = use_system_fonts;
                 g_object_notify_by_pspec (G_OBJECT (settings), properties[PROP_USE_SYSTEM_FONTS]);
+
+                g_signal_emit (settings, signals[SIGNAL_FONTS_CHANGED], 0);
+        }
+}
+
+void
+dh_settings_set_dark_mode (DhSettings *settings,
+                           gboolean    dark_mode)
+{
+        g_return_if_fail (DH_IS_SETTINGS (settings));
+
+        dark_mode = dark_mode != FALSE;
+
+        if (settings->priv->dark_mode != dark_mode) {
+                settings->priv->dark_mode = dark_mode;
+                g_object_notify_by_pspec (G_OBJECT (settings), properties[PROP_DARK_MODE]);
 
                 g_signal_emit (settings, signals[SIGNAL_FONTS_CHANGED], 0);
         }

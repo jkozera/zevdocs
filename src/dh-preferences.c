@@ -55,6 +55,7 @@ typedef struct {
 
         /* Fonts tab */
         GtkCheckButton *use_system_fonts_checkbutton;
+        GtkCheckButton *dark_mode_checkbutton;
         GtkGrid *custom_fonts_grid;
         GtkFontButton *variable_font_button;
         GtkFontButton *fixed_font_button;
@@ -110,6 +111,7 @@ dh_preferences_class_init (DhPreferencesClass *klass)
 
         // Fonts tab
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, use_system_fonts_checkbutton);
+        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, dark_mode_checkbutton);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, custom_fonts_grid);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, variable_font_button);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, fixed_font_button);
@@ -988,6 +990,10 @@ init_fonts_tab (DhPreferences *prefs)
                                 G_BINDING_DEFAULT |
                                 G_BINDING_SYNC_CREATE |
                                 G_BINDING_INVERT_BOOLEAN);
+
+        g_object_bind_property (settings, "dark-mode",
+                                priv->dark_mode_checkbutton, "active",
+                                G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
 
         g_object_bind_property (settings, "variable-font",
                                 priv->variable_font_button, "font",
