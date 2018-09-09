@@ -506,8 +506,7 @@ DhApp *
 dh_app_new (void)
 {
         return g_object_new (DH_TYPE_APP,
-                             "application-id", "io.github.jkozera.ZevDocs",
-                             "flags", G_APPLICATION_HANDLES_COMMAND_LINE,
+                             "flags", G_APPLICATION_NON_UNIQUE,
                              NULL);
 }
 

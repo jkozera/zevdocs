@@ -517,10 +517,10 @@ dh_window_init (DhWindow *window)
         add_actions (window);
 
         app = GTK_APPLICATION (g_application_get_default ());
-        if (!gtk_application_prefers_app_menu (app)) {
+        //if (!gtk_application_prefers_app_menu (app)) {
                 gtk_menu_button_set_menu_model (priv->window_menu_button,
                                                 priv->window_menu_plus_app_menu);
-        }
+        //}
 
         settings = dh_settings_app_get_singleton ();
         paned_settings = dh_settings_app_peek_paned_settings (settings);
