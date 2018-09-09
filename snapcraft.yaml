@@ -1,0 +1,72 @@
+name: zevdocs
+base: core18
+version: "0.2.2"
+summary: ZevDocs documentation browser
+description: ZevDocs is a documentation browser based on Devhelp supporting Zeal/Dash docsets.
+grade: stable
+confinement: strict
+icon: data/icons/256x256/io.github.jkozera.ZevDocs.png
+plugs:
+  gnome-3-28-1804:
+    interface: content
+    target: gnome-platform
+    default-provider: gnome-3-28-1804:gnome-3-28-1804
+    content: gnome-3-28-1804
+slots:
+  dbus-zevdocs:
+    interface: dbus
+    name: io.github.jkozera.ZevDocs
+    bus: session
+apps:
+  zevdocs:
+    command: desktop-launch snapcraft-preload zevdocs
+    desktop: usr/share/applications/io.github.jkozera.ZevDocs.desktop
+    plugs: [network, network-bind, x11, wayland, desktop, home, gnome-3-28-1804, browser-support]
+    slots: [dbus-zevdocs]
+    environment:
+      LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0/:$LD_LIBRARY_PATH
+
+parts:
+  build-deps:
+    after: [desktop-gnome-platform]
+    plugin: nil
+    stage-packages:
+      - gsettings-desktop-schemas-dev
+      - gobject-introspection
+      - libgirepository1.0-dev
+      - libwebkit2gtk-4.0-dev
+      - libjson-glib-dev
+      - gir1.2-webkit2-4.0
+      - gir1.2-json-1.0
+      - itstool
+      - golang
+      - libc6-dev
+      - libstdc++-dev
+    prime: [-*]
+  snapcraft-preload:
+    after: [build-deps]
+    source: https://github.com/jkozera/snapcraft-preload.git
+    plugin: cmake
+  zevdocs:
+    after: [build-deps]
+    plugin: meson
+    meson-parameters: [--prefix=/usr]
+    source: https://github.com/jkozera/zevdocs.git
+    source-commit: c94e771dca0410865ac4f1685b535da48e567779
+    stage-packages:
+      - libwebkit2gtk-4.0-37
+      - libjson-glib-1.0-0
+      - libc6
+    override-build: snapcraftctl build && glib-compile-schemas $SNAPCRAFT_PART_INSTALL/usr/share/glib-2.0/schemas/
+  zealcore:
+    after: [build-deps]
+    plugin: dep
+    go-importpath: github.com/jkozera/zealcore
+    go-packages: [github.com/jkozera/zealcore]
+    source: https://github.com/jkozera/zealcore.git
+    source-commit: 7a04435f65876bc5c9bb4c663e1aa3ef96197190
+    override-build: |
+            sed -i s,github.com/zealdocs,github.com/jkozera,g `find ../go/src -name *.go`
+            snapcraftctl build
+            mkdir -p $SNAPCRAFT_PART_INSTALL/app/bin && cp -a ../go/bin/zealcore $SNAPCRAFT_PART_INSTALL/app/bin
+    prime: [app]
