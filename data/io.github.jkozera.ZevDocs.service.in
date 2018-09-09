@@ -1,3 +1,0 @@
-[D-BUS Service]
-Name=io.github.jkozera.ZevDocs
-Exec=@bindir@/zevdocs --gapplication-service

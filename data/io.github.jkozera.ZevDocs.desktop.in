@@ -11,4 +11,3 @@ Type=Application
 Icon=io.github.jkozera.ZevDocs
 Categories=GNOME;GTK;Development;
 StartupNotify=true
-DBusActivatable=true

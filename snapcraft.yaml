@@ -12,17 +12,11 @@ plugs:
     target: gnome-platform
     default-provider: gnome-3-28-1804:gnome-3-28-1804
     content: gnome-3-28-1804
-slots:
-  dbus-zevdocs:
-    interface: dbus
-    name: io.github.jkozera.ZevDocs
-    bus: session
 apps:
   zevdocs:
     command: desktop-launch snapcraft-preload zevdocs
     desktop: usr/share/applications/io.github.jkozera.ZevDocs.desktop
     plugs: [network, network-bind, x11, wayland, desktop, home, gnome-3-28-1804, browser-support]
-    slots: [dbus-zevdocs]
     environment:
       LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0/:$LD_LIBRARY_PATH
 
@@ -52,7 +46,7 @@ parts:
     plugin: meson
     meson-parameters: [--prefix=/usr]
     source: https://github.com/jkozera/zevdocs.git
-    source-commit: c94e771dca0410865ac4f1685b535da48e567779
+    source-branch: master
     stage-packages:
       - libwebkit2gtk-4.0-37
       - libjson-glib-1.0-0
