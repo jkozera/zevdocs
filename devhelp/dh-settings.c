@@ -19,6 +19,7 @@
  * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define G_SETTINGS_ENABLE_BACKEND 1
 #include <gtk/gtk.h>
 #include <gio/gsettingsbackend.h>
 #include "config.h"
