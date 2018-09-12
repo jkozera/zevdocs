@@ -1,15 +1,15 @@
 subdir('icons')
 
 install_data(
-        'org.gnome.devhelp.gschema.xml',
+        'io.github.jkozera.ZevDocs.gschema.xml',
         install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'glib-2.0/schemas')
 )
 
 libdevhelp_gschema_conf = configuration_data()
 libdevhelp_gschema_conf.set('LIBDEVHELP_API_VERSION', LIBDEVHELP_API_VERSION)
 configure_file(
-        input : 'org.gnome.libdevhelp.gschema.xml.in',
-        output : 'org.gnome.libdevhelp-@0@.gschema.xml'.format(LIBDEVHELP_API_VERSION),
+        input : 'io.github.jkozera.ZevDocs.gschema.xml.in',
+        output : 'io.github.jkozera.ZevDocs-@0@.gschema.xml'.format(LIBDEVHELP_API_VERSION),
         configuration : libdevhelp_gschema_conf,
         install : true,
         install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'glib-2.0/schemas')

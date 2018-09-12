@@ -1,16 +1,16 @@
 <schemalist gettext-domain="devhelp">
-  <schema id="org.gnome.devhelp" path="/org/gnome/devhelp/">
-    <child name="state" schema="org.gnome.devhelp.state"/>
+  <schema id="io.github.jkozera.ZevDocs" path="/io/jkozera/zevdocs/">
+    <child name="state" schema="io.github.jkozera.ZevDocs.state"/>
   </schema>
-  <schema id="org.gnome.devhelp.state" path="/org/gnome/devhelp/state/">
-    <child name="main" schema="org.gnome.devhelp.state.main"/>
-    <child name="assistant" schema="org.gnome.devhelp.state.assistant"/>
+  <schema id="io.github.jkozera.ZevDocs.state" path="/io/jkozera/zevdocs/state/">
+    <child name="main" schema="io.github.jkozera.ZevDocs.state.main"/>
+    <child name="assistant" schema="io.github.jkozera.ZevDocs.state.assistant"/>
   </schema>
-  <schema id="org.gnome.devhelp.state.main" path="/org/gnome/devhelp/state/main/">
-    <child name="window" schema="org.gnome.devhelp.state.main.window"/>
-    <child name="paned" schema="org.gnome.devhelp.state.main.paned"/>
+  <schema id="io.github.jkozera.ZevDocs.state.main" path="/io/jkozera/zevdocs/state/main/">
+    <child name="window" schema="io.github.jkozera.ZevDocs.state.main.window"/>
+    <child name="paned" schema="io.github.jkozera.ZevDocs.state.main.paned"/>
   </schema>
-  <schema id="org.gnome.devhelp.state.main.window" path="/org/gnome/devhelp/state/main/window/">
+  <schema id="io.github.jkozera.ZevDocs.state.main.window" path="/io/jkozera/zevdocs/state/main/window/">
     <key name="maximized" type="b">
       <default>false</default>
       <summary>Main window maximized state</summary>
@@ -27,17 +27,17 @@
       <description>The height of the main window.</description>
     </key>
   </schema>
-  <schema id="org.gnome.devhelp.state.main.paned" path="/org/gnome/devhelp/state/main/paned/">
+  <schema id="io.github.jkozera.ZevDocs.state.main.paned" path="/io/jkozera/zevdocs/state/main/paned/">
     <key name="position" type="i">
       <default>300</default>
       <summary>Width of the index and search pane</summary>
       <description>The width of the index and search pane.</description>
     </key>
   </schema>
-  <schema id="org.gnome.devhelp.state.assistant" path="/org/gnome/devhelp/state/assistant/">
-    <child name="window" schema="org.gnome.devhelp.state.assistant.window"/>
+  <schema id="io.github.jkozera.ZevDocs.state.assistant" path="/io/jkozera/zevdocs/state/assistant/">
+    <child name="window" schema="io.github.jkozera.ZevDocs.state.assistant.window"/>
   </schema>
-  <schema id="org.gnome.devhelp.state.assistant.window" path="/org/gnome/devhelp/state/assistant/window/">
+  <schema id="io.github.jkozera.ZevDocs.state.assistant.window" path="/io/jkozera/zevdocs/state/assistant/window/">
     <key name="width" type="i">
       <default>350</default>
       <summary>Width of the assistant window</summary>

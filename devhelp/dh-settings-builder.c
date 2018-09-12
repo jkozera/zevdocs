@@ -161,11 +161,11 @@ dh_settings_builder_create_object (DhSettingsBuilder *builder)
          */
         if (builder->contents_path == NULL) {
                 // Must be compatible with Devhelp app version 3.28:
-                dh_settings_builder_set_contents_path (builder, "/org/gnome/devhelp/state/main/contents/");
+                dh_settings_builder_set_contents_path (builder, "/io/github/jkozera/devhelp/state/main/contents/");
         }
         if (builder->fonts_path == NULL) {
                 // Must be compatible with Devhelp app version 3.28:
-                dh_settings_builder_set_fonts_path (builder, "/org/gnome/devhelp/fonts/");
+                dh_settings_builder_set_fonts_path (builder, "/io/github/jkozera/devhelp/fonts/");
         }
 
         return _dh_settings_new (builder->contents_path,

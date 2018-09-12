@@ -22,9 +22,9 @@
 #include "dh-settings-app.h"
 
 /* Devhelp GSettings schema IDs */
-#define SETTINGS_SCHEMA_ID_WINDOW               "org.gnome.devhelp.state.main.window"
-#define SETTINGS_SCHEMA_ID_PANED                "org.gnome.devhelp.state.main.paned"
-#define SETTINGS_SCHEMA_ID_ASSISTANT            "org.gnome.devhelp.state.assistant.window"
+#define SETTINGS_SCHEMA_ID_WINDOW               "io.github.jkozera.ZevDocs.state.main.window"
+#define SETTINGS_SCHEMA_ID_PANED                "io.github.jkozera.ZevDocs.state.main.paned"
+#define SETTINGS_SCHEMA_ID_ASSISTANT            "io.github.jkozera.ZevDocs.state.assistant.window"
 
 typedef struct {
         GSettings *settings_window;

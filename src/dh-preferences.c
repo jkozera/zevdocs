@@ -995,10 +995,6 @@ init_fonts_tab (DhPreferences *prefs)
                                 priv->dark_mode_checkbutton, "active",
                                 G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
 
-        g_object_bind_property (settings, "gtk-application-prefer-dark-theme",
-                                priv->dark_mode_checkbutton, "active",
-                                G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
-
         g_object_bind_property (settings, "variable-font",
                                 priv->variable_font_button, "font",
                                 G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);

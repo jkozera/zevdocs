@@ -19,6 +19,7 @@
  * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <gtk/gtk.h>
 #include "config.h"
 #include "dh-settings.h"
 #include "dh-settings-builder.h"
@@ -73,7 +74,7 @@
  */
 
 /* libdevhelp GSettings schema IDs */
-#define LIBDEVHELP_GSCHEMA_PREFIX       "org.gnome.libdevhelp-" LIBDEVHELP_API_VERSION
+#define LIBDEVHELP_GSCHEMA_PREFIX       "io.github.jkozera.ZevDocs-" LIBDEVHELP_API_VERSION
 #define SETTINGS_SCHEMA_ID_CONTENTS     LIBDEVHELP_GSCHEMA_PREFIX ".contents"
 #define SETTINGS_SCHEMA_ID_FONTS        LIBDEVHELP_GSCHEMA_PREFIX ".fonts"
 
@@ -505,6 +506,12 @@ _dh_settings_new (const gchar *contents_path,
                                                              contents_path);
         priv->gsettings_fonts = g_settings_new_with_path (SETTINGS_SCHEMA_ID_FONTS,
                                                           fonts_path);
+
+        if (g_settings_get_boolean(priv->gsettings_fonts, "dark-mode")) {
+                g_object_set(gtk_settings_get_default(),
+                             "gtk-application-prefer-dark-theme", TRUE,
+                             NULL);
+        }
 
         g_signal_connect_object (priv->gsettings_contents,
                                  "changed::books-disabled",
