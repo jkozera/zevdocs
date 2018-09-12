@@ -954,6 +954,11 @@ dh_settings_bind_fonts (DhSettings *settings)
                          G_SETTINGS_BIND_DEFAULT |
                          G_SETTINGS_BIND_NO_SENSITIVITY);
 
+        g_settings_bind (priv->gsettings_fonts, "dark-mode",
+                         settings, "dark-mode",
+                         G_SETTINGS_BIND_DEFAULT |
+                         G_SETTINGS_BIND_NO_SENSITIVITY);
+
         g_settings_bind (priv->gsettings_fonts, "variable-font",
                          settings, "variable-font",
                          G_SETTINGS_BIND_DEFAULT |

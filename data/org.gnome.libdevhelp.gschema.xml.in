@@ -31,5 +31,10 @@
       <summary>Font for fixed width text</summary>
       <description>Font for text with fixed width, such as code examples.</description>
     </key>
+    <key name="dark-mode" type="b">
+      <default>false</default>
+      <summary>Use dark mode</summary>
+      <description>Use dark mode.</description>
+    </key>
   </schema>
 </schemalist>
