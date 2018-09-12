@@ -63,6 +63,7 @@ pkg_check_modules(Webkit REQUIRED webkit2gtk-4.0)
 pkg_check_modules(dconf REQUIRED dconf)
 pkg_check_modules(jsonglib REQUIRED json-glib-1.0)
 
+include_directories(build/)
 include_directories(${GTK3_INCLUDE_DIRS})
 include_directories(${GLIB_INCLUDE_DIRS})
 include_directories(${GDK_INCLUDE_DIRS})

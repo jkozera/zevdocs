@@ -505,9 +505,16 @@ dh_app_init (DhApp *app)
 DhApp *
 dh_app_new (void)
 {
-        return g_object_new (DH_TYPE_APP,
-                             "flags", G_APPLICATION_NON_UNIQUE,
-                             NULL);
+    if (getenv("SNAP_NAME") != NULL) {
+        return g_object_new(DH_TYPE_APP,
+                            "flags", G_APPLICATION_NON_UNIQUE,
+                            NULL);
+    } else {
+        return g_object_new(DH_TYPE_APP,
+                            "application-id", "io.github.jkozera.ZevDocs",
+                            "flags", G_APPLICATION_HANDLES_COMMAND_LINE,
+                            NULL);
+    }
 }
 
 /* Returns: (transfer none) (nullable). */

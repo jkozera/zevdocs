@@ -27,6 +27,9 @@ desktop_DATA = io.github.jkozera.ZevDocs.desktop
 $(desktop_DATA): $(desktop_in_file)
 	$(AM_V_GEN) $(MSGFMT) --desktop --template $< -d $(top_srcdir)/po -o $@
 
+dbusservicedir = $(datadir)/dbus-1/services
+dbusservice_DATA = io.github.jkozera.ZevDocs.service
+
 io.github.jkozera.ZevDocs.service: Makefile
 	$(AM_V_GEN) (echo '[D-BUS Service]'; \
 		     echo 'Name=io.github.jkozera.ZevDocs'; \
@@ -46,6 +49,7 @@ EXTRA_DIST =			\
 CLEANFILES =			\
 	$(defaults_DATA)	\
 	$(desktop_DATA) 	\
+	$(dbusservice_DATA)	\
 	$(appstream_XML)
 
 -include $(top_srcdir)/git.mk
