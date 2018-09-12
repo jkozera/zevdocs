@@ -70,6 +70,7 @@ main (int argc, char **argv)
                 strcat(env, getenv("HOME"));
                 strcat(env, "/.local/share");
                 setenv("XDG_DATA_DIRS", env, 1);
+                setenv("GIN_MODE", "release", 1);
                 if (getenv("SNAP")) {
                     char path[10000] = {0};
                     strcat(path, getenv("SNAP"));
