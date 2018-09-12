@@ -572,6 +572,8 @@ dh_book_list_directory_new (GFile *directory, gint scale)
                         return g_object_ref (cur_list_directory);
         }
 
+        g_assert(scale >= 0);
+
         DhBookListDirectory* dir = g_object_new (DH_TYPE_BOOK_LIST_DIRECTORY,
                                                  "scale", scale,
                                                  "directory", directory,

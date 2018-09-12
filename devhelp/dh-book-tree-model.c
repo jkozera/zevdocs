@@ -282,6 +282,7 @@ typedef struct {
         gint stamp;
         const gchar *currently_adding_language;
         JsonArray *array;
+        gint scale;
 } DhBookTreeModelPrivate;
 
 static void dh_book_tree_model_tree_model_init (GtkTreeModelIface *iface);
@@ -461,6 +462,8 @@ dh_book_tree_model_new (gboolean group_by_language, gint scale)
 {
         DhBookTreeModel *model = DH_BOOK_TREE_MODEL (g_object_new (DH_TYPE_BOOK_TREE_MODEL, NULL));
         DhBookTreeModelPrivate *priv = dh_book_tree_model_get_instance_private (model);
+        g_assert(scale >= 0);
+        priv->scale = scale;
 
         SoupSession *session;
         const char *uri;
@@ -710,11 +713,10 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
                               gint column,
                               GValue *value)
 {
+        DhBookTreeModelPrivate* priv = dh_book_tree_model_get_instance_private(tree_model);
 
         GList *list;
-        GList *books = dh_book_list_get_books (dh_book_list_get_default (
-                -1 // at this point it should be already created outside
-        ));
+        GList *books = dh_book_list_get_books (dh_book_list_get_default (priv->scale));
         DhBook *book;
         DhBookTreeModelNode *node;
         list = iter->user_data;

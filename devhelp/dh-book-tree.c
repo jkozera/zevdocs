@@ -611,7 +611,7 @@ book_tree_populate_tree (DhBookTree *tree)
         settings = dh_settings_get_default ();
         priv->store = GTK_TREE_MODEL(dh_book_tree_model_new(
             dh_settings_get_group_books_by_language (settings),
-            1
+            gtk_widget_get_scale_factor(tree)
         ));
         gtk_tree_view_set_model(GTK_TREE_VIEW(tree), priv->store);
 
