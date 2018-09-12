@@ -19,7 +19,6 @@ apps:
     plugs: [network, network-bind, x11, wayland, desktop, home, gnome-3-28-1804, browser-support]
     environment:
       LD_LIBRARY_PATH: $SNAP/usr/lib/x86_64-linux-gnu/webkit2gtk-4.0/:$LD_LIBRARY_PATH
-
 parts:
   build-deps:
     after: [desktop-gnome-platform]
@@ -48,6 +47,8 @@ parts:
     source: https://github.com/jkozera/zevdocs.git
     source-branch: master
     stage-packages:
+      - gnome-themes-extra-data
+      - arc-theme
       - libwebkit2gtk-4.0-37
       - libjson-glib-1.0-0
       - libc6
