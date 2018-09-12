@@ -505,13 +505,14 @@ _dh_settings_new (const gchar *contents_path,
         priv = dh_settings_get_instance_private (settings);
 
         char path[10000] = {0};
-        strcat(path, getenv("SNAP_DATA"));
-        strcat(path, "/devhelp.ini");
-        GSettingsBackend *backend = g_keyfile_settings_backend_new(
-                path, "/", "toplevel"
-        );
 
         if (getenv("SNAP_NAME") != NULL) {
+                strcat(path, getenv("SNAP_USER_DATA"));
+                strcat(path, "/zevdocs.ini");
+                GSettingsBackend *backend = g_keyfile_settings_backend_new(
+                        path, "/", "toplevel"
+                );
+
                 priv->gsettings_contents = g_settings_new_with_backend_and_path(
                         SETTINGS_SCHEMA_ID_CONTENTS, backend, contents_path
                 );
