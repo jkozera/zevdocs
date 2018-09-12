@@ -25,27 +25,40 @@ I18N.merge_file(
         install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'metainfo')
 )
 
-desktop_file = 'io.github.jkozera.ZevDocs.desktop'
-I18N.merge_file(
-        desktop_file,
-        type : 'desktop',
-        input : desktop_file + '.in',
-        output : desktop_file,
-        po_dir : '../po/',
-        install : true,
-        install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'applications')
-)
 
-service_file = 'io.github.jkozera.ZevDocs.service'
-service_conf = configuration_data()
-service_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
-configure_file(
-        input : service_file + '.in',
-        output : service_file,
-        configuration : service_conf,
-        install : true,
-        install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'dbus-1/services')
-)
+desktop_file = 'io.github.jkozera.ZevDocs.desktop'
+if get_option('snap_build')
+        I18N.merge_file(
+                desktop_file,
+                type : 'desktop',
+                input : desktop_file + '.snap.in',
+                output : desktop_file,
+                po_dir : '../po/',
+                install : true,
+                install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'applications')
+        )
+else
+        I18N.merge_file(
+                desktop_file,
+                type : 'desktop',
+                input : desktop_file + '.in',
+                output : desktop_file,
+                po_dir : '../po/',
+                install : true,
+                install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'applications')
+        )
+
+        service_file = 'io.github.jkozera.ZevDocs.service'
+        service_conf = configuration_data()
+        service_conf.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
+        configure_file(
+                input : service_file + '.in',
+                output : service_file,
+                configuration : service_conf,
+                install : true,
+                install_dir : join_paths(get_option('prefix'), get_option('datadir'), 'dbus-1/services')
+        )
+endif
 
 install_data(
         ['assistant.css', 'assistant.js'],

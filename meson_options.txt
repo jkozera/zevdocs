@@ -1,2 +1,3 @@
 option('flatpak_build', type : 'boolean', value : false, description : 'Flatpak build mode')
+option('snap_build', type : 'boolean', value : false, description : 'Snap build mode')
 option('gtk_doc', type : 'boolean', value : false, description : 'Build the API reference')

@@ -44,7 +44,7 @@ parts:
   zevdocs:
     after: [build-deps]
     plugin: meson
-    meson-parameters: [--prefix=/usr]
+    meson-parameters: [--prefix=/usr,-Dsnap_build=true]
     source: https://github.com/jkozera/zevdocs.git
     source-branch: master
     stage-packages:
