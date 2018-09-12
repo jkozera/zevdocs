@@ -60,7 +60,6 @@ pkg_check_modules(GLIB REQUIRED glib-2.0)
 pkg_check_modules(GDK REQUIRED gdk-3.0)
 pkg_check_modules(Cairo REQUIRED cairo)
 pkg_check_modules(Webkit REQUIRED webkit2gtk-4.0)
-pkg_check_modules(dconf REQUIRED dconf)
 pkg_check_modules(jsonglib REQUIRED json-glib-1.0)
 
 include_directories(build/)
@@ -69,7 +68,6 @@ include_directories(${GLIB_INCLUDE_DIRS})
 include_directories(${GDK_INCLUDE_DIRS})
 include_directories(${Cairo_INCLUDE_DIRS})
 include_directories(${Webkit_INCLUDE_DIRS})
-include_directories(${dconf_INCLUDE_DIRS})
 include_directories(${jsonglib_INCLUDE_DIRS})
 
 
@@ -86,8 +84,6 @@ GLIB_COMPILE_RESOURCES( GLIB_RESOURCES_ZEVDOCS
 
 add_executable(zevdocs
         ${GLIB_RESOURCES_ZEVDOCS}
-        devhelp/future/dh-dconf-migration.c
-        devhelp/future/dh-dconf-migration.h
         devhelp/devhelp.h
         devhelp/dh-application-window.c
         devhelp/dh-application-window.h
@@ -161,7 +157,6 @@ add_executable(zevdocs
 
 target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${Webkit_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${dconf_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${jsonglib_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${amtk_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} m)
