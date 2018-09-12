@@ -20,6 +20,7 @@
  */
 
 #include <gtk/gtk.h>
+#include <gio/gsettingsbackend.h>
 #include "config.h"
 #include "dh-settings.h"
 #include "dh-settings-builder.h"
@@ -502,10 +503,27 @@ _dh_settings_new (const gchar *contents_path,
         settings = g_object_new (DH_TYPE_SETTINGS, NULL);
         priv = dh_settings_get_instance_private (settings);
 
-        priv->gsettings_contents = g_settings_new_with_path (SETTINGS_SCHEMA_ID_CONTENTS,
-                                                             contents_path);
-        priv->gsettings_fonts = g_settings_new_with_path (SETTINGS_SCHEMA_ID_FONTS,
-                                                          fonts_path);
+        char path[10000] = {0};
+        strcat(path, getenv("SNAP_DATA"));
+        strcat(path, "/devhelp.ini");
+        GSettingsBackend *backend = g_keyfile_settings_backend_new(
+                path, "/", "toplevel"
+        );
+
+        if (getenv("SNAP_NAME") != NULL) {
+                priv->gsettings_contents = g_settings_new_with_backend_and_path(
+                        SETTINGS_SCHEMA_ID_CONTENTS, backend, contents_path
+                );
+                priv->gsettings_fonts = g_settings_new_with_backend_and_path (
+                        SETTINGS_SCHEMA_ID_FONTS, backend, fonts_path
+                );
+        } else {
+                priv->gsettings_contents = g_settings_new_with_path (SETTINGS_SCHEMA_ID_CONTENTS,
+                                                                     contents_path);
+                priv->gsettings_fonts = g_settings_new_with_path (SETTINGS_SCHEMA_ID_FONTS,
+                                                                  fonts_path);
+        }
+
 
         if (g_settings_get_boolean(priv->gsettings_fonts, "dark-mode")) {
                 g_object_set(gtk_settings_get_default(),
