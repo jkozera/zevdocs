@@ -52,7 +52,10 @@ parts:
       - libwebkit2gtk-4.0-37
       - libjson-glib-1.0-0
       - libc6
-    override-build: snapcraftctl build && glib-compile-schemas $SNAPCRAFT_PART_INSTALL/usr/share/glib-2.0/schemas/
+    override-build: |
+      snapcraftctl build
+      sed -i 's|Icon=io.github.jkozera.ZevDocs|Icon=\${SNAP}/meta/gui/icon.png|' ${SNAPCRAFT_PART_INSTALL}/usr/share/applications/io.github.jkozera.ZevDocs.desktop
+      glib-compile-schemas $SNAPCRAFT_PART_INSTALL/usr/share/glib-2.0/schemas/
   zealcore:
     after: [build-deps]
     plugin: dep

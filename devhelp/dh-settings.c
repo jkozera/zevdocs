@@ -531,6 +531,20 @@ _dh_settings_new (const gchar *contents_path,
                 g_object_set(gtk_settings_get_default(),
                              "gtk-application-prefer-dark-theme", TRUE,
                              NULL);
+                gchar *theme_name;
+                g_object_get(gtk_settings_get_default(),
+                             "gtk-theme-name", &theme_name, NULL);
+                if (getenv("SNAP_NAME") != NULL &&
+                    g_str_equal(getenv("SNAP_NAME"), "zevdocs") &&
+                     // the snap has access only to themes inside of itself
+                     !(g_str_equal("Arc", theme_name) ||
+                       g_str_equal("Arc-Dark", theme_name) ||
+                       g_str_equal("Arc-Darker", theme_name) ||
+                       g_str_equal("Adwaita", theme_name) ||
+                       g_str_equal("Adwaita-Dark", theme_name))) {
+                                g_object_set(gtk_settings_get_default(),
+                                             "gtk-theme-name", "Adwaita", NULL);
+                }
         }
 
         g_signal_connect_object (priv->gsettings_contents,
