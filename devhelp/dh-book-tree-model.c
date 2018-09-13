@@ -203,7 +203,7 @@ new_node (JsonObject* object, GtkTreePath *parent, gint num)
 
         title = json_object_get_string_member(object, "Title");
 
-        if (g_str_equal (json_object_get_string_member(object, "SourceId"), "com.kapeli")) {
+        if (g_str_has_prefix (json_object_get_string_member(object, "SourceId"), "com.kapeli")) {
                 return new_symbols_node (object, parent, num, title, title);
         } else {
                 len = strlen (title);

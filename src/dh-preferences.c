@@ -49,7 +49,9 @@ typedef struct {
         GtkTreeView *bookshelf_view;
         GtkListStore *bookshelf_store;
         GtkListStore *bookshelf_store_downloads;
+        GtkListStore *bookshelf_store_usercontrib_downloads;
         GtkTreeView *bookshelf_download_treeview;
+        GtkTreeView *bookshelf_download_treeview_usercontrib;
         DhBookList *full_book_list;
         GtkButton *bookshelf_delete_button;
 
@@ -106,7 +108,9 @@ dh_preferences_class_init (DhPreferencesClass *klass)
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_group_by_language_checkbutton);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_view);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_store_downloads);
+        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_store_usercontrib_downloads);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_download_treeview);
+        gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_download_treeview_usercontrib);
         gtk_widget_class_bind_template_child_private (widget_class, DhPreferences, bookshelf_delete_button);
 
         // Fonts tab
@@ -324,13 +328,15 @@ bookshelf_scroll_to_top (DhPreferences *prefs)
 
 
 static void
-preferences_bookshelf_populate_store_downloads (DhPreferences *prefs)
+preferences_bookshelf_populate_store_downloads (DhPreferences *prefs, GtkListStore *store, char repo)
 {
-
         DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
         GtkTreeIter  iter;
         SoupSession *session;
-        const char *uri;
+        char uri[] = "http://localhost:12340/repo/_/items";
+        int i;
+        for (i = 0; uri[i] != '_'; ++i);
+        uri[i] = repo;
         GHashTable *hash;
         GList *langlist;
         SoupMessage *request;
@@ -344,8 +350,10 @@ preferences_bookshelf_populate_store_downloads (DhPreferences *prefs)
         JsonObject *object;
 
         parser = json_parser_new();
-        session = soup_session_new();
-        uri = "http://localhost:12340/repo/1/items";
+        session = soup_session_new_with_options(
+                "use-thread-context", gtk_true(),
+                NULL
+        );
         hash = g_hash_table_new(g_str_hash, g_str_equal);
         request = soup_form_request_new_from_hash ("GET", uri, hash);
 
@@ -360,10 +368,10 @@ preferences_bookshelf_populate_store_downloads (DhPreferences *prefs)
 
         for (guint i = 0; i < json_array_get_length (array); ++i) {
                 object = json_array_get_object_element(array, i);
-                gtk_list_store_append (priv->bookshelf_store_downloads,
+                gtk_list_store_append (store,
                                        &iter);
 
-                gtk_list_store_set (priv->bookshelf_store_downloads,
+                gtk_list_store_set (store,
                                     &iter,
                                     COLUMN_DL_TITLE, json_object_get_string_member(object, "Title"),
                                     COLUMN_DL_PROGRESS, 0,
@@ -631,18 +639,18 @@ static void
 websocket_message_cb (SoupWebsocketConnection *self,
                       gint                     type,
                       GBytes                  *message,
-                      gpointer                 user_data)
-{
+                      gpointer                 user_data) {
         DhPreferencesPrivate *priv = user_data;
         JsonParser *parser;
         JsonNode *root;
         JsonObject *object;
         GError *error = NULL;
         size_t len;
-        gint received, total;
-        gboolean next;
+        gint64 received, total;
+        gboolean next, first = true;
         GtkTreeIter iter;
-        const gchar *docset, *iter_docset;
+        GtkListStore *store;
+        const gchar *docset, *iter_docset, *repo_id;
 
         const gchar* msg = g_bytes_get_data(message, &len);
         if (len < 2) {
@@ -654,27 +662,42 @@ websocket_message_cb (SoupWebsocketConnection *self,
 
         root = json_parser_get_root(parser);
         object = json_node_get_object(root);
+        repo_id = json_object_get_string_member(object, "RepoId");
         docset = json_object_get_string_member(object, "Docset");
         received = json_object_get_int_member(object, "Received");
         total = json_object_get_int_member(object, "Total");
 
-        next = gtk_tree_model_get_iter_first(priv->bookshelf_store_downloads, &iter);
+        if (g_str_equal(repo_id, "com.kapeli")){
+                store = priv->bookshelf_store_downloads;
+        }  else {
+                store = priv->bookshelf_store_usercontrib_downloads;
+        }
+
+        next = gtk_tree_model_get_iter_first(store, &iter);
         while (next) {
-                gtk_tree_model_get(GTK_TREE_MODEL (priv->bookshelf_store_downloads),
+                gtk_tree_model_get(GTK_TREE_MODEL (store),
                                    &iter,
                                    COLUMN_DL_TITLE, &iter_docset,
                                    -1);
                 if (g_str_equal (iter_docset, docset)) {
-                        gtk_list_store_set(priv->bookshelf_store_downloads,
+                        gtk_list_store_set(store,
                                            &iter,
                                            COLUMN_DL_PROGRESS, (gint)(((guint64)100) * ((guint64) received) / ((guint64) total)),
                                            -1);
                         break;
                 }
                 g_free(iter_docset);
-                next = gtk_tree_model_iter_next(priv->bookshelf_store_downloads, &iter);
+                next = gtk_tree_model_iter_next(store, &iter);
+                if (first && !next) {
+                        first = false;
+                        next = gtk_tree_model_get_iter_first(store, &iter);
+                }
         }
-        gtk_widget_queue_draw(priv->bookshelf_download_treeview);
+        if (g_str_equal(repo_id, "com.kapeli")) {
+                gtk_widget_queue_draw(priv->bookshelf_download_treeview);
+        } else {
+                gtk_widget_queue_draw(priv->bookshelf_download_treeview_usercontrib);
+        }
 
         if (received == total) {
             dh_book_list_refresh (dh_book_list_get_default(
@@ -719,7 +742,6 @@ open_progress_ws(DhPreferences *prefs)
         hash = g_hash_table_new(g_str_hash, g_str_equal);
         request = soup_form_request_new_from_hash ("GET", uri, hash);
 
-
         char **protocols = malloc(sizeof(char*));
         *protocols = NULL;
         soup_session_websocket_connect_async(session,
@@ -733,7 +755,7 @@ open_progress_ws(DhPreferences *prefs)
         free(protocols);
 }
 
-gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
+gboolean download_start(GtkTreeView *tv, GtkTreePath *path, GtkTreeViewColumn *column, DhPreferences *prefs)
 {
         DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
         GtkTreeSelection *selection = gtk_tree_view_get_selection(tv);
@@ -744,8 +766,7 @@ gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
         const char *uri;
         SoupMessage *request;
 
-
-        if (ev->type != GDK_2BUTTON_PRESS || priv->dl_ws != NULL) {
+        if (priv->dl_ws != NULL) {
                return FALSE;
         }
 
@@ -755,14 +776,17 @@ gboolean download_start(GtkTreeView *tv, GdkEvent *ev, DhPreferences *prefs)
         session = soup_session_new();
         uri = "http://localhost:12340/item";
         request = soup_message_new ("POST", uri);
-        json = g_strjoin("", "{\"id\":\"", id, "\"}", NULL);
+        if (tv == priv->bookshelf_download_treeview) {
+               json = g_strjoin("", "{\"id\":\"", id, "\", \"repo\": \"com.kapeli\"}", NULL);
+        } else {
+               json = g_strjoin("", "{\"id\":\"", id, "\", \"repo\": \"com.kapeli.contrib\"}", NULL);
+        }
 
         soup_message_set_request(request,
                                  "application/json",
                                  SOUP_MEMORY_COPY,
                                  json,
                                  strlen(json));
-
 
         soup_session_send_message (session, request);
 
@@ -784,9 +808,13 @@ preferences_bookshelf_refresh_cb (GObject* object, DhPreferences  *prefs)
         gtk_list_store_clear (priv->bookshelf_store);
         gtk_list_store_clear (priv->bookshelf_store_downloads);
         bookshelf_populate (prefs);
-        preferences_bookshelf_populate_store_downloads (prefs);
+        preferences_bookshelf_populate_store_downloads (
+                prefs, priv->bookshelf_store_downloads, '1'
+        );
+        preferences_bookshelf_populate_store_downloads (
+                prefs, priv->bookshelf_store_usercontrib_downloads, '2'
+        );
 }
-
 
 
 init_bookshelf_store (DhPreferences *prefs)
@@ -947,10 +975,20 @@ init_bookshelf_tab (DhPreferences *prefs)
                           G_CALLBACK (preferences_bookshelf_tree_selection_changed_cb),
                           priv);
 
-        preferences_bookshelf_populate_store_downloads (prefs);
+        preferences_bookshelf_populate_store_downloads (
+                prefs, priv->bookshelf_store_downloads, '1'
+        );
+        preferences_bookshelf_populate_store_downloads (
+                prefs, priv->bookshelf_store_usercontrib_downloads, '2'
+        );
 
         g_signal_connect (priv->bookshelf_download_treeview,
-                          "button-press-event",
+                          "row-activated",
+                          G_CALLBACK (download_start),
+                          prefs);
+
+        g_signal_connect (priv->bookshelf_download_treeview_usercontrib,
+                          "row-activated",
                           G_CALLBACK (download_start),
                           prefs);
 

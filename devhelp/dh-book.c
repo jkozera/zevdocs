@@ -373,7 +373,7 @@ dh_book_new_from_json (JsonObject *object, gint scale)
         priv->id = g_strdup(json_object_get_string_member(object, "Id"));
         priv->id_for_removing = NULL;
 
-        if (g_str_equal("com.kapeli", json_object_get_string_member(object, "SourceId"))) {
+        if (g_str_has_prefix(json_object_get_string_member(object, "SourceId"), "com.kapeli")) {
             priv->id_for_removing = priv->id;
         }
 
@@ -654,5 +654,10 @@ dh_book_cmp_by_title (DhBook *a,
         if (priv_a->title == NULL || priv_b->title == NULL)
                 return -1;
 
-        return g_utf8_collate (priv_a->title, priv_b->title);
+        gchar *title_a = g_ascii_strdown(priv_a->title, -1),
+              *title_b = g_ascii_strdown(priv_b->title, -1);
+        gint ret = g_utf8_collate (title_a, title_b);
+        g_free(title_a);
+        g_free(title_b);
+        return ret;
 }
