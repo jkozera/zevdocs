@@ -62,7 +62,7 @@ parts:
     go-importpath: github.com/jkozera/zealcore
     go-packages: [github.com/jkozera/zealcore]
     source: https://github.com/jkozera/zealcore.git
-    source-commit: 7a04435f65876bc5c9bb4c663e1aa3ef96197190
+    source-commit: b4bddc480c705aab38202bc05cb59d0f677b16d4
     override-build: |
             sed -i s,github.com/zealdocs,github.com/jkozera,g `find ../go/src -name *.go`
             snapcraftctl build
