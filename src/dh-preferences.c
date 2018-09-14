@@ -807,6 +807,7 @@ preferences_bookshelf_refresh_cb (GObject* object, DhPreferences  *prefs)
         DhPreferencesPrivate *priv = dh_preferences_get_instance_private (prefs);
         gtk_list_store_clear (priv->bookshelf_store);
         gtk_list_store_clear (priv->bookshelf_store_downloads);
+        gtk_list_store_clear (priv->bookshelf_store_usercontrib_downloads);
         bookshelf_populate (prefs);
         preferences_bookshelf_populate_store_downloads (
                 prefs, priv->bookshelf_store_downloads, '1'
