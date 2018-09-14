@@ -32,7 +32,6 @@ parts:
       - gir1.2-webkit2-4.0
       - gir1.2-json-1.0
       - libcairo2-dev
-      - libgirepository1.0-dev
       - itstool
       - golang
       - libc6-dev
