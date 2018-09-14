@@ -13,12 +13,12 @@
       Now with dark mode support!
     </p>
   </description>
-  <url type="homepage">https://jkozera.github.io/zevdocs/</url>
+  <url type="homepage">https://zevdocs.io/</url>
   <url type="bugtracker">https://github.com/jkozera/zevdocs/issues/</url>
   <url type="donation">http://www.gnome.org/friends/</url>
   <screenshots>
     <screenshot type="default">
-      <image>https://jkozera.github.io/zevdocs/screenshot.png</image>
+      <image>https://zevdocs.io/screenshot.png</image>
     </screenshot>
   </screenshots>
   <project_group>GNOME</project_group>
