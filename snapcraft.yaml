@@ -1,6 +1,6 @@
 name: zevdocs
 base: core18
-version: "0.3.0"
+version: "0.3.1"
 summary: ZevDocs documentation browser
 description: ZevDocs is a documentation browser based on Devhelp supporting Zeal/Dash docsets.
 grade: stable
