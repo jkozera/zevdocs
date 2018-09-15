@@ -16,10 +16,20 @@
       <h1 class="project-name">ZevDocs</h1>
       <h2 class="project-tagline">API documentation browser</h2>
       {% if site.github.is_project_page %}
+      <p>
+        <img src="https://img.shields.io/badge/dash%20docsets-{{ site.data.docsets.docsets | size }}-20732a.svg?style=for-the-badge">&nbsp;&nbsp;
+        <img src="https://img.shields.io/badge/user%20docsets-{{ site.data.docsets_usercontributed.docsets | size }}-20732a.svg?style=for-the-badge">&nbsp;&nbsp;
+        <a href="https://github.com/jkozera/zevdocs/releases">
+          <img src="https://img.shields.io/github/release/jkozera/zevdocs.svg?style=for-the-badge">&nbsp;&nbsp;
+        </a>
+        <a href="https://github.com/jkozera/zevdocs/releases">
+          <img src="https://img.shields.io/github/release-date/jkozera/zevdocs.svg?style=for-the-badge">
+        </a>
+      </p>
         <a href="{{ site.github.repository_url }}" class="btn">View on GitHub</a>
-      {% endif %}
         <a href="https://flathub.org/apps/details/io.github.jkozera.ZevDocs" class="btn">Download from Flathub</a>
         <a href="https://snapcraft.io/zevdocs" class="btn">Download from Snapcraft</a>
+      {% endif %}
     </section>
 
     <section class="main-content">
