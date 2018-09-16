@@ -78,7 +78,9 @@ dh_preferences_dispose (GObject *object)
         DhPreferencesPrivate *priv = dh_preferences_get_instance_private (DH_PREFERENCES (object));
 
         g_clear_object (&priv->bookshelf_store);
-        g_clear_object (&priv->full_book_list);
+//    The following causes SIGSEGV since in ZevDocs the books list is shared.
+//    Don't uncomment unless you're sure what you are doing.
+//        g_clear_object (&priv->full_book_list);
 
         G_OBJECT_CLASS (dh_preferences_parent_class)->dispose (object);
 }

@@ -499,7 +499,6 @@ dh_book_tree_model_new (gboolean group_by_language, gint scale)
         if (priv->group_by_language) {
                 json_array_foreach_element(array, extract_language, hash);
                 priv->langcount = 0;
-                langlist = NULL;
                 langlist = g_hash_table_get_keys(hash);
                 langlist = g_list_sort (langlist, compare_strs);
                 g_list_foreach(langlist, add_language, model);
