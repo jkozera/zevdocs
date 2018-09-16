@@ -70,8 +70,6 @@ include_directories(${Cairo_INCLUDE_DIRS})
 include_directories(${Webkit_INCLUDE_DIRS})
 include_directories(${jsonglib_INCLUDE_DIRS})
 
-
-
 include_directories(_build)
 include_directories(.)
 include_directories(devhelp/future)

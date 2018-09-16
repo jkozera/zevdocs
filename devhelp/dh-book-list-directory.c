@@ -385,13 +385,40 @@ find_books (DhBookListDirectory *list_directory)
         json_array_foreach_element(array, print_doc, list_directory);
 
         soup_buffer_free (buffer);
+        g_object_unref(parser);
         soup_message_body_free (body);
-        g_object_unref (parser);
         g_hash_table_unref (hash);
         g_object_unref (request);
         g_object_unref (session);
-        GFileEnumerator *enumerator;
-        GError *error = NULL;
+
+        /// https://cdn.sstatic.net/Sites/stackoverflow/img/favicon.ico?v=4f32ecc8f43d
+        DhBookManager *manager = list_directory;
+        const char *favicons[] = {
+                "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAb1BMVEUAAADycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAnycAmeo6nycAn////KsYcjAAAAInRSTlMAHcJkJ+gjSWvIAzriibZ+Exg2oHdGUYIPcdbTPaXvL129TyOK4gAAAAFiS0dEJLQG+ZkAAAAHdElNRQfiCRAQLzjsaQZEAAAAbUlEQVQY022OyQ6AIAxEBxVXxH1fUPz/f/QgpIT4Tp2XaVrAwuARhJ6IeOykMAHSLCdRiDKHrJxKLQPW8NakuCuAng/jZMS8rFs67yJyVvbj7BS9cPQJqxcS6iqlOG8btbnT2knj+SDhdTWBH16iswcK9IKYxwAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOC0wOS0xNlQxNjo0Nzo1OCswMjowMHenmG0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTgtMDktMTZUMTY6NDc6NTYrMDI6MDBWxVuMAAAAAElFTkSuQmCC",
+                "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAABQVBMVEX////0gCSeo6n0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCT0gCSeo6n///8Qpy7TAAAAaHRSTlMAAAA0yCwP79sQU/63AyqCiJb4ZwK0Vh/nogrY9S4YwNMmKPDeFATxVE27WkxQjgV+7txwJM/DHK7zZsLylAif6UYjMkli9+MVfOTZbD1KWylYx3i99MUxo+YNuPnNmmpXibrtHlGBEoEFhGAAAAABYktHRACIBR1IAAAAB3RJTUUH4gkQEC847GkGRAAAARdJREFUOMut0WdTwkAQBmA2SFCPIGCwF2LDSiwoNgRRREWx995f/v8f8ETHYZIlGRnfDzdzN8/s7e15PP8WYlMn8Db4HIHqR2OTY4VmgYBWC2hBubQAoVogHGkl0qMQbTxo7wA6u0jtRk8vX6GvH4gZNDCIoWG+yZGQQHyUxgTGNRuYmNTlOuWHSJjTQMIK1BnMzqlEyXlgIbW4tGwFwRUAq2mD1jJAdj3H9LCRiQAisKnntwop/hXbO7uyTHFv32efQ+ng8GvA5tGxJCfMJE+Bs/N0/sIk7+XVNQNu4qjk9u7+IWn5TUVR5E43Hp+eXyqoZAXl8u9nv769Rwsf9H3CgZ8wAFWpD7he4QLsUaqm5A7Y/AU45BMkqFCzuSQj1gAAACV0RVh0ZGF0ZTpjcmVhdGUAMjAxOC0wOS0xNlQxNjo0Nzo1OCswMjowMHenmG0AAAAldEVYdGRhdGU6bW9kaWZ5ADIwMTgtMDktMTZUMTY6NDc6NTYrMDI6MDBWxVuMAAAAAElFTkSuQmCC",
+        };
+        const char *rawjson = g_strdup_printf(
+                "{"
+                "\"Title\": \"Stack Overflow\","
+                "\"Id\": \"stackoverflow\","
+                "\"SourceId\": \"com.stackoverflow\","
+                "\"Icon\": \"%s\","
+                "\"Icon2x\": \"%s\","
+                "\"Language\": \"\""
+                "}",
+                favicons[0],
+                favicons[1],
+                NULL
+        );
+        parser = json_parser_new();
+
+        json_parser_load_from_data(parser, rawjson, strlen(rawjson), NULL);
+
+        DhBook *book = dh_book_new_from_json(json_node_get_object(json_parser_get_root(parser)), 1);
+        dh_book_list_add_book (DH_BOOK_LIST (list_directory), book);
+
+        g_object_unref(parser);
+        g_free(rawjson);
 }
 
 static void

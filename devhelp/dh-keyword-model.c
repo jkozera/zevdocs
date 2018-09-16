@@ -27,6 +27,7 @@
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
 #include <libsoup/soup.h>
+#include <glib/gi18n.h>
 #include "dh-book.h"
 #include "dh-book-list.h"
 #include "dh-search-context.h"
@@ -494,10 +495,26 @@ websocket_message_cb (SoupWebsocketConnection *self,
         json_parser_load_from_data(parser, msg, len, &error);
 
         if (error != NULL) {
-                g_signal_emit(ctx->model, signals[SIGNAL_FILTER_COMPLETE], 0);
                 const char *data = "";
                 soup_websocket_connection_close(self, 0, data);
 
+                if (g_queue_get_length(&ctx->priv->links) == 0) {
+                        book_link = dh_link_new_book ("", "stackoverflow", "Stack Overflow", "");
+
+                        uri = g_strjoin("",
+                                        "https://stackoverflow.com/search?",
+                                        soup_form_encode("q", ctx->settings.search_context->joined_keywords, NULL),
+                                        NULL);
+                        link = dh_link_new (DH_LINK_TYPE_KEYWORD,
+                                            book_link,
+                                            _("Search on Stack Overflow"),
+                                            uri);
+                        g_queue_push_tail(&ctx->priv->links, link);
+                        g_free (uri);
+                        dh_link_unref (book_link);
+                }
+
+                g_signal_emit(ctx->model, signals[SIGNAL_FILTER_COMPLETE], 0);
                 return;
         }
 
