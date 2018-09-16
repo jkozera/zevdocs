@@ -23,6 +23,8 @@
 #include <math.h>
 #include <glib/gi18n-lib.h>
 #include "dh-link.h"
+#include <webkitgtk-4.0/JavaScriptCore/JSValueRef.h>
+#include <webkitgtk-4.0/JavaScriptCore/JSStringRef.h>
 
 /**
  * SECTION:dh-web-view
@@ -50,6 +52,8 @@ typedef struct {
         DhProfile *profile;
         gchar *search_text;
         gdouble total_scroll_delta_y;
+        WebKitContextMenu *github_context_menu_item;
+        GSimpleAction *github_action;
 } DhWebViewPrivate;
 
 enum {
@@ -486,6 +490,111 @@ settings_fonts_changed_cb (DhSettings *settings,
         update_fonts (view);
 }
 
+void
+search_on_github_cb (GObject *source_object,
+                     GAsyncResult *res,
+                     gpointer user_data)
+{
+        DhWebView *view = DH_WEB_VIEW (user_data);
+        WebKitJavascriptResult *js_result;
+        GError *error = NULL;
+        js_result = webkit_web_view_run_javascript_finish (WEBKIT_WEB_VIEW (view), res, &error);
+        if (!js_result) {
+                g_warning ("Error running JS: %s", error->message);
+                g_error_free (error);
+                return;
+        }
+        JSValueRef value;
+        JSStringRef js_str_value;
+        gsize str_length;
+        gchar *str_value;
+        GString *uri;
+        GString *uri_with_login;
+        GString *return_to;
+        gchar *uri_value;
+        JSGlobalContextRef context = webkit_javascript_result_get_global_context(js_result);
+        value = webkit_javascript_result_get_value(js_result);
+        if (JSValueIsString(context, value)) {
+                js_str_value = JSValueToStringCopy(context, value, NULL);
+                str_length = JSStringGetMaximumUTF8CStringSize(js_str_value);
+                str_value = (gchar*)g_malloc(str_length);
+                JSStringGetUTF8CString(js_str_value, str_value, str_length);
+                JSStringRelease(js_str_value);
+                uri = g_string_new("http://github.com/search?q=");
+                uri = g_string_append(uri, str_value);
+                uri = g_string_append(uri, "&type=code");
+                uri_with_login = g_string_new("https://github.com/login?");
+
+                GHashTable *hash = g_hash_table_new((GHashFunc)g_string_hash, (GEqualFunc)g_string_equal);
+                return_to = g_string_new("return_to");
+                g_hash_table_insert(hash, return_to, uri);
+                gchar *uri_str = g_string_free(uri, FALSE);
+                gchar *hash_str = soup_form_encode("return_to", uri_str, NULL);
+                uri_with_login = g_string_append(uri_with_login, hash_str);
+                uri_value = g_string_free(uri_with_login, FALSE);
+                if (g_utf8_strlen(uri_value, -1) < 200) {
+                    webkit_web_view_load_uri(WEBKIT_WEB_VIEW(view), uri_value);
+                } else {
+                    GtkWidget *dialog = gtk_message_dialog_new(
+                                                gtk_widget_get_toplevel(GTK_WIDGET(view)),
+                                                GTK_DIALOG_MODAL,
+                                                GTK_MESSAGE_ERROR,
+                                                GTK_BUTTONS_CLOSE,
+                                                _("Searching for more than 200 characters at once is not allowed."),
+                                                NULL
+                                        );
+                    gtk_dialog_run(dialog);
+                    gtk_widget_destroy(dialog);
+                }
+                g_free(str_value);
+                g_free(uri_str);
+                g_string_free(return_to, TRUE);
+                g_free(uri_value);
+                g_hash_table_destroy(hash);
+                g_free(hash_str);
+        }
+        webkit_javascript_result_unref(js_result);
+
+}
+
+void
+search_on_github (GSimpleAction *simple,
+                  GVariant      *parameter,
+                  gpointer       user_data)
+{
+        DhWebView *view = DH_WEB_VIEW (user_data);
+        webkit_web_view_run_javascript(
+                view,
+                "window.getSelection().getRangeAt(0).toString()",
+                NULL,
+                search_on_github_cb,
+                view
+        );
+}
+
+gboolean
+context_menu_cb (WebKitWebView       *web_view,
+                 WebKitContextMenu   *context_menu,
+                 GdkEvent            *event,
+                 WebKitHitTestResult *hit_test_result,
+                 gpointer             user_data) {
+        DhWebView *view = DH_WEB_VIEW (user_data);
+        DhWebViewPrivate *priv = dh_web_view_get_instance_private(view);
+        priv->github_action = g_simple_action_new("search_on_github", NULL);
+        g_signal_connect_object (priv->github_action,
+                                 "activate",
+                                 G_CALLBACK (search_on_github),
+                                 view,
+                                 0);
+        priv->github_context_menu_item = webkit_context_menu_item_new_from_gaction(
+                priv->github_action,
+                _("Search on GitHub"),
+                NULL
+        );
+        webkit_context_menu_append(context_menu, priv->github_context_menu_item);
+        return FALSE;
+}
+
 static void
 dh_web_view_constructed (GObject *object)
 {
@@ -502,6 +611,11 @@ dh_web_view_constructed (GObject *object)
         webkit_settings_set_enable_html5_database (webkit_settings, FALSE);
         webkit_settings_set_enable_html5_local_storage (webkit_settings, FALSE);
         webkit_settings_set_enable_plugins (webkit_settings, FALSE);
+        webkit_settings_set_user_agent_with_application_details(
+                webkit_settings,
+                "ZevDocs (https://zevdocs.io/)",
+                PACKAGE_VERSION
+        );
 
         if (priv->profile == NULL)
                 set_profile (view, dh_profile_get_default (gtk_widget_get_scale_factor(
@@ -514,6 +628,28 @@ dh_web_view_constructed (GObject *object)
                                  G_CALLBACK (settings_fonts_changed_cb),
                                  view,
                                  0);
+
+
+        g_signal_connect_object(
+                view,
+                "context-menu",
+                G_CALLBACK (context_menu_cb),
+                view,
+                0
+        );
+
+        WebKitWebContext *context = webkit_web_view_get_context(view);
+        WebKitCookieManager *cookie_manager = webkit_web_context_get_cookie_manager(context);
+
+        /* Enable cookies to allow GitHub login */
+        gchar *cookies_file_name = g_build_filename(g_get_user_data_dir(), "zevdocs_cookies.sqlite", NULL);
+        webkit_cookie_manager_set_persistent_storage(
+                cookie_manager,
+                cookies_file_name,
+                WEBKIT_COOKIE_PERSISTENT_STORAGE_SQLITE
+        );
+        g_free(cookies_file_name);
+        webkit_cookie_manager_set_accept_policy(cookie_manager, WEBKIT_COOKIE_POLICY_ACCEPT_ALWAYS);
 
         update_fonts (view);
 }
@@ -621,11 +757,8 @@ dh_web_view_new (DhProfile *profile)
 {
         g_return_val_if_fail (profile == NULL || DH_IS_PROFILE (profile), NULL);
 
-        WebKitUserContentManager *mgr = webkit_user_content_manager_new();
-
         return g_object_new (DH_TYPE_WEB_VIEW,
                              "profile", profile,
-                             "user-content-manager", mgr,
                              NULL);
 }
 
