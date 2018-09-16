@@ -414,7 +414,9 @@ find_books (DhBookListDirectory *list_directory)
 
         json_parser_load_from_data(parser, rawjson, strlen(rawjson), NULL);
 
-        DhBook *book = dh_book_new_from_json(json_node_get_object(json_parser_get_root(parser)), 1);
+        DhBookListDirectoryPrivate *priv;
+        priv = dh_book_list_directory_get_instance_private (list_directory);
+        DhBook *book = dh_book_new_from_json(json_node_get_object(json_parser_get_root(parser)), priv->scale);
         dh_book_list_add_book (DH_BOOK_LIST (list_directory), book);
 
         g_object_unref(parser);

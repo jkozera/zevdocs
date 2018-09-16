@@ -532,8 +532,7 @@ websocket_message_cb (SoupWebsocketConnection *self,
         link = dh_link_new (DH_LINK_TYPE_KEYWORD,
                             book_link,
                             json_object_get_string_member(object, "Res"),
-                            uri
-                            );
+                            uri);
         g_free(uri);
         dh_link_unref (book_link);
         g_queue_push_tail(&ctx->priv->links, link);

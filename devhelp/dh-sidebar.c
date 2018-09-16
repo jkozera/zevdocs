@@ -460,12 +460,12 @@ hitlist_cell_icon_func (GtkTreeViewColumn *tree_column,
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (DH_SIDEBAR (data));
 
         GList *books = dh_book_list_get_books (dh_profile_get_book_list (priv->profile));
+
         DhBook *book;
 
         gtk_tree_model_get (hitlist_model, iter,
                             DH_KEYWORD_MODEL_COL_LINK, &link,
                             -1);
-
 
         while (books) {
                 book = books->data;
@@ -475,9 +475,7 @@ hitlist_cell_icon_func (GtkTreeViewColumn *tree_column,
                 books = books->next;
         }
 
-        g_object_set (cell,
-                      "surface", dh_book_get_icon_surface(book),
-                      NULL);
+        g_object_set (cell, "surface", dh_book_get_icon_surface(book), NULL);
 
         dh_link_unref (link);
 }
