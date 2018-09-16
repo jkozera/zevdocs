@@ -4,4 +4,3 @@ ZevDocs is a fork of [Devhelp](https://wiki.gnome.org/Apps/Devhelp) with support
 
 The documentation is kindly provided by <a href="https://kapeli.com/dash">Dash</a>, the macOS API docs browser.
 
-![Screenshot](screenshot.png)

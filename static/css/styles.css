@@ -12,3 +12,31 @@
 .page-header a {
   color: inherit;
 }
+.carousel {
+  margin: 0 auto;
+}
+@media screen and (min-width: 64em) {
+  .carousel {
+    height: 500px;
+  }
+  .carousel div img {
+    max-width: 64rem;
+  }
+  .carousel div.is-selected img {
+    padding: 0 4.5rem;
+  }
+}
+.carousel div img {
+  opacity: 0.5;
+}
+.carousel div.is-selected img {
+  opacity: 1;
+}
+@media screen and (max-width: 64em) {
+  .carousel img, .carousel div {
+     width: 100%;
+  }
+  .carousel div.is-selected img {
+    padding: 0 0;
+  }
+}
