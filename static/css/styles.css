@@ -9,3 +9,6 @@
   padding-left: 20px;
   margin: 2px;
 }
+.page-header a {
+  color: inherit;
+}
