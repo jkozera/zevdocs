@@ -401,7 +401,7 @@ dh_book_new_from_json (JsonObject *object, gint scale)
         priv->icon_surface = gdk_cairo_surface_create_from_pixbuf(
                 pixbuf, scale, NULL
         );
-        gdk_pixbuf_unref(pixbuf);
+        g_object_unref(pixbuf);
         g_object_unref(istream);
         g_free(data);
         g_free(language);
