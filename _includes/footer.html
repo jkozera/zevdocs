@@ -19,5 +19,9 @@
       </script>
     {% endif %}
 <script src="https://unpkg.com/flickity@2/dist/flickity.pkgd.min.js"></script>
+<script type="text/javascript">
+var flkty = new Flickity('.carousel', { "wrapAround": true });
+window.addEventListener("load", function () { flkty.resize(); });
+</script>
   </body>
 </html>
