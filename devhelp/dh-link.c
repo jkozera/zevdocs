@@ -22,8 +22,11 @@
 
 #include "config.h"
 #include "dh-link.h"
+#include "dh-book.h"
+#include "dh-book-list.h"
 #include <string.h>
 #include <glib/gi18n-lib.h>
+#include <gtk/gtk.h>
 
 /**
  * SECTION:dh-link
@@ -434,6 +437,34 @@ dh_link_get_book_id (DhLink *link)
 
         return "";
 }
+
+
+cairo_surface_t*
+dh_link_get_book_surface (DhLink* link)
+{
+        g_return_val_if_fail (link != NULL, NULL);
+
+        gchar *book_id = dh_link_get_book_id(link);
+
+        if (book_id != NULL) {
+                GList *books = dh_book_list_get_books(dh_book_list_get_default(-1));
+                DhBook *book;
+                while (books) {
+                        book = books->data;
+                        if (g_str_equal(book_id, dh_book_get_id(book))) {
+                                break;
+                        }
+                        books = books->next;
+                }
+
+                if (books != NULL) {
+                        return dh_book_get_icon_surface(book);
+                }
+        }
+
+        return NULL;
+}
+
 
 static gint
 dh_link_type_compare (DhLinkType a,

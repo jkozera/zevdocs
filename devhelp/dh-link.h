@@ -23,6 +23,7 @@
 #pragma once
 
 #include <glib-object.h>
+#include <cairo.h>
 
 G_BEGIN_DECLS
 
@@ -104,6 +105,8 @@ gchar *      dh_link_get_uri            (DhLink        *link);
 const gchar *dh_link_get_book_title     (DhLink        *link);
 
 const gchar *dh_link_get_book_id        (DhLink        *link);
+
+cairo_surface_t *dh_link_get_book_surface   (DhLink        *link);
 
 gint         dh_link_compare            (gconstpointer  a,
                                          gconstpointer  b);

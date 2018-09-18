@@ -57,6 +57,7 @@ typedef struct {
 
         /* A GtkSearchEntry. */
         GtkEntry *entry;
+        GtkToolbar *profile_chooser;
 
         DhBookTree *book_tree;
         GtkScrolledWindow *sw_book_tree;
@@ -512,6 +513,14 @@ dh_sidebar_constructed (GObject *object)
                       "margin", 6,
                       NULL);
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->entry));
+
+        priv->profile_chooser = GTK_TOOLBAR (gtk_toolbar_new());
+        gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->profile_chooser));
+        gtk_widget_show (GTK_WIDGET (priv->profile_chooser));
+
+        GtkToolButton *default_profile_item;
+        default_profile_item = GTK_TOOL_BUTTON(gtk_tool_button_new(NULL, "D"));
+        gtk_toolbar_insert(priv->profile_chooser, default_profile_item, 0);
 
         g_signal_connect (priv->entry,
                           "key-press-event",
