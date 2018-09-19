@@ -23,5 +23,29 @@
 var flkty = new Flickity('.carousel', { "wrapAround": true });
 window.addEventListener("load", function () { flkty.resize(); });
 </script>
+<script
+  src="https://code.jquery.com/jquery-3.3.1.min.js"
+  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+  crossorigin="anonymous"></script>
+<script type="text/javascript" src="{{ site.baseurl }}/static/js/mastodon.widget.js"></script>
+<script>
+$(document).ready(function() {
+// jQUERY is required!
+  var mapi = new MastodonApi({
+    target_selector  : '#myTimeline'
+    ,instance_uri    : 'https://floss.social'
+    ,access_token    : '304c752bc198c0d41e4746506995e23726f2a038648a32a060a3bc97bedffa08'
+    ,account_id      : '30865'
+    // optional parameters
+    // ===================
+    // - status max
+    //,toots_limit     : 5
+    // - if you are using font-awesome:
+    //,pic_icon        : '<i class="fa fa-picture-o"></i>'
+    // or a picture
+    //,pic_icon        : '<img src="mypicicon.gif" />'
+  });
+});
+</script>
   </body>
 </html>

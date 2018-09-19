@@ -1,0 +1,257 @@
+/**
+ * Mastodon User Timeline Widget
+ * Copyright (c) 2017 有限会社アゼット
+ * ライセンスに関して、LICENSEファイルを参照下さい。
+ * see license file for details.
+ *
+ * @author Azet <http://www.azet.jp>
+ * @version 1.05
+ */
+
+/* main container >>> */
+.mastodon-timeline {
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+	font-family: sans-serif;
+	margin-bottom: 1em;
+}
+
+.mt-header,
+.mt-footer {
+	padding: 10px 10px;
+}
+
+.mastodon-timeline a:link,
+.mastodon-timeline a:active,
+.mastodon-timeline a {
+	text-decoration: none;
+	font-weight: normal;
+}
+
+.mt-header {
+	font-weight: bold;
+	border-bottom: 1px solid purple;
+}
+
+.mt-header h4 {
+	display: inline-block;
+}
+
+.mt-body {
+	height: 250px;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+
+	/* force wrap */
+    white-space: pre-wrap; /* css-3 */
+    white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+    white-space: -pre-wrap; /* Opera 4-6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    word-wrap: break-word; /* Internet Explorer 5.5+ */
+}
+
+.mt-body .invisible {
+	display: none;
+}
+
+.mt-loading {
+	padding: 10px;
+	text-align: center;
+}
+
+.mt-footer {
+	text-align: center;
+}
+
+/* toots -messages */
+.mt-toot {
+	margin: 5px;
+	padding: 5px 5px 5px 65px;
+	position: relative;
+	min-height: 60px;
+}
+
+.mt-footer,
+.mt-toot:nth-child(n+2) {
+	border-top: 1px solid purple;
+}
+
+.mt-toot p:last-child {
+	margin-bottom: 0;
+}
+
+.mt-date {
+	text-align: right;
+}
+
+.mt-date .nsfw {
+	background: purple;
+	color: white;
+	margin-right: 1em;
+	padding: 0 3px;
+	border-radius: 2px;
+}
+
+
+.mt-avatar {
+	position: absolute;
+	top: 5px;
+	left: 5px;
+	/*margin: 0 10px 5px 0;*/
+	width: 50px;
+	height: 50px;
+	border-radius: 5px;
+	box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+.mt-error {
+	color: darkred;
+	background: lightpink;
+	margin: 5px;
+	padding: 10px;
+}
+
+/* spoiler === */
+a.btn-spoiler {
+	margin-left: 5px;
+	padding: 3px;
+	background: purple;
+	color: white;
+	border-radius: 3px;
+	font-size: 80%;
+}
+.spoiler-body {
+	display: none;
+}
+
+/* medias === */
+.toot-media-preview {
+	position: relative;
+	margin-top: 5px;
+	height: 100px;
+	background-size: cover;
+	background-position: center center;
+	box-sizing: border-box;
+	color: white;
+	text-align: center;
+	padding-top: 40px;
+}
+
+.toot-media-preview a {
+	display: block;
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+}
+
+/* toots status === */
+.toot-status {
+	font-weight: bold;
+	margin-top: 5px;
+}
+
+.toot-status .toot-status-boosts,
+.toot-status .toot-status-favourites {
+	display: inline-block;
+	white-space: nowrap;
+	margin-right: 10px;
+}
+
+/* medias display === */
+.toot-media-filter {
+	position: fixed;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	background: rgba(0, 0, 0, 0.9);
+}
+
+.toot-media-zoom {
+	position: fixed;
+	top: 5%;
+	right: 5%;
+	bottom: 5%;
+	left: 5%;
+}
+
+/* <<< */
+
+/* light theme >>> */
+.mastodon-timeline-light {
+	background: #fafafa;
+	color: #555;
+}
+
+.mastodon-timeline-light .mt-footer,
+.mastodon-timeline-light .mt-header {
+	background: #eee;
+}
+
+.mastodon-timeline-light a:link,
+.mastodon-timeline-light a:active,
+.mastodon-timeline-light a {
+	color: #26afff;
+}
+
+.mastodon-timeline-light .mt-header {
+	border-bottom-color: lightgrey;
+}
+
+.mastodon-timeline-light .mt-footer,
+.mastodon-timeline-light .mt-toot:nth-child(n+2) {
+	border-top-color:  lightgrey;
+}
+
+.mastodon-timeline-light .toot-status,
+.mastodon-timeline-light .mt-date a {
+	color: #aaa;
+}
+
+/* spoiler === */
+.mastodon-timeline-light a.btn-spoiler {
+	background: #26afff;
+	color: white;
+}
+/* <<< */
+
+/* dark theme >>> */
+.mastodon-timeline-dark {
+	background: #393f4f;
+	color: white;
+}
+
+.mastodon-timeline-dark .mt-footer,
+.mastodon-timeline-dark .mt-header {
+	background: #313543;
+}
+
+.mastodon-timeline-dark a:link,
+.mastodon-timeline-dark a:active,
+.mastodon-timeline-dark a {
+	color: #2b90d9;
+}
+
+.mastodon-timeline-dark .mt-header {
+	border-bottom-color: #606984;
+}
+
+.mastodon-timeline-dark .mt-footer,
+.mastodon-timeline-dark .mt-toot:nth-child(n+2) {
+	border-top-color: #606984;
+}
+
+.mastodon-timeline-dark .toot-status,
+.mastodon-timeline-dark .mt-date a {
+	color: #606984;
+}
+
+/* spoiler === */
+.mastodon-timeline-dark a.btn-spoiler {
+	background: #687390;
+	color: #393F4F;
+}
+/* <<< */
+
+/* vim set foldmethod=marker foldlevel=0 */
