@@ -308,6 +308,9 @@ profile_chooser_drag_data_received (GtkWidget      *widget,
                 GdkPixbuf *pixbuf;
                 size_t len;
                 GError *err;
+                if (gtk_selection_data_get_data(sel_data) == NULL)
+                        return;
+                gdk_drag_status(context, GDK_ACTION_LINK, time);
                 guchar *data = g_base64_decode(gtk_selection_data_get_data(sel_data), &len);
                 err = NULL;
                 istream = g_memory_input_stream_new_from_data(data, len, NULL);
@@ -332,7 +335,6 @@ profile_chooser_drag_leave (GtkWidget      *widget,
                             guint           time,
                             gpointer        user_data)
 {
-        DhSidebar *sidebar = DH_SIDEBAR(user_data);
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (user_data);
         if (priv->drag_button) {
                 gtk_drag_unhighlight(widget);
@@ -340,6 +342,19 @@ profile_chooser_drag_leave (GtkWidget      *widget,
                 priv->drag_button = NULL;
                 gtk_widget_show(priv->default_profile_item);
         }
+}
+
+gboolean
+profile_chooser_drag_drop (GtkWidget      *widget,
+                           GdkDragContext *context,
+                           gint            x,
+                           gint            y,
+                           guint           time,
+                           gpointer        user_data)
+{
+        DhSidebar *sidebar = DH_SIDEBAR(user_data);
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
+
         DhGroupDialog *dialog = dh_group_dialog_new();
         GtkWindow *parent_window = (GtkWindow *) gtk_widget_get_toplevel (GTK_WIDGET(sidebar));
         gtk_window_set_transient_for(GTK_WINDOW(dialog), parent_window);
@@ -348,7 +363,26 @@ profile_chooser_drag_leave (GtkWidget      *widget,
                         dh_group_dialog_get_current_text(dialog),
                         dh_group_dialog_get_current_icon(dialog));
         }
+        gchar *current_text = dh_group_dialog_get_current_text(dialog);
+        gchar *current_icon = dh_group_dialog_get_current_icon(dialog);
+
+        GtkToolItem *new_button;
+        if (strlen(current_icon) == 1) {
+                new_button = GTK_TOOL_ITEM(gtk_tool_button_new(
+                        NULL, current_icon
+                ));
+        } else {
+                GtkWidget *image = gtk_image_new_from_icon_name(current_icon, GTK_ICON_SIZE_SMALL_TOOLBAR);
+                new_button = GTK_TOOL_ITEM(gtk_tool_button_new(
+                        image,
+                        NULL
+                ));
+        }
+        gtk_toolbar_insert(priv->profile_chooser, new_button, 0);
+        gtk_widget_show_all(new_button);
+        gtk_drag_finish(context, true, false, time);
         gtk_widget_destroy(dialog);
+        return TRUE;
 }
 
 static gboolean
@@ -625,7 +659,7 @@ dh_sidebar_constructed (GObject *object)
 
         g_signal_connect(priv->profile_chooser,
                          "drag-drop",
-                         G_CALLBACK (profile_chooser_drag_leave),
+                         G_CALLBACK (profile_chooser_drag_drop),
                          sidebar);
 
         g_signal_connect (priv->entry,

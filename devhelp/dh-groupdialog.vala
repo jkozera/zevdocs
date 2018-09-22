@@ -10,18 +10,15 @@ public class DhGroupDialog : Dialog {
 
     private Button name_button;
 
-    private const string ENABLED_CONTEXTS[] = {"Categories", "Applications", "Devices"};
-
     private string current_text;
     private string current_letter;
 
     public DhGroupDialog () {
-        foreach (string context in ENABLED_CONTEXTS) {
-            foreach (string s in IconTheme.get_default().list_icons("Categories")) {
-                Image image = new Image.from_icon_name(s, IconSize.LARGE_TOOLBAR);
-                this.icons_flow_box.add(image);
-                image.show();
-            }
+
+        foreach (string s in IconTheme.get_default().list_icons("Categories")) {
+            Image image = new Image.from_icon_name(s, IconSize.LARGE_TOOLBAR);
+            this.icons_flow_box.add(image);
+            image.show();
         }
 
         CssProvider css = new CssProvider();
