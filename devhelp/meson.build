@@ -48,7 +48,8 @@ libdevhelp_public_c_files = [
         'dh-sidebar.c',
         'dh-tab.c',
         'dh-tab-label.c',
-        'dh-web-view.c'
+        'dh-web-view.c',
+        'dh-groupdialog.vala'
 ]
 
 libdevhelp_private_c_files = [
@@ -58,6 +59,11 @@ libdevhelp_private_c_files = [
         'dh-search-context.c',
         'dh-util-lib.c'
 ]
+
+libdevhelp_private_c_files += GNOME.compile_resources(
+        'dh-lib-resources',
+        'dh-lib.gresource.xml'
+)
 
 install_headers_first_subdir = 'devhelp-@0@'.format(LIBDEVHELP_API_VERSION)
 install_headers_subdir = join_paths(install_headers_first_subdir, 'devhelp')
@@ -80,6 +86,7 @@ libdevhelp_static = static_library(
         [libdevhelp_public_c_files,
          libdevhelp_private_c_files,
          libdevhelp_enums],
+        vala_header: 'devhelp-vala.h',
         include_directories : [CONFIG_H_INCLUDE_DIR, ROOT_INCLUDE_DIR],
         dependencies : LIBDEVHELP_DEPS
 )

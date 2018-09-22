@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/gnome/devhelp">
+    <file preprocess="xml-stripblanks">dh-groupdialog.ui</file>
+  </gresource>
+</gresources>

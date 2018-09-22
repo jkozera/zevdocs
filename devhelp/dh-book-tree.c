@@ -1055,7 +1055,7 @@ dh_book_tree_get_profile (DhBookTree *tree)
 }
 
 /**
- * dh_book_\tree_new:
+ * dh_book_tree_new:
  *
  * Returns: (transfer full) (nullable): the currently selected #DhLink in @tree,
  * or %NULL if the selection is empty or if a language group row is selected.

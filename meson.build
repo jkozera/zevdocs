@@ -4,7 +4,7 @@
 # See: https://github.com/mesonbuild/meson/issues/2607
 
 project(
-        'zevdocs', 'c',
+        'zevdocs', 'c', 'vala',
         meson_version : '>= 0.43',
         version : '0.4.0'
 )

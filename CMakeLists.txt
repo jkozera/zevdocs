@@ -1,6 +1,7 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.10)
 project(zevdocs C)
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 # from https://github.com/savoirfairelinux/ring-client-gnome/blob/master/cmake/GResources.cmake
 FIND_PROGRAM(GLIB_COMPILE_RESOURCES_EXECUTABLE NAMES glib-compile-resources)
 MARK_AS_ADVANCED(GLIB_COMPILE_RESOURCES_EXECUTABLE)
@@ -78,7 +79,22 @@ include_directories(src)
 GLIB_COMPILE_RESOURCES( GLIB_RESOURCES_ZEVDOCS
         SOURCE
         src/dh.gresource.xml
+        devhelp/dh-lib.gresource.xml
         )
+
+find_package(Vala "0.40" REQUIRED)
+
+
+list(APPEND VALA_COMPILER_FLAGS "--gresources=${CMAKE_CURRENT_SOURCE_DIR}/devhelp/dh-lib.gresource.xml")
+
+
+vala_precompile_target(
+        "libdevhelp-vala"
+        VALA_SOURCES_ZEVDOCS
+        devhelp/dh-groupdialog.vala
+        PACKAGES "gtk+-3.0"
+        # make it compatible with 'meson . build' by placing the header in build/:
+        HEADER ${CMAKE_CURRENT_SOURCE_DIR}/build/devhelp/devhelp-vala.h)
 
 add_executable(zevdocs
         ${GLIB_RESOURCES_ZEVDOCS}
@@ -139,6 +155,7 @@ add_executable(zevdocs
         devhelp/dh-util-lib.h
         devhelp/dh-web-view.c
         devhelp/dh-web-view.h
+        devhelp/dh-groupdialog.vala
         src/dh-app.c
         src/dh-app.h
         src/dh-assistant.c
@@ -151,7 +168,12 @@ add_executable(zevdocs
         src/dh-util-app.c
         src/dh-util-app.h
         src/dh-window.c
-        src/dh-window.h)
+        src/dh-window.h
+        ${VALA_SOURCES_ZEVDOCS})
+
+# Make sure the Vala sources are compiled to C before attempting to
+# build the executable.
+add_dependencies("zevdocs" "libdevhelp-vala")
 
 target_link_libraries(${PROJECT_NAME} ${GLIB_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${Webkit_LIBRARIES})

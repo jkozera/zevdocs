@@ -27,6 +27,8 @@
 #include "dh-util-lib.h"
 #include "dh-sidebar.h"
 #include "dh-book-tree.h"
+#include <devhelp/devhelp-vala.h>
+#include <src/dh-app.h>
 #include "dh-keyword-model.h"
 
 /**
@@ -330,13 +332,19 @@ profile_chooser_drag_leave (GtkWidget      *widget,
                             guint           time,
                             gpointer        user_data)
 {
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (DH_SIDEBAR (user_data));
+        DhSidebar *sidebar = DH_SIDEBAR(user_data);
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (user_data);
         if (priv->drag_button) {
                 gtk_drag_unhighlight(widget);
                 gtk_widget_destroy(priv->drag_button);
                 priv->drag_button = NULL;
                 gtk_widget_show(priv->default_profile_item);
         }
+        DhGroupDialog *dialog = dh_group_dialog_new();
+        GtkWindow *parent_window = (GtkWindow *) gtk_widget_get_toplevel (GTK_WIDGET(sidebar));
+        gtk_window_set_transient_for(GTK_WINDOW(dialog), parent_window);
+        gtk_dialog_run(GTK_DIALOG (dialog));
+        gtk_widget_destroy(dialog);
 }
 
 static gboolean
