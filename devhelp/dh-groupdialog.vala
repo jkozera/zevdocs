@@ -31,11 +31,18 @@ public class DhGroupDialog : Dialog {
         bbox.add(this.name_button);
         bbox.set_halign(Gtk.Align.CENTER);
         this.name_button.set_label("A");
+        this.name_button.clicked.connect(this.name_button_clicked);
         bbox.show_all();
         this.name_button.get_style_context().add_provider(css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
         this.icons_flow_box.insert(bbox, 0);
         this.current_text = "";
         this.current_letter = "A";
+    }
+
+    private void name_button_clicked () {
+        this.icons_flow_box.select_child(
+            this.icons_flow_box.get_child_at_index(0)
+        );
     }
 
     [GtkCallback]
