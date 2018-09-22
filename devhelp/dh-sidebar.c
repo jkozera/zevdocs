@@ -343,7 +343,11 @@ profile_chooser_drag_leave (GtkWidget      *widget,
         DhGroupDialog *dialog = dh_group_dialog_new();
         GtkWindow *parent_window = (GtkWindow *) gtk_widget_get_toplevel (GTK_WIDGET(sidebar));
         gtk_window_set_transient_for(GTK_WINDOW(dialog), parent_window);
-        gtk_dialog_run(GTK_DIALOG (dialog));
+        if (gtk_dialog_run(GTK_DIALOG (dialog)) != GTK_RESPONSE_CANCEL) {
+                g_print("%s/%s\n",
+                        dh_group_dialog_get_current_text(dialog),
+                        dh_group_dialog_get_current_icon(dialog));
+        }
         gtk_widget_destroy(dialog);
 }
 

@@ -385,7 +385,8 @@ macro(vala_precompile_target TARGET GENERATED_SOURCES)
                 ${VALA_INPUT_SOURCES}
                 DEPENDS
                 "${TARGET}-fast-vapis"
-                ${VALA_VAPIS})
+                ${VALA_VAPIS}
+                ${VALA_INPUT_SOURCES})
         unset(use_fast_vapi_flags)
     endif()
 
