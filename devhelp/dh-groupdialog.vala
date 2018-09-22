@@ -13,8 +13,8 @@ public class DhGroupDialog : Dialog {
     private string current_text;
     private string current_letter;
 
-    public DhGroupDialog () {
-
+    public DhGroupDialog (string docset_id) {
+        print(docset_id);
         foreach (string s in IconTheme.get_default().list_icons("Categories")) {
             Image image = new Image.from_icon_name(s, IconSize.LARGE_TOOLBAR);
             this.icons_flow_box.add(image);

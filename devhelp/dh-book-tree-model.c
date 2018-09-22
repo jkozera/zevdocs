@@ -733,8 +733,8 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
                 return;
 
         case DH_BOOK_TREE_MODEL_COL_BOOK:
-                g_value_init(value, DH_TYPE_BOOK);
-                g_value_set_boxed(value, node->book);
+                g_value_init(value, G_TYPE_OBJECT);
+                g_value_set_object(value, node->book);
                 return;
 
         case DH_BOOK_TREE_MODEL_COL_WEIGHT:

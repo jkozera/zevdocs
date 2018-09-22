@@ -71,7 +71,7 @@ typedef struct {
 
         guint idle_complete_id;
         guint idle_search_id;
-
+        const gchar* cur_docset_id;
 
         GtkToolButton *default_profile_item;
         GtkToolButton *drag_button;
@@ -288,7 +288,7 @@ profile_chooser_drag_motion (GtkWidget      *widget,
                              guint           time,
                              DhSidebar       *user_data)
 {
-        gtk_drag_get_data(widget, context, gdk_atom_intern("zevdocs-b64-icon", FALSE), time);
+        gtk_drag_get_data(widget, context, gdk_atom_intern("zevdocs-docs-with-b64-icon", FALSE), time);
 }
 
 static void
@@ -303,7 +303,6 @@ profile_chooser_drag_data_received (GtkWidget      *widget,
 {
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (user_data);
         if (priv->drag_button == NULL) {
-
                 GInputStream *istream;
                 GdkPixbuf *pixbuf;
                 size_t len;
@@ -311,7 +310,14 @@ profile_chooser_drag_data_received (GtkWidget      *widget,
                 if (gtk_selection_data_get_data(sel_data) == NULL)
                         return;
                 gdk_drag_status(context, GDK_ACTION_LINK, time);
-                guchar *data = g_base64_decode(gtk_selection_data_get_data(sel_data), &len);
+                const gchar *docs_with_icon = gtk_selection_data_get_data(sel_data);
+                gchar **splitted = g_strsplit(docs_with_icon, ";", 2);
+                if (priv->cur_docset_id != NULL) {
+                        g_free (priv->cur_docset_id);
+                }
+                priv->cur_docset_id = g_strdup(splitted[0]);
+                guchar *data = g_base64_decode(splitted[1], &len);
+                g_strfreev(splitted);
                 err = NULL;
                 istream = g_memory_input_stream_new_from_data(data, len, NULL);
                 pixbuf = gdk_pixbuf_new_from_stream(istream, NULL, &err);
@@ -333,15 +339,15 @@ static void
 profile_chooser_drag_leave (GtkWidget      *widget,
                             GdkDragContext *context,
                             guint           time,
-                            gpointer        user_data)
-{
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (user_data);
+                            gpointer        user_data) {
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private(user_data);
         if (priv->drag_button) {
                 gtk_drag_unhighlight(widget);
                 gtk_widget_destroy(priv->drag_button);
                 priv->drag_button = NULL;
                 gtk_widget_show(priv->default_profile_item);
         }
+
 }
 
 gboolean
@@ -355,7 +361,7 @@ profile_chooser_drag_drop (GtkWidget      *widget,
         DhSidebar *sidebar = DH_SIDEBAR(user_data);
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
 
-        DhGroupDialog *dialog = dh_group_dialog_new();
+        DhGroupDialog *dialog = dh_group_dialog_new(priv->cur_docset_id);
         GtkWindow *parent_window = (GtkWindow *) gtk_widget_get_toplevel (GTK_WIDGET(sidebar));
         gtk_window_set_transient_for(GTK_WINDOW(dialog), parent_window);
         if (gtk_dialog_run(GTK_DIALOG (dialog)) != GTK_RESPONSE_CANCEL) {
@@ -382,6 +388,9 @@ profile_chooser_drag_drop (GtkWidget      *widget,
         gtk_widget_show_all(new_button);
         gtk_drag_finish(context, true, false, time);
         gtk_widget_destroy(dialog);
+
+        g_free(priv->cur_docset_id);
+        priv->cur_docset_id = NULL;
         return TRUE;
 }
 
@@ -635,7 +644,7 @@ dh_sidebar_constructed (GObject *object)
         gtk_widget_set_sensitive(priv->default_profile_item, FALSE);
         gtk_toolbar_insert(priv->profile_chooser, priv->default_profile_item, 0);
 
-        GtkTargetEntry list_targets[] = {{"zevdocs-b64-icon", GTK_TARGET_SAME_APP, GDK_TARGET_STRING}};
+        GtkTargetEntry list_targets[] = {{"zevdocs-docs-with-b64-icon", GTK_TARGET_SAME_APP, GDK_TARGET_STRING}};
         gtk_drag_dest_set(priv->profile_chooser,
                           GTK_DEST_DEFAULT_HIGHLIGHT,
                           list_targets,

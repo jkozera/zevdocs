@@ -149,6 +149,29 @@ dh_book_tree_get_selected_icon_b64 (DhBookTree *tree)
         return icon;
 }
 
+static
+DhBook*
+dh_book_tree_get_selected_book (DhBookTree *tree)
+{
+        GtkTreeSelection *selection;
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+
+        g_return_val_if_fail (DH_IS_BOOK_TREE (tree), NULL);
+
+        selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree));
+        if (!gtk_tree_selection_get_selected (selection, &model, &iter))
+                return NULL;
+
+        DhBook *book;
+
+        gtk_tree_model_get (model, &iter,
+                            COL_BOOK, &book,
+                            -1);
+
+        return DH_BOOK(book);
+}
+
 static void
 book_tree_drag_begin_cb(GtkWidget      *widget,
                         GdkDragContext *context,
@@ -170,7 +193,7 @@ book_tree_drag_begin_cb(GtkWidget      *widget,
 static void
 book_tree_drag_data_get_cb(GtkWidget        *widget,
                            GdkDragContext   *context,
-                           GtkSelectionData *data,
+                           GtkSelectionData *selection_data,
                            guint             info,
                            guint             time,
                            gpointer          user_data)
@@ -178,14 +201,21 @@ book_tree_drag_data_get_cb(GtkWidget        *widget,
         DhBookTreePrivate *priv = dh_book_tree_get_instance_private (DH_BOOK_TREE (widget));
 
         if (dh_book_tree_get_selected_icon(DH_BOOK_TREE(widget)) != NULL) {
+                DhBook *book = dh_book_tree_get_selected_book(DH_BOOK_TREE(widget));
+                const gchar *id = dh_book_get_id(book);
                 gchar *base64 = dh_book_tree_get_selected_icon_b64(DH_BOOK_TREE(widget));
 
+                gchar* data = g_malloc(strlen(id) + 1 + strlen(base64) + 1);
+                data[0] = 0;
+                strcat(data, id);
+                strcat(data, ";");
+                strcat(data, base64);
                 gtk_selection_data_set(
-                        data,
-                        gtk_selection_data_get_target(data),
+                        selection_data,
+                        gtk_selection_data_get_target(selection_data),
                         8,
-                        (guchar*) base64,
-                        strlen(base64)
+                        (guchar*) data,
+                        strlen(data)
                 );
         }
 }
@@ -197,7 +227,7 @@ book_tree_selection_changed_cb (GtkTreeSelection *selection,
         DhBookTreePrivate *priv = dh_book_tree_get_instance_private (tree);
         DhLink *link;
 
-        GtkTargetEntry list_targets[] = {{"zevdocs-b64-icon", GTK_TARGET_SAME_APP, GDK_TARGET_STRING}};
+        GtkTargetEntry list_targets[] = {{"zevdocs-docs-with-b64-icon", GTK_TARGET_SAME_APP, GDK_TARGET_STRING}};
         gtk_drag_source_set(
                 GTK_WIDGET (tree),
                 GDK_BUTTON1_MASK,
