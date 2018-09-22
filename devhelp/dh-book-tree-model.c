@@ -759,6 +759,18 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
                 }
                 return;
 
+        case DH_BOOK_TREE_MODEL_COL_ICON_B64:
+                while (books) {
+                        book = books->data;
+                        if (g_str_equal(dh_book_get_title(node->book), dh_book_get_title(book))) {
+                                g_value_init(value, G_TYPE_STRING);
+                                g_value_set_string(value, dh_book_get_icon_b64(book));
+                                return;
+                        }
+                        books = books->next;
+                }
+                return;
+
         default:
                 return;
         }

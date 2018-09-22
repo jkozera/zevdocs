@@ -83,6 +83,7 @@ enum {
         COL_WEIGHT,
         COL_UNDERLINE,
         COL_ICON,
+        COL_ICON_B64,
         N_COLUMNS
 };
 
@@ -105,24 +106,47 @@ static
 cairo_surface_t*
 dh_book_tree_get_selected_icon (DhBookTree *tree)
 {
-    GtkTreeSelection *selection;
-    GtkTreeModel *model;
-    GtkTreeIter iter;
-    DhLink *link;
+        GtkTreeSelection *selection;
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+        DhLink *link;
 
-    g_return_val_if_fail (DH_IS_BOOK_TREE (tree), NULL);
+        g_return_val_if_fail (DH_IS_BOOK_TREE (tree), NULL);
 
-    selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree));
-    if (!gtk_tree_selection_get_selected (selection, &model, &iter))
-        return NULL;
+        selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree));
+        if (!gtk_tree_selection_get_selected (selection, &model, &iter))
+                return NULL;
 
-    cairo_surface_t* icon = NULL;
+        cairo_surface_t* icon = NULL;
 
-    gtk_tree_model_get (model, &iter,
-                        COL_ICON, &icon,
-                        -1);
+        gtk_tree_model_get (model, &iter,
+                            COL_ICON, &icon,
+                            -1);
 
-    return icon;
+        return icon;
+}
+
+static
+const gchar*
+dh_book_tree_get_selected_icon_b64 (DhBookTree *tree)
+{
+        GtkTreeSelection *selection;
+        GtkTreeModel *model;
+        GtkTreeIter iter;
+
+        g_return_val_if_fail (DH_IS_BOOK_TREE (tree), NULL);
+
+        selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree));
+        if (!gtk_tree_selection_get_selected (selection, &model, &iter))
+                return NULL;
+
+        const gchar* icon = NULL;
+
+        gtk_tree_model_get (model, &iter,
+                            COL_ICON_B64, &icon,
+                            -1);
+
+        return icon;
 }
 
 static void
@@ -133,16 +157,35 @@ book_tree_drag_begin_cb(GtkWidget      *widget,
         DhBookTreePrivate *priv = dh_book_tree_get_instance_private (DH_BOOK_TREE (widget));
 
         if (dh_book_tree_get_selected_icon(DH_BOOK_TREE(widget)) != NULL) {
-                g_print("%d", dh_book_tree_get_selected_icon(DH_BOOK_TREE(widget)));
-
                 cairo_surface_t *icon = dh_book_tree_get_selected_icon(DH_BOOK_TREE(widget));
                 GtkWidget *row = gtk_widget_get_ancestor (widget, GTK_TYPE_LIST_BOX_ROW);
                 gint x, y;
-                //gtk_widget_translate_coordinates (widget, row, 0, 0, &x, &y);
-                //cairo_surface_set_device_offset (icon, -x, -y);
                 gtk_drag_set_icon_surface(
                         context,
                         icon
+                );
+        }
+}
+
+static void
+book_tree_drag_data_get_cb(GtkWidget        *widget,
+                           GdkDragContext   *context,
+                           GtkSelectionData *data,
+                           guint             info,
+                           guint             time,
+                           gpointer          user_data)
+{
+        DhBookTreePrivate *priv = dh_book_tree_get_instance_private (DH_BOOK_TREE (widget));
+
+        if (dh_book_tree_get_selected_icon(DH_BOOK_TREE(widget)) != NULL) {
+                gchar *base64 = dh_book_tree_get_selected_icon_b64(DH_BOOK_TREE(widget));
+
+                gtk_selection_data_set(
+                        data,
+                        gtk_selection_data_get_target(data),
+                        8,
+                        (guchar*) base64,
+                        strlen(base64)
                 );
         }
 }
@@ -154,11 +197,12 @@ book_tree_selection_changed_cb (GtkTreeSelection *selection,
         DhBookTreePrivate *priv = dh_book_tree_get_instance_private (tree);
         DhLink *link;
 
+        GtkTargetEntry list_targets[] = {{"zevdocs-b64-icon", GTK_TARGET_SAME_APP, GDK_TARGET_STRING}};
         gtk_drag_source_set(
                 GTK_WIDGET (tree),
                 GDK_BUTTON1_MASK,
-                NULL,
-                0,
+                list_targets,
+                1,
                 GDK_ACTION_LINK
         );
 
@@ -189,10 +233,14 @@ book_tree_setup_selection (DhBookTree *tree)
                                  G_CALLBACK (book_tree_selection_changed_cb),
                                  tree,
                                  0);
-
         g_signal_connect_object (tree,
                                  "drag-begin",
                                  G_CALLBACK (book_tree_drag_begin_cb),
+                                 tree,
+                                 0);
+        g_signal_connect_object (tree,
+                                 "drag-data-get",
+                                 G_CALLBACK (book_tree_drag_data_get_cb),
                                  tree,
                                  0);
 }

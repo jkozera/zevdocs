@@ -72,6 +72,7 @@ typedef struct {
         gchar *title;
         gchar *language;
         cairo_surface_t* icon_surface;
+        const gchar* icon_b64;
 
         /* The book tree of DhLink*. */
         GNode *tree;
@@ -390,16 +391,16 @@ dh_book_new_from_json (JsonObject *object, gint scale)
         guchar* data;
         GError* err;
         if (scale == 1) {
-                data = g_base64_decode(json_object_get_string_member(object, "Icon"), &len);
+                priv->icon_b64 = g_strdup(json_object_get_string_member(object, "Icon"));
         } else {
-                data = g_base64_decode(json_object_get_string_member(object, "Icon2x"), &len);
-                scale = (int)(2.0 * (2.0 / (double)scale));
+                priv->icon_b64 = g_strdup(json_object_get_string_member(object, "Icon2x"));
         }
+        data = g_base64_decode(priv->icon_b64, &len);
         err = NULL;
         istream = g_memory_input_stream_new_from_data(data, len, NULL);
         pixbuf = gdk_pixbuf_new_from_stream(istream, NULL, &err);
         priv->icon_surface = gdk_cairo_surface_create_from_pixbuf(
-                pixbuf, scale, NULL
+                pixbuf, _dh_util_surface_scale(scale), NULL
         );
         g_object_unref(pixbuf);
         g_object_unref(istream);
@@ -494,6 +495,17 @@ dh_book_get_icon_surface (DhBook *book)
         priv = dh_book_get_instance_private (book);
 
         return priv->icon_surface;
+}
+
+const gchar*
+dh_book_get_icon_b64 (DhBook *book)
+{
+        DhBookPrivate *priv;
+
+        g_return_val_if_fail (DH_IS_BOOK (book), NULL);
+
+        priv = dh_book_get_instance_private (book);
+        return priv->icon_b64;
 }
 
 /**

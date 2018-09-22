@@ -346,3 +346,11 @@ _dh_util_bind_sidebar_and_notebook (DhSidebar  *sidebar,
                                  sidebar,
                                  G_CONNECT_AFTER);
 }
+
+gint _dh_util_surface_scale(gint scale)
+{
+        if (scale == 1)
+                return 1;
+        else
+                return (int)(2.0 * (2.0 / (double)scale));
+}

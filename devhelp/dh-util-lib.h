@@ -52,6 +52,8 @@ GSList *        _dh_util_get_possible_index_files       (GFile *book_directory);
 G_GNUC_INTERNAL
 void            _dh_util_bind_sidebar_and_notebook      (DhSidebar  *sidebar,
                                                          DhNotebook *notebook);
+G_GNUC_INTERNAL
+gint            _dh_util_surface_scale                  (gint scale);
 
 G_END_DECLS
 
