@@ -49,7 +49,8 @@ libdevhelp_public_c_files = [
         'dh-tab.c',
         'dh-tab-label.c',
         'dh-web-view.c',
-        'dh-groupdialog.vala'
+        'dh-groupdialog.vala',
+        'dh-profile-chooser.vala'
 ]
 
 libdevhelp_private_c_files = [

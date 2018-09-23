@@ -12,9 +12,9 @@ public class DhGroupDialog : Dialog {
 
     private string current_text;
     private string current_letter;
+    private string group_id;
 
     public DhGroupDialog (string docset_id) {
-        print(docset_id);
         foreach (string s in IconTheme.get_default().list_icons("Categories")) {
             Image image = new Image.from_icon_name(s, IconSize.LARGE_TOOLBAR);
             this.icons_flow_box.add(image);
@@ -23,14 +23,14 @@ public class DhGroupDialog : Dialog {
 
         CssProvider css = new CssProvider();
         css.load_from_data("* { padding: 2pt 2pt; }");
-        Box bbox = new Box(Gtk.Orientation.HORIZONTAL, 1);
+        Box bbox = new Box(Orientation.HORIZONTAL, 1);
         this.name_button = new Button();
         bbox.add(this.name_button);
-        bbox.set_halign(Gtk.Align.CENTER);
+        bbox.set_halign(Align.CENTER);
         this.name_button.set_label("A");
         this.name_button.clicked.connect(this.name_button_clicked);
         bbox.show_all();
-        this.name_button.get_style_context().add_provider(css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+        this.name_button.get_style_context().add_provider(css, STYLE_PROVIDER_PRIORITY_APPLICATION);
         this.icons_flow_box.insert(bbox, 0);
         this.current_text = "";
         this.current_letter = "A";
@@ -53,16 +53,39 @@ public class DhGroupDialog : Dialog {
 
     [GtkCallback]
     private void save_clicked () {
-        this.response(Gtk.ResponseType.OK);
+        Soup.Session session = new Soup.Session();
+        Soup.Message msg = new Soup.Message("POST", "http://localhost:12340/group");
+        Json.Object object = new Json.Object();
+        object.set_string_member("Icon", this.get_current_icon());
+        object.set_string_member("Name", this.get_current_text());
+        Json.Node node = new Json.Node(Json.NodeType.OBJECT);
+        node.set_object(object);
+        msg.set_request(
+            "application/json",
+            Soup.MemoryUse.COPY,
+            (uint8[])Json.to_string(node, false).to_utf8()
+        );
+        GLib.InputStream result = session.send(msg, null);
+
+        uint8 data[100];
+        size_t read;
+        result.read_all(data, out read);
+        group_id = (string) data;
+
+        this.response(ResponseType.OK);
     }
 
     [GtkCallback]
     private void cancel_clicked () {
-        this.response(Gtk.ResponseType.CANCEL);
+        this.response(ResponseType.CANCEL);
     }
 
     public string get_current_text() {
         return current_text;
+    }
+
+    public string get_group_id() {
+        return group_id;
     }
 
     public string get_current_icon() {

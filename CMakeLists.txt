@@ -85,13 +85,19 @@ GLIB_COMPILE_RESOURCES( GLIB_RESOURCES_ZEVDOCS
 find_package(Vala "0.40" REQUIRED)
 
 
+list(APPEND VALA_COMPILER_FLAGS "--pkg=libsoup-2.4")
+list(APPEND VALA_COMPILER_FLAGS "--pkg=json-glib-1.0")
 list(APPEND VALA_COMPILER_FLAGS "--gresources=${CMAKE_CURRENT_SOURCE_DIR}/devhelp/dh-lib.gresource.xml")
+list(APPEND VALA_COMPILER_FLAGS '-X')
+list(APPEND VALA_COMPILER_FLAGS '-DGETTEXT_PACKAGE="zevdocs"')
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D \"GETTEXT_PACKAGE=\\\"zevdocs\\\"\"")
 
 
 vala_precompile_target(
         "libdevhelp-vala"
         VALA_SOURCES_ZEVDOCS
         devhelp/dh-groupdialog.vala
+        devhelp/dh-profile-chooser.vala
         PACKAGES "gtk+-3.0"
         # make it compatible with 'meson . build' by placing the header in build/:
         HEADER ${CMAKE_CURRENT_SOURCE_DIR}/build/devhelp/devhelp-vala.h)

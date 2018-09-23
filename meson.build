@@ -9,6 +9,12 @@ project(
         version : '0.4.0'
 )
 
+add_project_arguments(['-X', '-DGETTEXT_PACKAGE="zevdocs"'],
+                      language: 'vala')
+add_project_arguments(['-DGETTEXT_PACKAGE="zevdocs"'],
+                      language: 'c')
+
+
 GNOME = import('gnome')
 PKG_CONFIG = import('pkgconfig')
 I18N = import('i18n')

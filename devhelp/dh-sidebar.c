@@ -60,7 +60,7 @@ typedef struct {
 
         /* A GtkSearchEntry. */
         GtkEntry *entry;
-        GtkToolbar *profile_chooser;
+        DhProfileChooser *profile_chooser;
 
         DhBookTree *book_tree;
         GtkScrolledWindow *sw_book_tree;
@@ -71,10 +71,6 @@ typedef struct {
 
         guint idle_complete_id;
         guint idle_search_id;
-        const gchar* cur_docset_id;
-
-        GtkToolButton *default_profile_item;
-        GtkToolButton *drag_button;
 } DhSidebarPrivate;
 
 enum {
@@ -278,120 +274,6 @@ hitlist_selection_changed_cb (GtkTreeSelection *selection,
                 g_signal_emit (sidebar, signals[SIGNAL_LINK_SELECTED], 0, link);
                 dh_link_unref (link);
         }
-}
-
-static void
-profile_chooser_drag_motion (GtkWidget      *widget,
-                             GdkDragContext *context,
-                             gint            x,
-                             gint            y,
-                             guint           time,
-                             DhSidebar       *user_data)
-{
-        gtk_drag_get_data(widget, context, gdk_atom_intern("zevdocs-docs-with-b64-icon", FALSE), time);
-}
-
-static void
-profile_chooser_drag_data_received (GtkWidget      *widget,
-                                    GdkDragContext *context,
-                                    gint            x,
-                                    gint            y,
-                                    GtkSelectionData* sel_data,
-                                    guint           info,
-                                    guint           time,
-                                    DhSidebar       *user_data)
-{
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (user_data);
-        if (priv->drag_button == NULL) {
-                GInputStream *istream;
-                GdkPixbuf *pixbuf;
-                size_t len;
-                GError *err;
-                if (gtk_selection_data_get_data(sel_data) == NULL)
-                        return;
-                gdk_drag_status(context, GDK_ACTION_LINK, time);
-                const gchar *docs_with_icon = gtk_selection_data_get_data(sel_data);
-                gchar **splitted = g_strsplit(docs_with_icon, ";", 2);
-                if (priv->cur_docset_id != NULL) {
-                        g_free (priv->cur_docset_id);
-                }
-                priv->cur_docset_id = g_strdup(splitted[0]);
-                guchar *data = g_base64_decode(splitted[1], &len);
-                g_strfreev(splitted);
-                err = NULL;
-                istream = g_memory_input_stream_new_from_data(data, len, NULL);
-                pixbuf = gdk_pixbuf_new_from_stream(istream, NULL, &err);
-                cairo_surface_t *surface = gdk_cairo_surface_create_from_pixbuf(
-                        pixbuf, _dh_util_surface_scale(gtk_widget_get_scale_factor(widget)), NULL
-                );
-                GtkWidget *image = gtk_image_new_from_surface(surface);
-                priv->drag_button = GTK_TOOL_BUTTON(gtk_tool_button_new(image, NULL));
-                gtk_toolbar_insert(GTK_TOOLBAR (widget), GTK_TOOL_ITEM(priv->drag_button), -1);
-                g_object_unref(pixbuf);
-                gtk_drag_highlight(widget);
-                gtk_widget_show_all(widget);
-                gtk_widget_hide(priv->default_profile_item);
-        }
-
-}
-
-static void
-profile_chooser_drag_leave (GtkWidget      *widget,
-                            GdkDragContext *context,
-                            guint           time,
-                            gpointer        user_data) {
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private(user_data);
-        if (priv->drag_button) {
-                gtk_drag_unhighlight(widget);
-                gtk_widget_destroy(priv->drag_button);
-                priv->drag_button = NULL;
-                gtk_widget_show(priv->default_profile_item);
-        }
-
-}
-
-gboolean
-profile_chooser_drag_drop (GtkWidget      *widget,
-                           GdkDragContext *context,
-                           gint            x,
-                           gint            y,
-                           guint           time,
-                           gpointer        user_data)
-{
-        DhSidebar *sidebar = DH_SIDEBAR(user_data);
-        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
-
-        DhGroupDialog *dialog = dh_group_dialog_new(priv->cur_docset_id);
-        GtkWindow *parent_window = (GtkWindow *) gtk_widget_get_toplevel (GTK_WIDGET(sidebar));
-        gtk_window_set_transient_for(GTK_WINDOW(dialog), parent_window);
-        if (gtk_dialog_run(GTK_DIALOG (dialog)) != GTK_RESPONSE_CANCEL) {
-                g_print("%s/%s\n",
-                        dh_group_dialog_get_current_text(dialog),
-                        dh_group_dialog_get_current_icon(dialog));
-        }
-        gchar *current_text = dh_group_dialog_get_current_text(dialog);
-        gchar *current_icon = dh_group_dialog_get_current_icon(dialog);
-
-        GtkToolItem *new_button;
-        if (strlen(current_icon) == 1) {
-                new_button = GTK_TOOL_ITEM(gtk_tool_button_new(
-                        NULL, current_icon
-                ));
-        } else {
-                GtkWidget *image = gtk_image_new_from_icon_name(current_icon, GTK_ICON_SIZE_SMALL_TOOLBAR);
-                new_button = GTK_TOOL_ITEM(gtk_tool_button_new(
-                        image,
-                        NULL
-                ));
-        }
-        gtk_toolbar_insert(priv->profile_chooser, new_button, 0);
-        gtk_widget_show_all(new_button);
-        gtk_drag_finish(context, true, false, time);
-        gtk_widget_destroy(dialog);
-
-        g_free(priv->cur_docset_id);
-        priv->cur_docset_id = NULL;
-        return TRUE;
 }
 
 static gboolean
@@ -635,41 +517,9 @@ dh_sidebar_constructed (GObject *object)
                       NULL);
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->entry));
 
-        priv->profile_chooser = GTK_TOOLBAR (gtk_toolbar_new());
-        gtk_toolbar_set_style(priv->profile_chooser, GTK_TOOLBAR_ICONS);
+        priv->profile_chooser = dh_profile_chooser_new();
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->profile_chooser));
         gtk_widget_show (GTK_WIDGET (priv->profile_chooser));
-
-        priv->default_profile_item = GTK_TOOL_BUTTON(gtk_tool_button_new(NULL, _("drag&drop here to group")));
-        gtk_widget_set_sensitive(priv->default_profile_item, FALSE);
-        gtk_toolbar_insert(priv->profile_chooser, priv->default_profile_item, 0);
-
-        GtkTargetEntry list_targets[] = {{"zevdocs-docs-with-b64-icon", GTK_TARGET_SAME_APP, GDK_TARGET_STRING}};
-        gtk_drag_dest_set(priv->profile_chooser,
-                          GTK_DEST_DEFAULT_HIGHLIGHT,
-                          list_targets,
-                          1,
-                          GDK_ACTION_LINK);
-
-        g_signal_connect(priv->profile_chooser,
-                         "drag-motion",
-                         G_CALLBACK (profile_chooser_drag_motion),
-                         sidebar);
-
-        g_signal_connect(priv->profile_chooser,
-                         "drag-data-received",
-                         G_CALLBACK (profile_chooser_drag_data_received),
-                         sidebar);
-
-        g_signal_connect(priv->profile_chooser,
-                         "drag-leave",
-                         G_CALLBACK (profile_chooser_drag_leave),
-                         sidebar);
-
-        g_signal_connect(priv->profile_chooser,
-                         "drag-drop",
-                         G_CALLBACK (profile_chooser_drag_drop),
-                         sidebar);
 
         g_signal_connect (priv->entry,
                           "key-press-event",
@@ -785,8 +635,6 @@ dh_sidebar_constructed (GObject *object)
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->sw_book_tree));
 
         gtk_widget_show_all (GTK_WIDGET (sidebar));
-
-        priv->drag_button = NULL;
 }
 
 static void

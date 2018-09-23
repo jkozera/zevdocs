@@ -227,7 +227,7 @@ book_tree_selection_changed_cb (GtkTreeSelection *selection,
         DhBookTreePrivate *priv = dh_book_tree_get_instance_private (tree);
         DhLink *link;
 
-        GtkTargetEntry list_targets[] = {{"zevdocs-docs-with-b64-icon", GTK_TARGET_SAME_APP, GDK_TARGET_STRING}};
+        GtkTargetEntry list_targets[] = {{"zevdocs-docs-with-b64-icon", GTK_TARGET_SAME_APP, 1}};
         gtk_drag_source_set(
                 GTK_WIDGET (tree),
                 GDK_BUTTON1_MASK,
