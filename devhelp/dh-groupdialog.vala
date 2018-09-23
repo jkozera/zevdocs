@@ -66,11 +66,8 @@ public class DhGroupDialog : Dialog {
             (uint8[])Json.to_string(node, false).to_utf8()
         );
         GLib.InputStream result = session.send(msg, null);
-
-        uint8 data[100];
-        size_t read;
-        result.read_all(data, out read);
-        group_id = (string) data;
+        GLib.DataInputStream result_data = new GLib.DataInputStream(result);
+        group_id = result_data.read_line();
 
         this.response(ResponseType.OK);
     }
