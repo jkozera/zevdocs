@@ -9,40 +9,47 @@ int _dh_util_surface_scale(int scale)
                 return (int)(2.0 * (2.0 / (double)scale));
 }
 
-public class DhProfileChooser : Toolbar {
+public class DhProfileChooser : Box {
 
-    ToolButton drag_button;
-    ToolButton default_button;
+    ToggleButton drag_button;
+    ToggleButton default_button;
     string cur_docset_id;
     private string[] group_ids;
     private string[] group_lists;
-    private ToggleToolButton[] buttons;
+    private ToggleButton[] buttons;
+    private Box toolbar;
     bool handling_toggle;
-
+    CssProvider css;
     public signal void group_selected(string id, string comma_separated_docs);
 
     public DhProfileChooser() {
-        this.set_style(ToolbarStyle.ICONS);
-
-        this.drag_motion.connect(this.on_drag_motion);
-        this.drag_data_received.connect(this.on_drag_data_received);
-        this.drag_drop.connect(this.on_drag_drop);
-        this.drag_leave.connect(this.on_drag_leave);
+        css = new CssProvider();
+        css.load_from_data("* { padding: 2pt 2pt; }");
+        toolbar = new Box(Orientation.HORIZONTAL, 0);
+        toolbar.pack_end(new Label("Drag to group..."));
+        this.set_hexpand(true);
+        toolbar.set_hexpand(true);
+        toolbar.drag_motion.connect(this.on_drag_motion);
+        toolbar.drag_data_received.connect(this.on_drag_data_received);
+        toolbar.drag_drop.connect(this.on_drag_drop);
+        toolbar.drag_leave.connect(this.on_drag_leave);
         TargetEntry list_targets[] = {TargetEntry(){
             target="zevdocs-docs-with-b64-icon",
             flags=TargetFlags.SAME_APP,
             info=1
         }};
         drag_dest_set(
-            this,
+            toolbar,
             DestDefaults.HIGHLIGHT,
             list_targets,
             DragAction.LINK
         );
+        this.pack_end(toolbar);
+        this.show_all();
         load_groups();
     }
 
-    void bind_toggle_handler(ToggleToolButton btn, int i) {
+    void bind_toggle_handler(ToggleButton btn, int i) {
         btn.toggled.connect(() => {
             if (handling_toggle) return;
             handling_toggle = true;
@@ -69,7 +76,8 @@ public class DhProfileChooser : Toolbar {
         Json.Node line_node = Json.from_string(data_stream.read_line()); 
         Json.Array array = line_node.get_array();
         if (array.get_length() == 0) {
-            default_button = new ToolButton(null, _("drag&drop here to group"));
+            default_button = new ToggleButton();
+            default_button.set_label(_("drag&drop here to group"));
             this.add(default_button);
             default_button.set_sensitive(false);
         } else {
@@ -83,39 +91,55 @@ public class DhProfileChooser : Toolbar {
             this.remove(buttons[i]);
             buttons[i].destroy();
         }
-        buttons = new ToggleToolButton[0];
+        buttons = new ToggleButton[0];
         group_ids = new string[0];
         group_lists = new string[0];
         for (int i = 0; i < array.get_length(); ++i) {
             Json.Object obj = array.get_element(i).get_object();
             string icon = obj.get_string_member("Icon");
             string name = obj.get_string_member("Name");
-            ToggleToolButton btn = new ToggleToolButton();
-            this.add(btn);
+            ToggleButton btn = new ToggleButton();
+            btn.set_relief(ReliefStyle.NONE);
             buttons += btn;
             group_ids += obj.get_string_member("Id");
             group_lists += obj.get_string_member("DocsList");
             if (icon.length == 1) {
                 btn.set_label(icon);
             } else {
-                btn.set_icon_widget(new Image.from_icon_name(icon, IconSize.SMALL_TOOLBAR));
-                btn.set_label(name);
+                btn.add(new Image.from_icon_name(icon, IconSize.LARGE_TOOLBAR));
             }
             bind_toggle_handler(btn, i);
+
+            this.make_btn_on_drag_motion(btn);
+            this.make_btn_on_drag_data_received(btn);
+            this.make_btn_on_drag_drop(btn);
+            this.make_btn_on_drag_leave(btn);
+            TargetEntry list_targets[] = {TargetEntry(){
+                target="zevdocs-docs-with-b64-icon",
+                flags=TargetFlags.SAME_APP,
+                info=1
+            }};
+            drag_dest_set(
+                btn,
+                DestDefaults.HIGHLIGHT,
+                list_targets,
+                DragAction.LINK
+            );
+            btn.get_style_context().add_provider(css, STYLE_PROVIDER_PRIORITY_APPLICATION);            this.add(btn);
             btn.show_all();
         }
     }
 
     bool on_drag_motion(DragContext context, int x, int y, uint time) {
-        drag_get_data(this, context, Atom.intern("zevdocs-docs-with-b64-icon", false), time);
+        drag_get_data(toolbar, context, Atom.intern("zevdocs-docs-with-b64-icon", false), time);
         return true;
     }
 
     void on_drag_data_received(DragContext context, int x, int y, SelectionData data, uint info, uint time) {
+        if (data.get_data() == null)
+            return;
+        drag_status(context, DragAction.LINK, time);
         if (drag_button == null) {
-            if (data.get_data() == null)
-                return;
-            drag_status(context, DragAction.LINK, time);
             string data_string = (string) data.get_data();
             string[] splitted = data_string.split(";", 2);
             cur_docset_id = splitted[0];
@@ -126,12 +150,14 @@ public class DhProfileChooser : Toolbar {
                 pixbuf, _dh_util_surface_scale(this.get_scale_factor()), null
             );
             Image *image = new Image.from_surface(surface);
-            drag_button = new ToolButton(image, null);
-            this.insert(drag_button, -1);
+            drag_button = new ToggleButton();
+            drag_button.add(image);
+            drag_button.set_relief(ReliefStyle.NONE);
+            toolbar.add(drag_button);
             drag_button.show_all();
             if (default_button != null)
                 default_button.hide();
-            drag_highlight(this);
+            drag_highlight(toolbar);
         }
     }
 
@@ -150,12 +176,44 @@ public class DhProfileChooser : Toolbar {
     }
 
     void on_drag_leave(DragContext context, uint time) {
+        drag_unhighlight(toolbar);
         if (drag_button != null) {
-            drag_unhighlight(this);
             drag_button.destroy();
-            if (default_button != null)
-                default_button.show();
-            drag_button = null;
         }
+        drag_button = null;
+    }
+
+
+    void make_btn_on_drag_motion(ToggleButton btn) {
+        btn.drag_motion.connect((context, x, y, time) => {
+            drag_get_data(btn, context, Atom.intern("zevdocs-docs-with-b64-icon", false), time);
+            return true;
+        });
+    }
+
+    void make_btn_on_drag_data_received(ToggleButton btn) {
+        btn.drag_data_received.connect((context, x, y, data, info, time) => {
+            if (data.get_data() == null)
+                return;
+            drag_status(context, DragAction.LINK, time);
+            string data_string = (string) data.get_data();
+            string[] splitted = data_string.split(";", 2);
+            cur_docset_id = splitted[0];
+
+            drag_highlight(btn);
+        });
+    }
+
+    void make_btn_on_drag_drop(ToggleButton btn) {
+        btn.drag_drop.connect((context, x, y, time) => {
+            print("Add %s\n", cur_docset_id);
+            return true;
+        });
+    }
+
+    void make_btn_on_drag_leave(ToggleButton btn) {
+        btn.drag_leave.connect((context, time) => {
+            drag_unhighlight(btn);
+        });
     }
 }

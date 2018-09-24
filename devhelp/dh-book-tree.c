@@ -1139,8 +1139,7 @@ dh_book_tree_select_uri (DhBookTree  *tree,
 {
 }
 
-static
-gboolean
+static gboolean
 _dh_book_tree_visible_func (GtkTreeModel *model,
                             GtkTreeIter *iter,
                             gpointer data)

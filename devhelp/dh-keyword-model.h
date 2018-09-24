@@ -25,6 +25,7 @@
 #include <glib-object.h>
 #include <devhelp/dh-link.h>
 #include <devhelp/dh-profile.h>
+#include <gtk/gtktreemodel.h>
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,7 @@ DhLink         *dh_keyword_model_filter (DhKeywordModel *model,
                                          const gchar    *search_string,
                                          const gchar    *current_book_id,
                                          DhProfile      *profile);
+GtkTreeModel *dh_keyword_model_set_filter(DhKeywordModel *model, GString *filter);
 
 G_END_DECLS
 

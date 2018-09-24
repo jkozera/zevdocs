@@ -22,7 +22,6 @@
  * along with Devhelp.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "dh-keyword-model.h"
 #include <cairo/cairo-gobject.h>
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
@@ -30,6 +29,7 @@
 #include <glib/gi18n.h>
 #include "dh-book.h"
 #include "dh-book-list.h"
+#include "dh-keyword-model.h"
 #include "dh-search-context.h"
 #include "dh-util-lib.h"
 
@@ -91,6 +91,8 @@ typedef struct {
         GQueue links;
 
         gint stamp;
+        GtkTreeModel *filter_store;
+        GStrv filter_strv;
 } DhKeywordModelPrivate;
 
 typedef struct {
@@ -522,7 +524,7 @@ websocket_message_cb (SoupWebsocketConnection *self,
         object = json_node_get_object(root);
 
         book_link = dh_link_new_book ("",
-                                      "",
+                                      json_object_get_string_member(object, "DocsetId"),
                                       json_object_get_string_member(object, "DocsetName"),
                                       "");
         uri = g_strjoin("/",
@@ -800,4 +802,38 @@ dh_keyword_model_filter (DhKeywordModel *model,
                 return g_queue_peek_head (&priv->links);
 
         return exact_link;
+}
+
+static gboolean
+_dh_keyword_model_visible_func (GtkTreeModel *model,
+                                GtkTreeIter *iter,
+                                gpointer data)
+{
+        DhKeywordModel *parent_model = DH_KEYWORD_MODEL(data);
+        DhKeywordModelPrivate *priv = dh_keyword_model_get_instance_private(parent_model);
+        DhLink *link;
+        gtk_tree_model_get(model, iter, DH_KEYWORD_MODEL_COL_LINK, &link, -1);
+        if (g_strv_contains(priv->filter_strv, dh_link_get_book_id(link)))
+                return TRUE;
+        return FALSE;
+}
+
+GtkTreeModel* dh_keyword_model_set_filter(DhKeywordModel *model, GString *filter)
+{
+        DhKeywordModelPrivate *priv = dh_keyword_model_get_instance_private(model);
+        if (priv->filter_store != NULL) {
+                g_object_unref(priv->filter_store);
+        }
+        priv->filter_store = gtk_tree_model_filter_new(
+                GTK_TREE_MODEL(model),
+                NULL
+        );
+        priv->filter_strv = g_strsplit(filter, ",", 0);
+        gtk_tree_model_filter_set_visible_func(
+                GTK_TREE_MODEL_FILTER(priv->filter_store),
+                _dh_keyword_model_visible_func,
+                model,
+                NULL
+        );
+        return priv->filter_store;
 }

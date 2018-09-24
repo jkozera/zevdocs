@@ -499,6 +499,11 @@ static void group_selected_cb (DhProfileChooser* chooser,
 {
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
         dh_book_tree_set_filter(priv->book_tree, comma_separated_docs);
+        if (g_str_equal(comma_separated_docs, "*")) {
+                gtk_tree_view_set_model(priv->hitlist_view, priv->hitlist_model);
+        } else {
+                gtk_tree_view_set_model(priv->hitlist_view, dh_keyword_model_set_filter(priv->hitlist_model, comma_separated_docs));
+        }
 }
 
 static void
