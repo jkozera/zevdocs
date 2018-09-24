@@ -22,13 +22,9 @@
  * along with this program; if not, see <http:/www.gnu.org/licenses/>.
  */
 
-#include "config.h"
+#include <glib/gi18n.h>
 #include "dh-book-tree.h"
-#include <glib/gi18n-lib.h>
-#include "dh-book.h"
-#include "dh-book-list.h"
 #include "dh-book-tree-model.h"
-#include "dh-settings.h"
 
 /**
  * SECTION:dh-book-tree
@@ -54,6 +50,8 @@ struct _DhBookTree {
 typedef struct {
         DhProfile *profile;
         GtkTreeModel *store;
+        GtkTreeModel *filter_store;
+        GStrv filter_strv;
         DhLink *selected_link;
         GtkMenu *context_menu;
 } DhBookTreePrivate;
@@ -744,13 +742,17 @@ book_tree_populate_tree (DhBookTree *tree)
 
         gtk_tree_view_set_model(GTK_TREE_VIEW(tree), NULL);
         if (priv->store) {
-            g_object_unref (priv->store);
+                g_object_unref (priv->store);
+        }
+        if (priv->filter_store) {
+                g_object_unref(priv->filter_store);
         }
         settings = dh_settings_get_default ();
         priv->store = GTK_TREE_MODEL(dh_book_tree_model_new(
             dh_settings_get_group_books_by_language (settings),
             gtk_widget_get_scale_factor(tree)
         ));
+        priv->filter_store = NULL;
         gtk_tree_view_set_model(GTK_TREE_VIEW(tree), priv->store);
 
         book_tree_init_selection (tree);
@@ -1135,4 +1137,54 @@ void
 dh_book_tree_select_uri (DhBookTree  *tree,
                          const gchar *uri)
 {
+}
+
+static
+gboolean
+_dh_book_tree_visible_func (GtkTreeModel *model,
+                            GtkTreeIter *iter,
+                            gpointer data)
+{
+        DhBookTree *tree = DH_BOOK_TREE (data);
+        DhBookTreePrivate *priv = dh_book_tree_get_instance_private (tree);
+        GValue book = {0,};
+        GtkTreeIter parent;
+        gtk_tree_model_get_value(model, iter, COL_BOOK, &book);
+        while(book.g_type != G_TYPE_OBJECT) {
+                if (!gtk_tree_model_iter_parent(model, &parent, iter)) break;
+                iter = &parent;
+                gtk_tree_model_get_value(model, iter, COL_BOOK, &book);
+        }
+        if (book.g_type == G_TYPE_OBJECT) {
+                if (g_strv_contains(priv->filter_strv, dh_book_get_id(g_value_get_object(&book))))
+                        return TRUE;
+        } else {
+                return TRUE;
+        }
+        return FALSE;
+}
+
+void dh_book_tree_set_filter (DhBookTree    *tree,
+                              const GString *filter)
+{
+        DhBookTreePrivate *priv = dh_book_tree_get_instance_private (tree);
+        if (priv->filter_store != NULL) {
+                g_object_unref(priv->filter_store);
+        }
+        priv->filter_store = gtk_tree_model_filter_new(
+                priv->store,
+                NULL
+        );
+        if (g_str_equal(filter, "*")) {
+                gtk_tree_view_set_model(GTK_TREE_VIEW(tree), priv->store);
+        } else {
+                priv->filter_strv = g_strsplit(filter, ",", 0);
+                gtk_tree_model_filter_set_visible_func(
+                        GTK_TREE_MODEL_FILTER(priv->filter_store),
+                        _dh_book_tree_visible_func,
+                        tree,
+                        NULL
+                );
+                gtk_tree_view_set_model(GTK_TREE_VIEW(tree), priv->filter_store);
+        }
 }

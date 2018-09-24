@@ -35,6 +35,8 @@ DhProfile  *dh_book_tree_get_profile       (DhBookTree  *tree);
 DhLink     *dh_book_tree_get_selected_link (DhBookTree  *tree);
 void        dh_book_tree_select_uri        (DhBookTree  *tree,
                                             const gchar *uri);
+void        dh_book_tree_set_filter        (DhBookTree  *tree,
+                                            const GString *filter);
 
 G_END_DECLS
 

@@ -48,7 +48,11 @@ public class DhProfileChooser : Toolbar {
             handling_toggle = true;
             for (int j = 0; j < buttons.length; ++j) {
                 if (i == j) {
-                    this.group_selected(group_ids[i], group_lists[i]);
+                    if (buttons[i].get_active()) {
+                        this.group_selected(group_ids[i], group_lists[i]);
+                    } else {
+                        this.group_selected("*", "*");
+                    }
                 } else {
                     buttons[j].set_active(false);
                 }

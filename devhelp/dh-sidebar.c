@@ -497,7 +497,8 @@ static void group_selected_cb (DhProfileChooser* chooser,
                                GString* comma_separated_docs,
                                DhSidebar *sidebar)
 {
-        g_print("%s\n", comma_separated_docs);
+        DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
+        dh_book_tree_set_filter(priv->book_tree, comma_separated_docs);
 }
 
 static void

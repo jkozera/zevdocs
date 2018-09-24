@@ -18,16 +18,11 @@
 
 
 #include "dh-book-tree-model.h"
-#include <gmodule.h>
-#include <cairo/cairo-gobject.h>
 #include <gtk/gtk.h>
 #include <json-glib/json-glib.h>
 #include <libsoup/soup.h>
 #include "dh-book.h"
 #include "dh-book-list.h"
-#include "dh-search-context.h"
-#include "dh-util-lib.h"
-#include "dh-link.h"
 
 
 typedef struct {
@@ -290,7 +285,17 @@ static void dh_book_tree_model_tree_model_init (GtkTreeModelIface *iface);
 G_DEFINE_TYPE_WITH_CODE (DhBookTreeModel, dh_book_tree_model, G_TYPE_OBJECT,
                          G_ADD_PRIVATE (DhBookTreeModel)
                          G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL,
-                                                dh_book_tree_model_tree_model_init));
+                                                dh_book_tree_model_tree_model_init))
+
+void dh_book_tree_model_unref_node(GtkTreeModel *model, GtkTreeIter *iter)
+{
+
+}
+
+void dh_book_tree_model_ref_node(GtkTreeModel * model, GtkTreeIter * iter)
+{
+
+}
 
 static void
 free_node(DhBookTreeModelNode *node) {
@@ -626,9 +631,17 @@ lazy_fetch_children(DhBookTreeModelNode *node)
         for (guint i = 0; i < json_array_get_length(array); ++i) {
                 subarray = json_array_get_array_element(array, i);
                 symbol = json_array_get_string_element(subarray, 0);
+                gchar *path;
+                if (node->symbolchapterpath[0] != 0) {
+                        path = g_strjoin("", node->symbolchapterpath, "/",
+                                         g_uri_escape_string(g_uri_escape_string(symbol, "", FALSE), "", FALSE),
+                                         NULL);
+                } else {
+                        path = g_uri_escape_string(g_uri_escape_string(symbol, "", FALSE), "", FALSE);
+                }
                 node->children = g_list_append(node->children,
                                                new_dynamic_symbols_node (node->object,
-                                                                         g_strjoin("", node->symbolchapterpath, "/", symbol, NULL),
+                                                                         path,
                                                                          0,
                                                                          node->path,
                                                                          i,
@@ -733,8 +746,13 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
                 return;
 
         case DH_BOOK_TREE_MODEL_COL_BOOK:
-                g_value_init(value, G_TYPE_OBJECT);
-                g_value_set_object(value, node->book);
+                if (node->book) {
+                        g_value_init(value, G_TYPE_OBJECT);
+                        g_value_set_object(value, node->book);
+                } else {
+                        g_value_init(value, G_TYPE_INT);
+                        g_value_set_int(value, 0);
+                }
                 return;
 
         case DH_BOOK_TREE_MODEL_COL_WEIGHT:
@@ -817,6 +835,20 @@ dh_book_tree_model_iter_children (GtkTreeModel *tree_model,
 }
 
 static gboolean
+dh_book_tree_model_iter_n_children (GtkTreeModel *tree_model,
+                                    GtkTreeIter *iter)
+{
+        GList *list;
+        DhBookTreeModelPrivate *priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (tree_model));
+        if (iter == NULL) {
+                list = priv->root_nodes;
+        } else {
+                list = iter->user_data;
+        }
+        return g_list_length(list);
+}
+
+static gboolean
 dh_book_tree_model_iter_parent (GtkTreeModel *tree_model,
                                 GtkTreeIter *iter,
                                 GtkTreeIter *child)
@@ -857,8 +889,11 @@ dh_book_tree_model_tree_model_init (GtkTreeModelIface *iface)
         iface->iter_has_child = dh_book_tree_model_iter_has_child;
         iface->iter_nth_child = dh_book_tree_model_iter_nth_child;
         iface->iter_children = dh_book_tree_model_iter_children;
+        iface->iter_n_children = dh_book_tree_model_iter_n_children;
         iface->iter_next = dh_book_tree_model_iter_next;
         iface->iter_parent = dh_book_tree_model_iter_parent;
+        iface->ref_node = dh_book_tree_model_ref_node;
+        iface->unref_node = dh_book_tree_model_unref_node;
         iface->get_path = dh_book_tree_model_get_path;
         iface->get_value = dh_book_tree_model_get_value;
 }
