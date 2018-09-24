@@ -492,6 +492,14 @@ book_tree_link_selected_cb (DhBookTree *book_tree,
         g_signal_emit (sidebar, signals[SIGNAL_LINK_SELECTED], 0, link);
 }
 
+static void group_selected_cb (DhProfileChooser* chooser,
+                               GString* id,
+                               GString* comma_separated_docs,
+                               DhSidebar *sidebar)
+{
+        g_print("%s\n", comma_separated_docs);
+}
+
 static void
 dh_sidebar_constructed (GObject *object)
 {
@@ -520,6 +528,11 @@ dh_sidebar_constructed (GObject *object)
         priv->profile_chooser = dh_profile_chooser_new();
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->profile_chooser));
         gtk_widget_show (GTK_WIDGET (priv->profile_chooser));
+
+        g_signal_connect (priv->profile_chooser,
+                          "group-selected",
+                          G_CALLBACK(group_selected_cb),
+                          sidebar);
 
         g_signal_connect (priv->entry,
                           "key-press-event",

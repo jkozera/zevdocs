@@ -14,8 +14,12 @@ public class DhProfileChooser : Toolbar {
     ToolButton drag_button;
     ToolButton default_button;
     string cur_docset_id;
+    private string[] group_ids;
+    private string[] group_lists;
     private ToggleToolButton[] buttons;
     bool handling_toggle;
+
+    public signal void group_selected(string id, string comma_separated_docs);
 
     public DhProfileChooser() {
         this.set_style(ToolbarStyle.ICONS);
@@ -43,7 +47,9 @@ public class DhProfileChooser : Toolbar {
             if (handling_toggle) return;
             handling_toggle = true;
             for (int j = 0; j < buttons.length; ++j) {
-                if (i != j) {
+                if (i == j) {
+                    this.group_selected(group_ids[i], group_lists[i]);
+                } else {
                     buttons[j].set_active(false);
                 }
             }
@@ -62,12 +68,20 @@ public class DhProfileChooser : Toolbar {
             default_button = new ToolButton(null, _("drag&drop here to group"));
             this.add(default_button);
             default_button.set_sensitive(false);
+        } else {
+            if (default_button != null) {
+                this.remove(default_button);
+                default_button.destroy();
+                default_button = null;
+            }
         }
         for (int i = 0; i < buttons.length; ++i) {
             this.remove(buttons[i]);
             buttons[i].destroy();
         }
-        buttons = buttons[0:0];
+        buttons = new ToggleToolButton[0];
+        group_ids = new string[0];
+        group_lists = new string[0];
         for (int i = 0; i < array.get_length(); ++i) {
             Json.Object obj = array.get_element(i).get_object();
             string icon = obj.get_string_member("Icon");
@@ -75,6 +89,8 @@ public class DhProfileChooser : Toolbar {
             ToggleToolButton btn = new ToggleToolButton();
             this.add(btn);
             buttons += btn;
+            group_ids += obj.get_string_member("Id");
+            group_lists += obj.get_string_member("DocsList");
             if (icon.length == 1) {
                 btn.set_label(icon);
             } else {
@@ -120,10 +136,6 @@ public class DhProfileChooser : Toolbar {
         Gtk.Window parent_window = (Gtk.Window) this.get_toplevel();
         dialog.set_transient_for(parent_window);
         if (dialog.run() == ResponseType.OK) {
-                print("%s/%s/'%s'\n",
-                      dialog.get_current_text(),
-                      dialog.get_current_icon(),
-                      dialog.get_group_id());
                 string current_text = dialog.get_current_text();
                 string current_icon = dialog.get_current_icon();
                 load_groups();

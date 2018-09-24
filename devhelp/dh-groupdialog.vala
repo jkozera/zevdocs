@@ -13,6 +13,7 @@ public class DhGroupDialog : Dialog {
     private string current_text;
     private string current_letter;
     private string group_id;
+    private string docset_id;
 
     public DhGroupDialog (string docset_id) {
         foreach (string s in IconTheme.get_default().list_icons("Categories")) {
@@ -34,6 +35,7 @@ public class DhGroupDialog : Dialog {
         this.icons_flow_box.insert(bbox, 0);
         this.current_text = "";
         this.current_letter = "A";
+        this.docset_id = docset_id;
     }
 
     private void name_button_clicked () {
@@ -68,6 +70,14 @@ public class DhGroupDialog : Dialog {
         GLib.InputStream result = session.send(msg, null);
         GLib.DataInputStream result_data = new GLib.DataInputStream(result);
         group_id = result_data.read_line();
+
+        msg = new Soup.Message("POST", "http://localhost:12340/group/" + group_id + "/doc");
+        msg.set_request(
+            "text/plain",
+            Soup.MemoryUse.COPY,
+            (uint8[])this.docset_id.to_utf8()
+        );
+        session.send(msg);
 
         this.response(ResponseType.OK);
     }
