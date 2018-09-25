@@ -12,12 +12,13 @@ int _dh_util_surface_scale(int scale)
 public class DhProfileChooser : Box {
 
     ToggleButton drag_button;
-    ToggleButton default_button;
     string cur_docset_id;
     private string[] group_ids;
     private string[] group_lists;
     private ToggleButton[] buttons;
     private Box toolbar;
+    private Label placeholder;
+    private string current_group;
     bool handling_toggle;
     CssProvider css;
     public signal void group_selected(string id, string comma_separated_docs);
@@ -26,7 +27,9 @@ public class DhProfileChooser : Box {
         css = new CssProvider();
         css.load_from_data("* { padding: 2pt 2pt; }");
         toolbar = new Box(Orientation.HORIZONTAL, 0);
-        toolbar.pack_end(new Label("Drag to group..."));
+        placeholder = new Label(_("Drag to group..."));
+        current_group = "*";
+        toolbar.pack_end(placeholder);
         this.set_hexpand(true);
         toolbar.set_hexpand(true);
         toolbar.drag_motion.connect(this.on_drag_motion);
@@ -56,8 +59,12 @@ public class DhProfileChooser : Box {
             for (int j = 0; j < buttons.length; ++j) {
                 if (i == j) {
                     if (buttons[i].get_active()) {
+                        current_group = group_ids[i];
+                        placeholder.set_text(_("Drag to remove..."));
                         this.group_selected(group_ids[i], group_lists[i]);
                     } else {
+                        current_group = "*";
+                        placeholder.set_text(_("Drag to group..."));
                         this.group_selected("*", "*");
                     }
                 } else {
@@ -75,18 +82,6 @@ public class DhProfileChooser : Box {
         GLib.DataInputStream data_stream = new GLib.DataInputStream(stream);
         Json.Node line_node = Json.from_string(data_stream.read_line()); 
         Json.Array array = line_node.get_array();
-        if (array.get_length() == 0) {
-            default_button = new ToggleButton();
-            default_button.set_label(_("drag&drop here to group"));
-            this.add(default_button);
-            default_button.set_sensitive(false);
-        } else {
-            if (default_button != null) {
-                this.remove(default_button);
-                default_button.destroy();
-                default_button = null;
-            }
-        }
         for (int i = 0; i < buttons.length; ++i) {
             this.remove(buttons[i]);
             buttons[i].destroy();
@@ -94,6 +89,7 @@ public class DhProfileChooser : Box {
         buttons = new ToggleButton[0];
         group_ids = new string[0];
         group_lists = new string[0];
+        bool cur_group_found = false;
         for (int i = 0; i < array.get_length(); ++i) {
             Json.Object obj = array.get_element(i).get_object();
             string icon = obj.get_string_member("Icon");
@@ -102,6 +98,9 @@ public class DhProfileChooser : Box {
             btn.set_relief(ReliefStyle.NONE);
             buttons += btn;
             group_ids += obj.get_string_member("Id");
+            if (current_group == obj.get_string_member("Id")) {
+                cur_group_found = true;
+            }
             group_lists += obj.get_string_member("DocsList");
             if (icon.length == 1) {
                 btn.set_label(icon);
@@ -128,6 +127,10 @@ public class DhProfileChooser : Box {
             btn.get_style_context().add_provider(css, STYLE_PROVIDER_PRIORITY_APPLICATION);            this.add(btn);
             btn.show_all();
         }
+        if (!cur_group_found) {
+            this.group_selected("*", "*");
+            placeholder.set_text(_("Drag to group..."));
+        }
     }
 
     bool on_drag_motion(DragContext context, int x, int y, uint time) {
@@ -140,37 +143,47 @@ public class DhProfileChooser : Box {
             return;
         drag_status(context, DragAction.LINK, time);
         if (drag_button == null) {
+            Image image;
             string data_string = (string) data.get_data();
             string[] splitted = data_string.split(";", 2);
             cur_docset_id = splitted[0];
-            uchar[] decoded = Base64.decode(splitted[1]);
-            MemoryInputStream istream = new MemoryInputStream.from_data(decoded);
-            Pixbuf pixbuf = new Pixbuf.from_stream(istream);
-            Cairo.Surface surface = cairo_surface_create_from_pixbuf(
-                pixbuf, _dh_util_surface_scale(this.get_scale_factor()), null
-            );
-            Image *image = new Image.from_surface(surface);
+            if (current_group == "*") {
+                uchar[] decoded = Base64.decode(splitted[1]);
+                MemoryInputStream istream = new MemoryInputStream.from_data(decoded);
+                Pixbuf pixbuf = new Pixbuf.from_stream(istream);
+                Cairo.Surface surface = cairo_surface_create_from_pixbuf(
+                    pixbuf, _dh_util_surface_scale(this.get_scale_factor()), null
+                );
+                image = new Image.from_surface(surface);
+            } else {
+                image = new Image.from_icon_name("user-trash", IconSize.LARGE_TOOLBAR);
+            }
             drag_button = new ToggleButton();
             drag_button.add(image);
             drag_button.set_relief(ReliefStyle.NONE);
             toolbar.add(drag_button);
             drag_button.show_all();
-            if (default_button != null)
-                default_button.hide();
             drag_highlight(toolbar);
         }
     }
 
     bool on_drag_drop(DragContext context, int x, int y, uint time) {
-        DhGroupDialog dialog = new DhGroupDialog(cur_docset_id);
-        Gtk.Window parent_window = (Gtk.Window) this.get_toplevel();
-        dialog.set_transient_for(parent_window);
-        if (dialog.run() == ResponseType.OK) {
-                string current_text = dialog.get_current_text();
-                string current_icon = dialog.get_current_icon();
-                load_groups();
+        if (current_group == "*") {
+            DhGroupDialog dialog = new DhGroupDialog(cur_docset_id);
+            Gtk.Window parent_window = (Gtk.Window) this.get_toplevel();
+            dialog.set_transient_for(parent_window);
+            if (dialog.run() == ResponseType.OK) {
+                    string current_text = dialog.get_current_text();
+                    string current_icon = dialog.get_current_icon();
+                    load_groups();
+            }
+            dialog.destroy();
+        } else {
+            Soup.Session session = new Soup.Session();
+            Soup.Message msg = new Soup.Message("DELETE", "http://localhost:12340/group/" + current_group + "/doc/" + cur_docset_id);
+            session.send(msg);
+            load_groups();
         }
-        dialog.destroy();
         cur_docset_id = null;
         return true;
     }
@@ -182,7 +195,6 @@ public class DhProfileChooser : Box {
         }
         drag_button = null;
     }
-
 
     void make_btn_on_drag_motion(ToggleButton btn) {
         btn.drag_motion.connect((context, x, y, time) => {
@@ -206,7 +218,11 @@ public class DhProfileChooser : Box {
 
     void make_btn_on_drag_drop(ToggleButton btn) {
         btn.drag_drop.connect((context, x, y, time) => {
-            print("Add %s\n", cur_docset_id);
+            Soup.Session session = new Soup.Session();
+            Soup.Message msg = new Soup.Message("POST", "http://localhost:12340/group/" + current_group + "/doc/" + cur_docset_id);
+            session.send(msg);
+            load_groups();
+
             return true;
         });
     }
