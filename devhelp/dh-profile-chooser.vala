@@ -18,7 +18,9 @@ public class DhProfileChooser : Box {
     private ToggleButton[] buttons;
     private Box toolbar;
     private Label placeholder;
+    private int current_group_i;
     private string current_group;
+    private string current_drop_group;
     bool handling_toggle;
     CssProvider css;
     public signal void group_selected(string id, string comma_separated_docs);
@@ -60,6 +62,7 @@ public class DhProfileChooser : Box {
                 if (i == j) {
                     if (buttons[i].get_active()) {
                         current_group = group_ids[i];
+                        current_group_i = i;
                         placeholder.set_text(_("Drag to remove..."));
                         this.group_selected(group_ids[i], group_lists[i]);
                     } else {
@@ -94,11 +97,12 @@ public class DhProfileChooser : Box {
             Json.Object obj = array.get_element(i).get_object();
             string icon = obj.get_string_member("Icon");
             string name = obj.get_string_member("Name");
+            string id = obj.get_string_member("Id");
             ToggleButton btn = new ToggleButton();
             btn.set_relief(ReliefStyle.NONE);
             buttons += btn;
-            group_ids += obj.get_string_member("Id");
-            if (current_group == obj.get_string_member("Id")) {
+            group_ids += id;
+            if (current_group == id) {
                 cur_group_found = true;
             }
             group_lists += obj.get_string_member("DocsList");
@@ -110,7 +114,7 @@ public class DhProfileChooser : Box {
             bind_toggle_handler(btn, i);
 
             this.make_btn_on_drag_motion(btn);
-            this.make_btn_on_drag_data_received(btn);
+            this.make_btn_on_drag_data_received(btn, id);
             this.make_btn_on_drag_drop(btn);
             this.make_btn_on_drag_leave(btn);
             TargetEntry list_targets[] = {TargetEntry(){
@@ -182,7 +186,9 @@ public class DhProfileChooser : Box {
             Soup.Session session = new Soup.Session();
             Soup.Message msg = new Soup.Message("DELETE", "http://localhost:12340/group/" + current_group + "/doc/" + cur_docset_id);
             session.send(msg);
+            this.group_selected("*", "*");
             load_groups();
+            this.group_selected(current_group, group_lists[current_group_i]);
         }
         cur_docset_id = null;
         return true;
@@ -203,7 +209,7 @@ public class DhProfileChooser : Box {
         });
     }
 
-    void make_btn_on_drag_data_received(ToggleButton btn) {
+    void make_btn_on_drag_data_received(ToggleButton btn, string group) {
         btn.drag_data_received.connect((context, x, y, data, info, time) => {
             if (data.get_data() == null)
                 return;
@@ -211,7 +217,7 @@ public class DhProfileChooser : Box {
             string data_string = (string) data.get_data();
             string[] splitted = data_string.split(";", 2);
             cur_docset_id = splitted[0];
-
+            current_drop_group = group;
             drag_highlight(btn);
         });
     }
@@ -219,7 +225,7 @@ public class DhProfileChooser : Box {
     void make_btn_on_drag_drop(ToggleButton btn) {
         btn.drag_drop.connect((context, x, y, time) => {
             Soup.Session session = new Soup.Session();
-            Soup.Message msg = new Soup.Message("POST", "http://localhost:12340/group/" + current_group + "/doc/" + cur_docset_id);
+            Soup.Message msg = new Soup.Message("POST", "http://localhost:12340/group/" + current_drop_group + "/doc/" + cur_docset_id);
             session.send(msg);
             load_groups();
 

@@ -286,17 +286,6 @@ G_DEFINE_TYPE_WITH_CODE (DhBookTreeModel, dh_book_tree_model, G_TYPE_OBJECT,
                          G_ADD_PRIVATE (DhBookTreeModel)
                          G_IMPLEMENT_INTERFACE (GTK_TYPE_TREE_MODEL,
                                                 dh_book_tree_model_tree_model_init))
-
-void dh_book_tree_model_unref_node(GtkTreeModel *model, GtkTreeIter *iter)
-{
-
-}
-
-void dh_book_tree_model_ref_node(GtkTreeModel * model, GtkTreeIter * iter)
-{
-
-}
-
 static void
 free_node(DhBookTreeModelNode *node) {
         free(node->title);
@@ -429,7 +418,6 @@ add_docs_for_cur_lang (JsonArray *array,
                 path = gtk_tree_path_new_from_indices(idx, -1),
                 newnode = new_node (object, path, priv->langcount++);
                 gtk_tree_path_free(path);
-                node->book = newnode->book;  // needed for icons
                 node->children = g_list_append (node->children, newnode);
         }
 }
@@ -668,9 +656,6 @@ dh_book_tree_model_iter_has_child (GtkTreeModel *tree_model,
 {
         GList *list;
         DhBookTreeModelNode *node;
-        DhBookTreeModelPrivate *priv;
-
-        priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (tree_model));
         list = iter->user_data;
         if (list == NULL) {
                 return FALSE;
@@ -768,7 +753,13 @@ dh_book_tree_model_get_value (GtkTreeModel *tree_model,
         case DH_BOOK_TREE_MODEL_COL_ICON:
                 while (books) {
                         book = books->data;
-                        if (g_str_equal(dh_book_get_title(node->book), dh_book_get_title(book))) {
+                        if (node->book == NULL) {
+                                if (!g_str_equal(dh_book_get_language(book), "")) {
+                                        g_value_init(value, CAIRO_GOBJECT_TYPE_SURFACE);
+                                        g_value_set_boxed(value, dh_book_get_icon_surface(book));
+                                        return;
+                                }
+                        } else if (g_str_equal(dh_book_get_title(node->book), dh_book_get_title(book))) {
                                 g_value_init(value, CAIRO_GOBJECT_TYPE_SURFACE);
                                 g_value_set_boxed(value, dh_book_get_icon_surface(book));
                                 return;
@@ -839,11 +830,17 @@ dh_book_tree_model_iter_n_children (GtkTreeModel *tree_model,
                                     GtkTreeIter *iter)
 {
         GList *list;
+        DhBookTreeModelNode *node;
         DhBookTreeModelPrivate *priv = dh_book_tree_model_get_instance_private (DH_BOOK_TREE_MODEL (tree_model));
         if (iter == NULL) {
                 list = priv->root_nodes;
         } else {
                 list = iter->user_data;
+                node = list->data;
+                if (node->lazy_children_url && !node->children) {
+                        lazy_fetch_children(node);
+                }
+                list = node->children;
         }
         return g_list_length(list);
 }
@@ -892,8 +889,6 @@ dh_book_tree_model_tree_model_init (GtkTreeModelIface *iface)
         iface->iter_n_children = dh_book_tree_model_iter_n_children;
         iface->iter_next = dh_book_tree_model_iter_next;
         iface->iter_parent = dh_book_tree_model_iter_parent;
-        iface->ref_node = dh_book_tree_model_ref_node;
-        iface->unref_node = dh_book_tree_model_unref_node;
         iface->get_path = dh_book_tree_model_get_path;
         iface->get_value = dh_book_tree_model_get_value;
 }
