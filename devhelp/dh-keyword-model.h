@@ -53,7 +53,7 @@ DhLink         *dh_keyword_model_filter (DhKeywordModel *model,
                                          const gchar    *search_string,
                                          const gchar    *current_book_id,
                                          DhProfile      *profile);
-GtkTreeModel *dh_keyword_model_set_filter(DhKeywordModel *model, GString *filter);
+void dh_keyword_model_set_group_id(DhKeywordModel *model, gchar *id);
 
 G_END_DECLS
 

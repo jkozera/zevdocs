@@ -92,7 +92,7 @@ typedef struct {
 
         gint stamp;
         GtkTreeModel *filter_store;
-        GStrv filter_strv;
+        GString *group_id;
 } DhKeywordModelPrivate;
 
 typedef struct {
@@ -561,6 +561,15 @@ link_compare (gconstpointer a,
         return dh_link_compare (a, b);
 }
 
+void dh_keyword_model_set_group_id(DhKeywordModel *model, gchar *id)
+{
+        DhKeywordModelPrivate *priv = dh_keyword_model_get_instance_private (model);
+        if (priv->group_id != NULL) {
+                g_string_free(priv->group_id, TRUE);
+        }
+        priv->group_id = g_string_new(id);
+}
+
 static void
 search_books (DhKeywordModel *model,
               SearchSettings  *settings,
@@ -577,7 +586,8 @@ search_books (DhKeywordModel *model,
         }
 
         SoupSession *session;
-        const char *uri;
+        char *uri;
+        gboolean uri_needs_free = FALSE;
         GHashTable *hash;
         SearchContext *ctx;
         SoupMessage *request;
@@ -588,7 +598,12 @@ search_books (DhKeywordModel *model,
         ctx->priv = priv;
 
         session = soup_session_new();
-        uri = "ws://localhost:12340/search";
+        if (priv->group_id == NULL || g_str_equal("*", priv->group_id->str)) {
+                uri = "ws://localhost:12340/search";
+        } else {
+                uri = g_strdup_printf("ws://localhost:12340/search/group/%s", priv->group_id->str);
+                uri_needs_free = TRUE;
+        }
         hash = g_hash_table_new(g_str_hash, g_str_equal);
         request = soup_form_request_new_from_hash ("GET", uri, hash);
 
@@ -605,6 +620,9 @@ search_books (DhKeywordModel *model,
         free(protocols);
         g_hash_table_unref(hash);
         g_object_unref(request);
+        if (uri_needs_free) {
+                g_free(uri);
+        }
 }
 
 static GQueue *
@@ -802,38 +820,4 @@ dh_keyword_model_filter (DhKeywordModel *model,
                 return g_queue_peek_head (&priv->links);
 
         return exact_link;
-}
-
-static gboolean
-_dh_keyword_model_visible_func (GtkTreeModel *model,
-                                GtkTreeIter *iter,
-                                gpointer data)
-{
-        DhKeywordModel *parent_model = DH_KEYWORD_MODEL(data);
-        DhKeywordModelPrivate *priv = dh_keyword_model_get_instance_private(parent_model);
-        DhLink *link;
-        gtk_tree_model_get(model, iter, DH_KEYWORD_MODEL_COL_LINK, &link, -1);
-        if (g_strv_contains(priv->filter_strv, dh_link_get_book_id(link)))
-                return TRUE;
-        return FALSE;
-}
-
-GtkTreeModel* dh_keyword_model_set_filter(DhKeywordModel *model, GString *filter)
-{
-        DhKeywordModelPrivate *priv = dh_keyword_model_get_instance_private(model);
-        if (priv->filter_store != NULL) {
-                g_object_unref(priv->filter_store);
-        }
-        priv->filter_store = gtk_tree_model_filter_new(
-                GTK_TREE_MODEL(model),
-                NULL
-        );
-        priv->filter_strv = g_strsplit(filter, ",", 0);
-        gtk_tree_model_filter_set_visible_func(
-                GTK_TREE_MODEL_FILTER(priv->filter_store),
-                _dh_keyword_model_visible_func,
-                model,
-                NULL
-        );
-        return priv->filter_store;
 }

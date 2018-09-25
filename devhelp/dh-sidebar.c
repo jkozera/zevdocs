@@ -493,17 +493,14 @@ book_tree_link_selected_cb (DhBookTree *book_tree,
 }
 
 static void group_selected_cb (DhProfileChooser* chooser,
-                               GString* id,
-                               GString* comma_separated_docs,
+                               gchar* id,
+                               gchar* comma_separated_docs,
                                DhSidebar *sidebar)
 {
         DhSidebarPrivate *priv = dh_sidebar_get_instance_private (sidebar);
+        dh_keyword_model_set_group_id(priv->hitlist_model, id);
         dh_book_tree_set_filter(priv->book_tree, comma_separated_docs);
-        if (g_str_equal(comma_separated_docs, "*")) {
-                gtk_tree_view_set_model(priv->hitlist_view, priv->hitlist_model);
-        } else {
-                gtk_tree_view_set_model(priv->hitlist_view, dh_keyword_model_set_filter(priv->hitlist_model, comma_separated_docs));
-        }
+        setup_search_idle (sidebar);
 }
 
 static void
