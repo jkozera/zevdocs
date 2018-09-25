@@ -78,7 +78,7 @@ public class DhProfileChooser : Box {
         });
     }
 
-    void load_groups() {
+    int load_groups() {
         Soup.Session session = new Soup.Session();
         Soup.Request req = session.request("http://localhost:12340/group");
         GLib.InputStream stream = req.send();
@@ -92,7 +92,7 @@ public class DhProfileChooser : Box {
         buttons = new ToggleButton[0];
         group_ids = new string[0];
         group_lists = new string[0];
-        bool cur_group_found = false;
+        int cur_group_found = -1;
         for (int i = 0; i < array.get_length(); ++i) {
             Json.Object obj = array.get_element(i).get_object();
             string icon = obj.get_string_member("Icon");
@@ -103,7 +103,7 @@ public class DhProfileChooser : Box {
             buttons += btn;
             group_ids += id;
             if (current_group == id) {
-                cur_group_found = true;
+                cur_group_found = i;
             }
             group_lists += obj.get_string_member("DocsList");
             if (icon.length == 1) {
@@ -131,10 +131,14 @@ public class DhProfileChooser : Box {
             btn.get_style_context().add_provider(css, STYLE_PROVIDER_PRIORITY_APPLICATION);            this.add(btn);
             btn.show_all();
         }
-        if (!cur_group_found) {
+        if (cur_group_found == -1) {
+            current_group = "*";
             this.group_selected("*", "*");
             placeholder.set_text(_("Drag to group..."));
+        } else {
+            current_group_i = cur_group_found;
         }
+        return cur_group_found;
     }
 
     bool on_drag_motion(DragContext context, int x, int y, uint time) {
@@ -187,8 +191,10 @@ public class DhProfileChooser : Box {
             Soup.Message msg = new Soup.Message("DELETE", "http://localhost:12340/group/" + current_group + "/doc/" + cur_docset_id);
             session.send(msg);
             this.group_selected("*", "*");
-            load_groups();
-            this.group_selected(current_group, group_lists[current_group_i]);
+            int cur_group_found = load_groups();
+            if (cur_group_found >= 0) {
+                this.group_selected(current_group, group_lists[current_group_i]);
+            }
         }
         cur_docset_id = null;
         return true;

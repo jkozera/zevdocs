@@ -161,13 +161,14 @@ dh_book_tree_get_selected_book (DhBookTree *tree)
         if (!gtk_tree_selection_get_selected (selection, &model, &iter))
                 return NULL;
 
-        DhBook *book;
+        GValue book = {0,};
 
-        gtk_tree_model_get (model, &iter,
-                            COL_BOOK, &book,
-                            -1);
+        gtk_tree_model_get_value (model, &iter, COL_BOOK, &book);
 
-        return DH_BOOK(book);
+        if (book.g_type == G_TYPE_OBJECT)
+                return DH_BOOK(g_value_get_object(&book));
+        else
+                return NULL;
 }
 
 static void
@@ -200,6 +201,7 @@ book_tree_drag_data_get_cb(GtkWidget        *widget,
 
         if (dh_book_tree_get_selected_icon(DH_BOOK_TREE(widget)) != NULL) {
                 DhBook *book = dh_book_tree_get_selected_book(DH_BOOK_TREE(widget));
+                if (book == NULL) return;
                 const gchar *id = dh_book_get_id(book);
                 gchar *base64 = dh_book_tree_get_selected_icon_b64(DH_BOOK_TREE(widget));
 

@@ -528,15 +528,6 @@ dh_sidebar_constructed (GObject *object)
                       NULL);
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->entry));
 
-        priv->profile_chooser = dh_profile_chooser_new();
-        gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->profile_chooser));
-        gtk_widget_show (GTK_WIDGET (priv->profile_chooser));
-
-        g_signal_connect (priv->profile_chooser,
-                          "group-selected",
-                          G_CALLBACK(group_selected_cb),
-                          sidebar);
-
         g_signal_connect (priv->entry,
                           "key-press-event",
                           G_CALLBACK (entry_key_press_event_cb),
@@ -649,6 +640,15 @@ dh_sidebar_constructed (GObject *object)
         gtk_widget_set_hexpand (GTK_WIDGET (priv->sw_book_tree), TRUE);
         gtk_widget_set_vexpand (GTK_WIDGET (priv->sw_book_tree), TRUE);
         gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->sw_book_tree));
+
+        priv->profile_chooser = dh_profile_chooser_new();
+        gtk_container_add (GTK_CONTAINER (sidebar), GTK_WIDGET (priv->profile_chooser));
+        gtk_widget_show (GTK_WIDGET (priv->profile_chooser));
+
+        g_signal_connect (priv->profile_chooser,
+                          "group-selected",
+                          G_CALLBACK(group_selected_cb),
+                          sidebar);
 
         gtk_widget_show_all (GTK_WIDGET (sidebar));
 }
