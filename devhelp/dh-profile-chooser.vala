@@ -158,9 +158,12 @@ public class DhProfileChooser : Box {
             if (current_group == "*") {
                 uchar[] decoded = Base64.decode(splitted[1]);
                 MemoryInputStream istream = new MemoryInputStream.from_data(decoded);
-                Pixbuf pixbuf = new Pixbuf.from_stream(istream);
+                int scale_factor = this.get_scale_factor();
+                Pixbuf pixbuf = new Pixbuf.from_stream_at_scale(
+                    istream, scale_factor * 16, scale_factor * 16, true
+                );
                 Cairo.Surface surface = cairo_surface_create_from_pixbuf(
-                    pixbuf, _dh_util_surface_scale(this.get_scale_factor()), null
+                    pixbuf, _dh_util_surface_scale(scale_factor), null
                 );
                 image = new Image.from_surface(surface);
             } else {

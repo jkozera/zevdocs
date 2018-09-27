@@ -398,7 +398,7 @@ dh_book_new_from_json (JsonObject *object, gint scale)
         data = g_base64_decode(priv->icon_b64, &len);
         err = NULL;
         istream = g_memory_input_stream_new_from_data(data, len, NULL);
-        pixbuf = gdk_pixbuf_new_from_stream(istream, NULL, &err);
+        pixbuf = gdk_pixbuf_new_from_stream_at_scale(istream, 16*scale, 16*scale, TRUE, NULL, &err);
         priv->icon_surface = gdk_cairo_surface_create_from_pixbuf(
                 pixbuf, _dh_util_surface_scale(scale), NULL
         );
