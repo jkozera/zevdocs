@@ -1,6 +1,6 @@
 name: zevdocs
 base: core18
-version: "0.5.0"
+version: "0.5.1"
 summary: ZevDocs documentation browser
 description: ZevDocs is a documentation browser based on Devhelp supporting Zeal/Dash docsets.
 grade: stable
@@ -63,7 +63,7 @@ parts:
     go-importpath: github.com/jkozera/zealcore
     go-packages: [github.com/jkozera/zealcore]
     source: https://github.com/jkozera/zealcore.git
-    source-commit: 272d90d6018990d82a92d8f76180189598de82be
+    source-commit: efe1c8e5046aa9d2644cafcfcd708418136dc476
     override-build: |
             sed -i s,github.com/zealdocs,github.com/jkozera,g `find ../go/src -name *.go`
             snapcraftctl build
