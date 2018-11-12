@@ -4,7 +4,8 @@
   padding-left: 5px;
 }
 #docset-list li, #docset-list-contrib li {
-  background-repeat: no-repeat; background-position: left center;
+  background-repeat: no-repeat;
+  background-position: left center;
   padding-left: 20px;
   margin: 2px;
 }
@@ -38,19 +39,4 @@
   .carousel div.is-selected img {
     padding: 0 0;
   }
-  #myTimeline {
-    display: none;
-  }
-}
-#myTimeline {
-  float: right;
-  width: 350px;
-  margin-right: -6rem;
-  margin-top: -5rem;
-}
-.mastodon-timeline-dark a:link, .mastodon-timeline-dark a:active, .mastodon-timeline-dark a {
-  color: #96CB6C;
-}
-.mt-body {
-  height: 400px;
 }
