@@ -13,18 +13,18 @@
       Now with dark mode support!
     </p>
   </description>
-  <url type="homepage">https://zevdocs.io/</url>
+  <url type="homepage">https://jkozera.github.io/zevdocs/</url>
   <url type="bugtracker">https://github.com/jkozera/zevdocs/issues/</url>
   <url type="donation">http://www.gnome.org/friends/</url>
   <screenshots>
     <screenshot type="default">
-      <image>https://zevdocs.io/screenshot.png</image>
+      <image>https://jkozera.github.io/zevdocs/screenshot.png</image>
     </screenshot>
     <screenshot>
-      <image>https://zevdocs.io/screenshot2.png</image>
+      <image>https://jkozera.github.io/zevdocs/screenshot2.png</image>
     </screenshot>
     <screenshot>
-      <image>https://zevdocs.io/screenshot3.png</image>
+      <image>https://jkozera.github.io/zevdocs/screenshot3.png</image>
     </screenshot>
   </screenshots>
   <project_group>GNOME</project_group>
@@ -60,6 +60,7 @@
     <content_attribute id="money-gambling">none</content_attribute>
   </content_rating>
   <releases>
+    <release version="0.5.2" date="2019-04-22" />
     <release version="0.5.1" date="2018-09-27" />
     <release version="0.5.0" date="2018-09-25" />
     <release version="0.4.0" date="2018-09-16" />

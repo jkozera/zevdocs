@@ -613,7 +613,7 @@ dh_web_view_constructed (GObject *object)
         webkit_settings_set_enable_plugins (webkit_settings, FALSE);
         webkit_settings_set_user_agent_with_application_details(
                 webkit_settings,
-                "ZevDocs (https://zevdocs.io/)",
+                "ZevDocs (http://jkozera.github.io/zevdocs/)",
                 PACKAGE_VERSION
         );
 

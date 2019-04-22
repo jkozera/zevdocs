@@ -6,7 +6,7 @@
 project(
         'zevdocs', 'c', 'vala',
         meson_version : '>= 0.43',
-        version : '0.5.1'
+        version : '0.5.2'
 )
 
 add_project_arguments(['-X', '-DGETTEXT_PACKAGE="zevdocs"'],
